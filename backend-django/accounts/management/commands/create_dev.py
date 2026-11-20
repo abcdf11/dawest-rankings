@@ -1,4 +1,5 @@
 import getpass
+import os
 import sys
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
@@ -9,22 +10,43 @@ from django.db import transaction
 
 
 class Command(BaseCommand):
-    help = "Create a developer account with a securely prompted password; no public developer signup."
+    help = "Create a developer account using a hidden prompt or one-time startup environment variables."
     def add_arguments(self, parser):
         parser.add_argument("--username")
-        parser.add_argument("--password-stdin", action="store_true")
+        source = parser.add_mutually_exclusive_group()
+        source.add_argument("--password-stdin", action="store_true")
+        source.add_argument("--from-env", action="store_true")
 
     @transaction.atomic
     def handle(self, *args, **options):
-        username = (options["username"] or input("Developer username: ")).strip().lower()
+        from_env = options["from_env"]
+        if from_env:
+            if options["username"]:
+                raise CommandError("Use DAWEST_BOOTSTRAP_DEV_USERNAME with --from-env.")
+            username = os.environ.get("DAWEST_BOOTSTRAP_DEV_USERNAME", "")
+            password = os.environ.get("DAWEST_BOOTSTRAP_DEV_PASSWORD", "")
+            if not username and not password:
+                return
+            if not username.strip() or not password:
+                raise CommandError("Set both DAWEST_BOOTSTRAP_DEV_USERNAME and DAWEST_BOOTSTRAP_DEV_PASSWORD, or remove both.")
+        else:
+            username = options["username"] or input("Developer username: ")
+        username = username.strip().lower()
         User = get_user_model()
         if not username or len(username) > 30 or not username.replace("_", "").isalnum():
             raise CommandError("Use up to 30 letters, digits, or underscores.")
-        if User.objects.filter(username__iexact=username).exists():
-            raise CommandError("That account already exists. Use Django Admin to manage its role.")
-        password = sys.stdin.readline().rstrip("\r\n") if options["password_stdin"] else getpass.getpass("Password: ")
-        if not options["password_stdin"] and password != getpass.getpass("Repeat password: "):
-            raise CommandError("Passwords do not match.")
+        existing = User.objects.filter(username__iexact=username).first()
+        if existing:
+            if from_env and existing.is_staff and (not existing.is_active or existing.has_perm("accounts.access_dev_console")):
+                self.stdout.write("Developer account already exists; startup setup skipped. Credentials and account status were preserved.")
+                return
+            raise CommandError("That username is already registered. Choose an unused developer username.")
+        if not from_env:
+            password = sys.stdin.readline().rstrip("\r\n") if options["password_stdin"] else getpass.getpass("Password: ")
+            if not options["password_stdin"] and password != getpass.getpass("Repeat password: "):
+                raise CommandError("Passwords do not match.")
+        if len(password) > 128:
+            raise CommandError("Use a password of at most 128 characters.")
         user = User(username=username, is_staff=True)
         try:
             validate_password(password, user)

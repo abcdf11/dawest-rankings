@@ -95,7 +95,9 @@ The native Python deployment can serve both React and Django at one public URL. 
 
 4. Save and redeploy the latest commit. The build installs Python dependencies, builds React, and collects Django static files. Startup applies migrations and launches Gunicorn on Render's `PORT`. React pages and assets are served by Django and WhiteNoise.
 5. Set **Health Check Path** to `/api/v1/health/`, then confirm that both `/` and `/api/v1/health/` respond successfully. The health endpoint checks the database, so a 500 there means database connectivity or migrations need attention.
-6. To create a developer, open the web service's **Shell** and run `python backend-django/manage.py create_dev --username owner`. Enter your own password and sign in through `/dev/login`.
+6. On the **free web service plan**, create your first developer through **Environment**. Add `DAWEST_BOOTSTRAP_DEV_USERNAME=owner` and set `DAWEST_BOOTSTRAP_DEV_PASSWORD` to your own strong password. Choose **Save and deploy**. The startup script creates the account after migrations. Sign in through `/dev/login`, then remove **both** bootstrap variables and save/deploy again. The account remains in PostgreSQL. Restarts preserve the existing password and disabled status; an existing player account is never promoted through this setup. Passwords are read directly from the environment, validated, and hashed; they are not printed or passed as command arguments. The bootstrap variables are removed from the environment inherited by Gunicorn workers.
+
+   On a plan with **Shell**, you can instead run `python backend-django/manage.py create_dev --username owner` and enter the password at its hidden prompt. Free Render web services do not provide Shell access.
 
 This configuration keeps player/team accounts in PostgreSQL across service restarts. Without Redis, the ladder refreshes by polling. The complete Node / Redis realtime stack is available through the Blueprint below. No SQLite fallback or default developer credentials are used on Render.
 
