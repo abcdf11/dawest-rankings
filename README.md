@@ -63,7 +63,43 @@ Authentication uses Django sessions with an HttpOnly session cookie. Login, sign
 
 Public signup cannot assign staff roles. The developer login checks staff permissions, and every developer API action verifies them again on the server. Account/login attempts and registrations are throttled. Deactivating a player revokes tracked sessions and removes them from public rankings. Private registration receipts enforce ownership.
 
-## Deploy on Render
+## Deploy on Render with your existing Python service
+
+The native Python deployment can serve both React and Django at one public URL. This fixes a deployment where `/api/v1/auth/session/` works but `/`, `/signup`, or `/dev/login` return Django's "Not Found" page.
+
+1. In Render, create **New > Postgres**, named `dawest-db`, in the **same region as the existing web service**. Wait until it is available, then copy its **Internal Database URL** from the database's **Connect** menu. Choose a paid database for long-term use; free Render databases expire after 30 days.
+2. Open the existing web service's **Environment** page. Keep the generated `DJANGO_SECRET_KEY` already configured and add:
+
+   | Key | Value |
+   | --- | --- |
+   | `DATABASE_URL` | The database's Internal Database URL, entered only in Render |
+   | `DJANGO_DEBUG` | `0` |
+   | `COOKIE_SECURE` | `1` |
+   | `TRUST_PROXY_HEADERS` | `1` |
+   | `USE_REDIS` | `0` until a Redis instance and realtime gateway are configured |
+
+   Keep `VITE_API_URL` and `VITE_SOCKET_URL` unset. The app uses its own origin for login and API calls. Render's assigned hostname is automatically added to Django's allowed hosts. A custom domain must also be included in `DJANGO_ALLOWED_HOSTS`.
+3. Under **Settings > Build & Deploy**, select **Python 3**, leave **Root Directory** blank, and use:
+
+   **Build Command**
+
+   ```sh
+   bash scripts/render-build.sh
+   ```
+
+   **Start Command**
+
+   ```sh
+   bash scripts/render-start.sh
+   ```
+
+4. Save and redeploy the latest commit. The build installs Python dependencies, builds React, and collects Django static files. Startup applies migrations and launches Gunicorn on Render's `PORT`. React pages and assets are served by Django and WhiteNoise.
+5. Set **Health Check Path** to `/api/v1/health/`, then confirm that both `/` and `/api/v1/health/` respond successfully. The health endpoint checks the database, so a 500 there means database connectivity or migrations need attention.
+6. To create a developer, open the web service's **Shell** and run `python backend-django/manage.py create_dev --username owner`. Enter your own password and sign in through `/dev/login`.
+
+This configuration keeps player/team accounts in PostgreSQL across service restarts. Without Redis, the ladder refreshes by polling. The complete Node / Redis realtime stack is available through the Blueprint below. No SQLite fallback or default developer credentials are used on Render.
+
+## Deploy the complete stack with a Render Blueprint
 
 The repository includes `render.yaml`, a production Blueprint for the complete stack. It uses paid compute plans in Singapore. Review Render's displayed cost before applying the Blueprint. No Render resources have been created from this workspace.
 
@@ -150,9 +186,11 @@ npx playwright install chromium
 npm run test:e2e -- --workers=2
 $env:USE_SQLITE='1'; $env:USE_REDIS='0'
 Set-Location backend-django
-..\.venv\Scripts\python.exe manage.py test accounts rankings teams --noinput
+..\.venv\Scripts\python.exe manage.py test config accounts rankings teams --noinput
 ```
 
 Browser presentation tests use isolated API fixtures. Backend tests enforce real session authentication, CSRF, role boundaries, roster ownership, registered-only visibility, unique usernames, and transactional reviews. `tests/integration/auth-flow.mjs` exercises real browser signup, cookie persistence, team registration, developer approval, adding/removing/restoring competitors, and session revocation against an isolated API on port 8001. Set `SQLITE_PATH` to that isolated migrated database and optionally `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`; run it with the frontend on 5173. Never point integration fixtures at a production database.
+
+`tests/integration/native-deployment.mjs` checks the production React build served directly by Django, without Vite or API mocks. Build React, migrate an isolated SQLite database, collect static files, and run Django with `DEBUG=0` on localhost port 8002; then run `node tests/integration/native-deployment.mjs`. It verifies same-origin signup/session persistence, leaderboard visibility, registration and developer pages, assets, and genuine API 404s. It creates test accounts only on localhost.
 
 Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.
