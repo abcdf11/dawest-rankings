@@ -1,0 +1,18 @@
+FROM node:22-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY frontend/package.json frontend/package.json
+COPY realtime-node/package.json realtime-node/package.json
+RUN npm ci --workspace realtime-node
+COPY realtime-node realtime-node
+RUN npm run build --workspace realtime-node
+RUN npm prune --omit=dev --workspace realtime-node
+FROM node:22-alpine
+ENV NODE_ENV=production
+WORKDIR /app
+COPY --from=build --chown=node:node /app/node_modules node_modules
+COPY --from=build --chown=node:node /app/realtime-node/dist realtime-node/dist
+COPY --from=build --chown=node:node /app/realtime-node/package.json realtime-node/package.json
+USER node
+EXPOSE 3001
+CMD ["node", "realtime-node/dist/server.js"]

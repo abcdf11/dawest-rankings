@@ -1,0 +1,19 @@
+{
+  "name": "dawest-rankings",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "frontend",
+    "realtime-node"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend && npm run build --workspace realtime-node",
+    "build:site": "npm run build --workspace frontend",
+    "test": "npm run test --workspace frontend && npm run test --workspace realtime-node",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}
