@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from rest_framework.test import APIClient
 from .engine import calculate_outcome, process_completed_match, simulate_match_outcome, tier_for_rating
 from .models import Match, Player, RankingEvent, RankingState, RatingHistory
@@ -12,6 +13,11 @@ class RankingTests(TestCase):
         cache.clear()
         self.a = Player.objects.create(username="deadeye", display_name="Deadeye", region="NA", rating=1890, peak_rating=1890, rank=1)
         self.b = Player.objects.create(username="vex", display_name="Vex", region="EU", rating=1850, peak_rating=1850, rank=2, previous_rank=2)
+        for player in (self.a, self.b):
+            player.user = get_user_model().objects.create_user(username=player.username, password="test-password")
+            player.registered_at = timezone.now()
+            player.save()
+        RankingState.objects.all().delete()
         self.match = Match.objects.create(player_a=self.a, player_b=self.b, score_a=5, score_b=2)
         self.client = APIClient()
     def test_elo_is_zero_sum_and_tournament_and_sweep_have_more_weight(self):

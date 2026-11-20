@@ -5,6 +5,8 @@ __pycache__/
 *.pyc
 *.sqlite3
 .env
+.env.local
+.env.*.local
 !.env.example
 *.tar.gz
 test-results/

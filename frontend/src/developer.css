@@ -1,0 +1,468 @@
+.dev-main {
+  max-width: 1360px;
+  padding: 45px 38px 70px;
+  margin: auto;
+}
+.dev-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+.dev-heading h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -1.7px;
+  margin: 12px 0 10px;
+}
+.dev-heading p {
+  font-size: 0.875rem;
+  color: #888;
+}
+.dev-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 28px;
+}
+.dev-stats > div {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  border: 1px solid #fff2;
+  background: #ffffff03;
+  padding: 22px;
+  color: #aaa;
+  border-radius: 3px;
+}
+.dev-stats span {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font:
+    400 0.625rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 1px;
+  color: #777;
+}
+.dev-stats b {
+  font-size: 1.9rem;
+  color: #ddd;
+  font-weight: 550;
+  letter-spacing: -1px;
+}
+.dev-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #fff2;
+  margin: 0 0 20px;
+  padding-bottom: 14px;
+}
+.dev-toolbar nav {
+  display: flex;
+  gap: 24px;
+}
+.dev-toolbar nav > button {
+  font-size: 0.875rem;
+  color: #777;
+  padding: 10px 0;
+}
+.dev-toolbar nav > button.active {
+  color: #eee;
+  border-bottom: 1px solid #bbb;
+}
+.dev-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: #777;
+  font-size: 0.75rem;
+  margin: 0 0 18px;
+}
+.dev-filter input {
+  background: #111;
+  border: 1px solid #fff2;
+  padding: 12px 13px;
+  border-radius: 3px;
+  min-width: 260px;
+  font-size: 0.8125rem;
+}
+.dev-filter select {
+  font-size: 0.75rem;
+}
+.dev-filter > span:last-child {
+  font-size: 0.6875rem;
+  line-height: 1.7;
+}
+.dev-applications {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.dev-applications > .empty-state {
+  grid-column: 1/-1;
+  margin: 0;
+}
+.dev-application {
+  background: #111;
+  border: 1px solid #fff2;
+  border-radius: 3px;
+  padding: 23px;
+}
+.dev-application-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 17px;
+}
+.dev-application-heading h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  margin-top: 8px;
+}
+.dev-application-heading h2 > small {
+  font:
+    400 0.625rem "JetBrains Mono",
+    monospace;
+  margin-left: 10px;
+  border: 1px solid #fff2;
+  padding: 3px 5px;
+  color: #999;
+  vertical-align: middle;
+}
+.dev-status {
+  font:
+    400 0.5625rem "JetBrains Mono",
+    monospace;
+  color: #aaa;
+  letter-spacing: 1px;
+  border: 1px solid #fff2;
+  padding: 7px 8px;
+}
+.dev-captain,
+.dev-description {
+  font-size: 0.75rem;
+  color: #888;
+  line-height: 1.8;
+  margin-bottom: 13px;
+}
+.dev-captain b {
+  color: #bbb;
+  font-weight: 500;
+}
+.dev-roster {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 16px 0 22px;
+}
+.dev-roster > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font:
+    400 0.625rem "JetBrains Mono",
+    monospace;
+  padding: 7px 9px;
+  border: 1px solid #fff1;
+  background: #ffffff03;
+  color: #aaa;
+}
+.dev-review {
+  border-top: 1px solid #fff1;
+  padding-top: 17px;
+}
+.dev-review .registration-field {
+  font-size: 0.75rem;
+}
+.dev-review > div {
+  display: flex;
+  gap: 10px;
+}
+.dev-review .button {
+  font-size: 0.75rem;
+}
+.dev-review-note {
+  font-size: 0.75rem;
+  color: #999;
+  line-height: 1.8;
+  border-top: 1px solid #fff1;
+  padding-top: 15px;
+}
+.dev-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  padding: 13px 15px;
+  border: 1px solid #fff2;
+  background: #ffffff05;
+  color: #bbb;
+  margin-bottom: 18px;
+}
+.dev-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #fff2;
+  border-radius: 3px;
+}
+.dev-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+.dev-table th {
+  background: #121212;
+  font:
+    400 0.625rem "JetBrains Mono",
+    monospace;
+  color: #777;
+  letter-spacing: 1px;
+  padding: 15px 20px;
+  border-bottom: 1px solid #fff2;
+}
+.dev-table td {
+  padding: 17px 20px;
+  border-bottom: 1px solid #ffffff09;
+  color: #999;
+  font-size: 0.8125rem;
+}
+.dev-table td > strong {
+  color: #ddd;
+  font-size: 0.875rem;
+  font-weight: 550;
+  display: block;
+  margin-bottom: 7px;
+}
+.dev-table td > small {
+  display: block;
+  font-size: 0.6875rem;
+  color: #666;
+}
+.dev-table tr:last-child td {
+  border-bottom: 0;
+}
+.dev-table .button {
+  font-size: 0.6875rem;
+  min-height: 33px;
+  padding: 8px 12px;
+}
+.dev-activity {
+  border: 1px solid #fff2;
+  background: #101010;
+  padding: 0 20px;
+  border-radius: 3px;
+}
+.dev-activity > div {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid #fff1;
+  padding: 19px 0;
+  color: #777;
+}
+.dev-activity > div:last-child {
+  border: 0;
+}
+.dev-activity > div > span {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dev-activity strong {
+  font:
+    500 0.8125rem "JetBrains Mono",
+    monospace;
+  color: #bbb;
+}
+.dev-activity small {
+  font-size: 0.6875rem;
+  color: #666;
+}
+.dev-activity time {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+.dev-access-gate {
+  max-width: 600px;
+  margin: 90px auto;
+}
+.dev-add-form > h2 {
+  font-size: 1.6rem;
+  font-weight: 750;
+  letter-spacing: -0.7px;
+}
+.dev-add-form > p {
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: #888;
+  margin: 15px 0 23px;
+}
+.dev-player-picker {
+  border: 1px solid #fff2;
+  padding: 13px;
+  max-height: 230px;
+  overflow: auto;
+  margin-bottom: 22px;
+}
+.dev-player-picker > span {
+  font:
+    400 0.5625rem "JetBrains Mono",
+    monospace;
+  color: #888;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 13px;
+}
+.dev-player-picker > label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.8125rem;
+  padding: 9px 0;
+  color: #bbb;
+}
+.dev-player-picker input {
+  accent-color: #bbb;
+}
+.dev-player-picker small {
+  margin-left: auto;
+  color: #777;
+  font-size: 0.6875rem;
+}
+@media (max-width: 760px) {
+  .dev-main {
+    padding: 29px 17px 50px;
+  }
+  .dev-heading {
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .dev-heading h1 {
+    font-size: 1.6rem;
+    letter-spacing: -1px;
+    line-height: 1.2;
+  }
+  .dev-heading .registration-eyebrow {
+    font-size: 0.4375rem;
+  }
+  .dev-heading p {
+    font-size: 0.75rem;
+    line-height: 1.8;
+  }
+  .dev-heading > .button {
+    min-width: 35px;
+    font-size: 0.625rem;
+    padding: 9px;
+  }
+  .dev-stats {
+    gap: 8px;
+    margin-bottom: 23px;
+  }
+  .dev-stats > div {
+    padding: 15px 10px;
+    gap: 8px;
+  }
+  .dev-stats > div > svg {
+    display: none;
+  }
+  .dev-stats span {
+    font-size: 0.4375rem;
+    letter-spacing: 0.3px;
+    line-height: 1.7;
+  }
+  .dev-stats b {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+  .dev-toolbar {
+    gap: 10px;
+    align-items: center;
+  }
+  .dev-toolbar nav {
+    gap: 16px;
+  }
+  .dev-toolbar nav > button {
+    font-size: 0.6875rem;
+  }
+  .dev-toolbar > .button {
+    font-size: 0.625rem;
+    padding: 9px;
+    min-height: 34px;
+    gap: 4px;
+  }
+  .dev-filter {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .dev-filter input {
+    min-width: 0;
+    width: 100%;
+  }
+  .dev-filter > span:last-child {
+    font-size: 0.625rem;
+  }
+  .dev-applications {
+    grid-template-columns: 1fr;
+  }
+  .dev-application {
+    padding: 18px;
+  }
+  .dev-application-heading h2 {
+    font-size: 1.25rem;
+  }
+  .dev-status {
+    font-size: 0.5rem;
+  }
+  .dev-table {
+    min-width: 570px;
+  }
+  .dev-table th,
+  .dev-table td {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .dev-activity {
+    padding: 0 14px;
+  }
+  .dev-activity > div {
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .dev-activity time {
+    width: 100%;
+    margin-left: 27px;
+    font-size: 0.625rem;
+  }
+  .dev-activity strong {
+    font-size: 0.6875rem;
+  }
+  .dev-activity small {
+    font-size: 0.625rem;
+  }
+  .dev-site .registration-header-label {
+    display: none;
+  }
+  .dev-site .registration-header {
+    gap: 14px;
+  }
+  .dev-site .registration-back {
+    font-size: 0.6875rem;
+  }
+  .dev-player-picker > label {
+    flex-wrap: wrap;
+  }
+  .dev-player-picker small {
+    font-size: 0.625rem;
+  }
+}

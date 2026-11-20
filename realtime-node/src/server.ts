@@ -5,17 +5,27 @@ import { createServer } from "node:http";
 import { Redis } from "ioredis";
 import { Server } from "socket.io";
 import { rankingEvent, liveEvent, type LiveEvent } from "./events.js";
+import { allowsOrigin } from "./origins.js";
 
 const origins = (
   process.env.SOCKET_ALLOWED_ORIGINS ??
   "http://localhost:5173,http://localhost:8080"
 ).split(",");
+const sameOrigin = process.env.SOCKET_SAME_ORIGIN === "1";
+const corsOptions: cors.CorsOptionsDelegate = (request, callback) => {
+  callback(null, {
+    origin: allowsOrigin(request, origins, sameOrigin),
+    methods: ["GET", "POST"],
+  });
+};
 const app = express();
 app.disable("x-powered-by");
-app.use(helmet(), cors({ origin: origins }));
+app.use(helmet(), cors(corsOptions));
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: origins, methods: ["GET", "POST"] },
+  cors: corsOptions,
+  allowRequest: (request, callback) =>
+    callback(null, allowsOrigin(request, origins, sameOrigin)),
   maxHttpBufferSize: 16_384,
   connectionStateRecovery: { maxDisconnectionDuration: 120_000 },
 });

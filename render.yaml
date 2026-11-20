@@ -1,0 +1,155 @@
+# Full production stack. These are paid plans; review Render's estimate before applying.
+# Keep this file at the root of the Git repository you connect to Render.
+services:
+  - type: keyvalue
+    name: dawest-cache
+    region: singapore
+    plan: 256mb
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+  - type: pserv
+    name: dawest-api
+    runtime: docker
+    region: singapore
+    plan: 0.5c-512mb
+    dockerContext: .
+    dockerfilePath: ./infra/Dockerfile.django
+    preDeployCommand: python manage.py migrate --noinput
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com,localhost,127.0.0.1
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: TRUST_PROXY_HEADERS
+        value: "1"
+      - key: USE_SQLITE
+        value: "0"
+      - key: USE_REDIS
+        value: "1"
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: dawest-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: dawest-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: dawest-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: dawest-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: dawest-db
+          property: port
+      - key: REDIS_URL
+        fromService:
+          name: dawest-cache
+          type: keyvalue
+          property: connectionString
+
+  - type: pserv
+    name: dawest-realtime
+    runtime: docker
+    region: singapore
+    plan: 0.5c-512mb
+    dockerContext: .
+    dockerfilePath: ./infra/Dockerfile.node
+    envVars:
+      - key: PORT
+        value: "3001"
+      - key: SOCKET_SAME_ORIGIN
+        value: "1"
+      - key: REDIS_URL
+        fromService:
+          name: dawest-cache
+          type: keyvalue
+          property: connectionString
+
+  - type: worker
+    name: dawest-relay
+    runtime: docker
+    region: singapore
+    plan: 0.5c-512mb
+    dockerContext: .
+    dockerfilePath: ./infra/Dockerfile.django
+    dockerCommand: python manage.py relay_rankings --loop
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        fromService:
+          name: dawest-api
+          type: pserv
+          envVarKey: DJANGO_SECRET_KEY
+      - key: USE_SQLITE
+        value: "0"
+      - key: USE_REDIS
+        value: "1"
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: dawest-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: dawest-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: dawest-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: dawest-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: dawest-db
+          property: port
+      - key: REDIS_URL
+        fromService:
+          name: dawest-cache
+          type: keyvalue
+          property: connectionString
+
+  - type: web
+    name: dawest
+    runtime: docker
+    region: singapore
+    plan: 0.5c-512mb
+    dockerContext: .
+    dockerfilePath: ./infra/Dockerfile.render-frontend
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: DJANGO_UPSTREAM
+        fromService:
+          name: dawest-api
+          type: pserv
+          property: hostport
+      - key: REALTIME_UPSTREAM
+        fromService:
+          name: dawest-realtime
+          type: pserv
+          property: hostport
+
+databases:
+  - name: dawest-db
+    region: singapore
+    plan: 0.1c-256mb
+    postgresMajorVersion: "16"
+    databaseName: dawest
+    user: dawest
+    ipAllowList: []

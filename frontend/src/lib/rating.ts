@@ -1,6 +1,12 @@
-import type { MatchType, Player, Simulation, Tier } from "../types/rankings";
+import type {
+  MatchType,
+  RankedCompetitor,
+  Simulation,
+  Tier,
+} from "../types/rankings";
 export const WEIGHTS: Record<MatchType, number> = {
   RANKED_1V1: 1,
+  RANKED_TEAM: 1,
   SHOWMATCH: 1.2,
   TOURNAMENT: 1.5,
   QUALIFIER: 1.25,
@@ -29,7 +35,7 @@ function round2(n: number) {
   );
 }
 export function simulateLocal(
-  players: Player[],
+  players: RankedCompetitor[],
   aId: number,
   bId: number,
   scoreA: number,

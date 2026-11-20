@@ -1,26 +1,56 @@
 import { ChevronDown, SearchX } from "lucide-react";
 import { motion } from "framer-motion";
-import type { Player } from "../types/rankings";
+import type { RankingEntry, RankingKind } from "../types/rankings";
 import { formatRating } from "../lib/rating";
 import { Delta, FormPills, Sigil, Streak, TierBadge } from "./Shared";
 export function RankingsTable({
   players,
   onSelect,
   onReset,
+  kind = "players",
+  emptyLadder = false,
 }: {
-  players: Player[];
-  onSelect: (p: Player) => void;
+  players: RankingEntry[];
+  onSelect: (p: RankingEntry) => void;
   onReset: () => void;
+  kind?: RankingKind;
+  emptyLadder?: boolean;
 }) {
   if (!players.length)
     return (
       <div className="empty-state">
         <SearchX size={34} />
-        <h3>No gunslingers found</h3>
-        <p>Try a different name, region, or competitive tier.</p>
-        <button className="button secondary" onClick={onReset}>
-          Clear filters
-        </button>
+        <h3>
+          {emptyLadder
+            ? kind === "teams"
+              ? "No registered teams yet"
+              : "Be the first on the frontier"
+            : kind === "teams"
+              ? "No teams found"
+              : "No gunslingers found"}
+        </h3>
+        <p>
+          {emptyLadder
+            ? kind === "teams"
+              ? "Register your crew. Approved teams appear here."
+              : "Create a player account to claim your place on the leaderboard."
+            : "Try a different name, region, or competitive tier."}
+        </p>
+        {!emptyLadder && (
+          <button className="button secondary" onClick={onReset}>
+            Clear filters
+          </button>
+        )}
+        {kind === "players" && (
+          <a className="empty-signup-link" href="/signup">
+            Create a player account to join the leaderboard
+          </a>
+        )}
+        {emptyLadder && kind === "teams" && (
+          <a className="empty-signup-link" href="/register">
+            Register a team
+          </a>
+        )}
       </div>
     );
   return (
@@ -31,7 +61,7 @@ export function RankingsTable({
             <th scope="col">
               RANK <ChevronDown size={12} />
             </th>
-            <th scope="col">PLAYER</th>
+            <th scope="col">{kind === "teams" ? "TEAM / ROSTER" : "PLAYER"}</th>
             <th scope="col">POWER RATING</th>
             <th scope="col">RECORD</th>
             <th scope="col">STREAK</th>
@@ -74,8 +104,15 @@ export function RankingsTable({
                   <span>
                     <strong>{player.display_name}</strong>
                     <span className="player-meta">
-                      @{player.username}
+                      {"tag" in player
+                        ? `${player.tag} · ${player.roster.length} players`
+                        : `@${player.username}`}
                       <span className="region-tag">{player.region}</span>
+                      {!("tag" in player) && player.team && (
+                        <span className="team-affiliation">
+                          {player.team.tag}
+                        </span>
+                      )}
                     </span>
                   </span>
                   <TierBadge tier={player.tier} />

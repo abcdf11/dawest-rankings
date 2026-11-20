@@ -8,11 +8,17 @@ import {
   ListOrdered,
   RotateCcw,
 } from "lucide-react";
-import type { Player } from "../types/rankings";
+import type { RankingEntry, RankingKind } from "../types/rankings";
 import { decodeRanking, movePlayer } from "../lib/builder";
 import { Sigil, TierBadge } from "./Shared";
 import { formatRating } from "../lib/rating";
-export function CustomRankBuilder({ players }: { players: Player[] }) {
+export function CustomRankBuilder({
+  players,
+  kind = "players",
+}: {
+  players: RankingEntry[];
+  kind?: RankingKind;
+}) {
   const [ids, setIds] = useState<number[]>(
     () =>
       decodeRanking(
@@ -31,6 +37,7 @@ export function CustomRankBuilder({ players }: { players: Player[] }) {
   }
   async function share() {
     const url = new URL(window.location.href);
+    url.searchParams.set("ranking", kind);
     url.hash = new URLSearchParams({ list: ids.join(".") }).toString();
     window.history.replaceState(null, "", url);
     try {
@@ -47,7 +54,7 @@ export function CustomRankBuilder({ players }: { players: Player[] }) {
         <ListOrdered size={30} />
         <h3>A new frontier</h3>
         <p>
-          Your community list will be available when players join the ladder.
+          Your community list will be available when {kind} join the ladder.
         </p>
       </div>
     );
@@ -59,9 +66,13 @@ export function CustomRankBuilder({ players }: { players: Player[] }) {
         </span>
         <div>
           <span className="eyebrow gold">YOUR FRONTIER. YOUR RULES.</span>
-          <h2>BUILD YOUR POWER LIST</h2>
+          <h2>
+            {kind === "teams"
+              ? "BUILD YOUR TEAM LIST"
+              : "BUILD YOUR POWER LIST"}
+          </h2>
           <p>
-            Drag players into your order, then share your picks with the
+            Drag {kind} into your order, then share your picks with the
             community.
           </p>
         </div>
@@ -85,8 +96,14 @@ export function CustomRankBuilder({ players }: { players: Player[] }) {
               setCopied(false);
             }}
           >
-            <option value="10">Top 10 players</option>
-            <option value="20">Top 20 players</option>
+            <option value={Math.min(10, players.length)}>
+              Top {Math.min(10, players.length)} {kind}
+            </option>
+            {players.length > 10 && (
+              <option value={Math.min(20, players.length)}>
+                Top {Math.min(20, players.length)} {kind}
+              </option>
+            )}
           </select>
         </label>
         <span className="muted">

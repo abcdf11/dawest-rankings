@@ -1,25 +1,43 @@
 import { useState } from "react";
 import { Crosshair, RotateCcw, Swords, Zap } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import type { Ladder, MatchType, Player, Simulation } from "../types/rankings";
+import type {
+  Ladder,
+  MatchType,
+  RankingEntry,
+  RankingKind,
+  Simulation,
+} from "../types/rankings";
 import { simulate } from "../lib/api";
 import { formatRating, WEIGHTS } from "../lib/rating";
 import { Sigil, TierBadge } from "./Shared";
 export function MatchSimulator({
   players,
   source,
+  kind = "players",
 }: {
-  players: Player[];
+  players: RankingEntry[];
   source: Ladder["source"];
+  kind?: RankingKind;
 }) {
   const [aId, setA] = useState(players[0]?.id ?? 0),
     [bId, setB] = useState(players[1]?.id ?? 0);
   const [scoreA, setScoreA] = useState("5"),
     [scoreB, setScoreB] = useState("2");
-  const [type, setType] = useState<MatchType>("RANKED_1V1");
+  const rankedType: MatchType = kind === "teams" ? "RANKED_TEAM" : "RANKED_1V1";
+  const [type, setType] = useState<MatchType>(rankedType);
   const mutation = useMutation({
     mutationFn: () =>
-      simulate(players, aId, bId, Number(scoreA), Number(scoreB), type, source),
+      simulate(
+        players,
+        aId,
+        bId,
+        Number(scoreA),
+        Number(scoreB),
+        type,
+        source,
+        kind,
+      ),
   });
   const a = players.find((p) => p.id === aId),
     b = players.find((p) => p.id === bId);
@@ -41,7 +59,7 @@ export function MatchSimulator({
       <div className="empty-state">
         <Swords size={30} />
         <h3>The frontier is waiting</h3>
-        <p>At least two ranked players are needed to simulate a duel.</p>
+        <p>At least two ranked {kind} are needed to simulate a match.</p>
       </div>
     );
   return (
@@ -52,7 +70,11 @@ export function MatchSimulator({
         </span>
         <div>
           <span className="eyebrow gold">PLAY OUT THE POSSIBILITIES</span>
-          <h2>WHAT IF THEY DUELED?</h2>
+          <h2>
+            {kind === "teams"
+              ? "WHAT IF THEY CLASHED?"
+              : "WHAT IF THEY DUELED?"}
+          </h2>
           <p>Set the score. See exactly how the frontier would shift.</p>
         </div>
       </div>
@@ -130,7 +152,9 @@ export function MatchSimulator({
               clear();
             }}
           >
-            <option value="RANKED_1V1">Ranked 1v1 · 1.0×</option>
+            <option value={rankedType}>
+              {kind === "teams" ? "Ranked team match" : "Ranked 1v1"} · 1.0×
+            </option>
             <option value="SHOWMATCH">Showmatch · 1.2×</option>
             <option value="QUALIFIER">Qualifier · 1.25×</option>
             <option value="TOURNAMENT">Official tournament · 1.5×</option>
@@ -142,7 +166,11 @@ export function MatchSimulator({
           onClick={() => mutation.mutate()}
         >
           <Zap size={16} />
-          {mutation.isPending ? "Calculating…" : "Simulate duel"}
+          {mutation.isPending
+            ? "Calculating…"
+            : kind === "teams"
+              ? "Simulate team match"
+              : "Simulate duel"}
         </button>
         <button
           className="icon-button"
@@ -153,7 +181,7 @@ export function MatchSimulator({
             setB(players[1].id);
             setScoreA("5");
             setScoreB("2");
-            setType("RANKED_1V1");
+            setType(rankedType);
             clear();
           }}
         >
@@ -162,7 +190,7 @@ export function MatchSimulator({
       </div>
       {invalid && (
         <p className="validation">
-          Choose different players and enter a decisive score from 0 to 100.
+          Choose different {kind} and enter a decisive score from 0 to 100.
         </p>
       )}
       {mutation.isError && (
@@ -185,7 +213,7 @@ function SimulationResult({
   players,
 }: {
   result: Simulation;
-  players: Player[];
+  players: RankingEntry[];
 }) {
   return (
     <div className="simulation-result" aria-live="polite">

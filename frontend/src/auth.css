@@ -1,0 +1,249 @@
+.account-menu {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .site-header nav {
+    display: none;
+  }
+  .site-header .header-right > .help-button {
+    display: inline-flex;
+  }
+  .registration-header > .account-menu .account-username {
+    display: none;
+  }
+  .registration-header:has(.account-menu) {
+    gap: 12px;
+  }
+  .registration-header:has(.account-menu) .registration-back {
+    font-size: 0.6875rem;
+  }
+}
+.account-menu > a {
+  color: #aaa;
+  text-decoration: none;
+}
+.account-menu > a:hover {
+  color: #fff;
+}
+.account-menu .account-signup {
+  background: #ddd;
+  color: #111;
+  border: 1px solid #fff4;
+  border-radius: 3px;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+.account-username {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #aaa;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.6875rem;
+}
+.account-pending {
+  font:
+    400 0.5625rem "JetBrains Mono",
+    monospace;
+  color: #666;
+  letter-spacing: 1px;
+}
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 85px;
+  max-width: 1140px;
+  min-height: calc(100dvh - 88px);
+  padding: 60px 40px;
+  margin: auto;
+}
+.auth-intro > h1 {
+  font:
+    850 4rem/1.04 Inter,
+    sans-serif;
+  letter-spacing: -3px;
+  margin: 23px 0;
+  max-width: 480px;
+}
+.auth-intro > p {
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  color: #888;
+  max-width: 420px;
+}
+.auth-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-top: 1px solid #fff1;
+  padding-top: 24px;
+  margin-top: 30px;
+  color: #888;
+  font-size: 0.75rem;
+  line-height: 1.8;
+  max-width: 420px;
+}
+.auth-note > svg {
+  margin-top: 3px;
+}
+.auth-card .registration-form fieldset {
+  margin-bottom: 19px;
+}
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  align-items: center;
+  margin-top: 24px;
+  font-size: 0.75rem;
+}
+.auth-links > a {
+  color: #aaa;
+  text-decoration: none;
+}
+.auth-links > a:hover {
+  color: #eee;
+}
+.auth-session-note {
+  font-size: 0.75rem;
+  line-height: 1.8;
+  padding: 12px;
+  background: #ffffff05;
+  border: 1px solid #fff2;
+  margin-bottom: 20px;
+  color: #aaa;
+}
+.auth-session-note > a {
+  color: #eee;
+}
+.auth-gate {
+  padding: 50px 30px;
+  text-align: center;
+}
+.auth-gate > svg {
+  margin: auto auto 20px;
+  color: #aaa;
+}
+.auth-gate h2 {
+  font-size: 1.8rem;
+  letter-spacing: -1px;
+  font-weight: 750;
+}
+.auth-gate p {
+  font-size: 0.875rem;
+  color: #888;
+  line-height: 1.9;
+  margin: 18px auto 25px;
+  max-width: 390px;
+}
+.auth-gate .button {
+  text-decoration: none;
+}
+.auth-gate-links {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.empty-signup-link {
+  display: inline-flex;
+  margin-top: 20px;
+  color: #ccc;
+  text-decoration: none;
+  border-bottom: 1px solid #666;
+  padding-bottom: 4px;
+  font-size: 0.8125rem;
+}
+@media (max-width: 1100px) {
+  .header-right {
+    gap: 13px;
+  }
+  .header-right .season-badge {
+    display: none;
+  }
+  .site-header nav {
+    gap: 18px;
+  }
+  .account-menu {
+    gap: 10px;
+  }
+  .auth-layout {
+    gap: 40px;
+  }
+  .auth-intro > h1 {
+    font-size: 3.3rem;
+  }
+}
+@media (max-width: 760px) {
+  .auth-layout {
+    display: block;
+    padding: 36px 20px 50px;
+    min-height: calc(100dvh - 75px);
+  }
+  .auth-intro {
+    margin-bottom: 30px;
+  }
+  .auth-intro > h1 {
+    font-size: 3rem;
+    letter-spacing: -2.5px;
+    max-width: 350px;
+    margin: 18px 0;
+  }
+  .auth-intro > p {
+    font-size: 0.875rem;
+  }
+  .auth-note {
+    display: none;
+  }
+  .account-menu {
+    font-size: 0.6875rem;
+    gap: 9px;
+  }
+  .account-menu .account-signup {
+    padding: 8px 9px;
+  }
+  .account-username {
+    max-width: 78px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    font-size: 0.625rem;
+  }
+  .account-username > svg {
+    display: none;
+  }
+  .site-header nav > button:nth-child(2) {
+    display: none;
+  }
+  .header-inner {
+    gap: 12px;
+  }
+  .header-right {
+    margin-left: auto;
+    gap: 9px;
+  }
+  .header-right > .help-button {
+    display: none;
+  }
+  .site-header nav {
+    gap: 0;
+    margin-left: auto;
+  }
+  .auth-card .registration-form-heading h2 {
+    font-size: 1.08rem;
+  }
+  .auth-gate {
+    padding: 37px 20px;
+  }
+  .auth-gate h2 {
+    font-size: 1.5rem;
+  }
+  .auth-gate p {
+    font-size: 0.8125rem;
+  }
+}

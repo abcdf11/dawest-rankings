@@ -1,4 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { fixtureApi } from "./fixtures";
+test.beforeEach(async ({ page }) => {
+  await fixtureApi(page);
+  await page.addInitScript(() =>
+    sessionStorage.setItem("dawest:intro-seen:v1", "1"),
+  );
+});
 test("ladder filters, sort, profile, and empty state work", async ({
   page,
 }) => {

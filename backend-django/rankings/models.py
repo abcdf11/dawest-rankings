@@ -1,4 +1,5 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 from django.db.models.functions import Lower
@@ -17,6 +18,9 @@ class Player(models.Model):
         GUNSLINGER = "GUNSLINGER", "Gunslinger"
         DEPUTY = "DEPUTY", "Deputy"
         ROOKIE = "ROOKIE", "Rookie"
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="player_profile")
+    registered_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     username = models.SlugField(max_length=40, unique=True)
     display_name = models.CharField(max_length=64)
     region = models.CharField(max_length=4, choices=Region.choices)

@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Crosshair, TrendingUp, Trophy } from "lucide-react";
-import type { Ladder, Player } from "../types/rankings";
+import type {
+  Ladder,
+  Player,
+  RankingEntry,
+  RankingKind,
+} from "../types/rankings";
 import { getPlayer } from "../lib/api";
 import { formatRating } from "../lib/rating";
 import { Modal } from "./Modal";
@@ -9,16 +14,21 @@ export function PlayerDrawer({
   player,
   source,
   onClose,
+  kind = "players",
+  onSelectPlayer,
 }: {
-  player: Player;
+  player: RankingEntry;
   source: Ladder["source"];
   onClose: () => void;
+  kind?: RankingKind;
+  onSelectPlayer?: (player: Player) => void;
 }) {
   const { data, isError, refetch } = useQuery({
-    queryKey: ["player", player.username, source],
-    queryFn: () => getPlayer(player, source),
+    queryKey: [kind === "teams" ? "team" : "player", player.username, source],
+    queryFn: () => getPlayer(player, source, kind),
   });
   const p = data ?? player;
+  const team = "roster" in p ? p : null;
   const history = data?.history ?? [];
   const min = Math.min(...history.map((h) => h.rating)) - 15,
     max = Math.max(...history.map((h) => h.rating)) + 15;
@@ -29,17 +39,49 @@ export function PlayerDrawer({
     )
     .join(" ");
   return (
-    <Modal title="PLAYER PROFILE" onClose={onClose} drawer>
-      <div className="drawer-identity">
+    <Modal
+      title={kind === "teams" ? "TEAM PROFILE" : "PLAYER PROFILE"}
+      onClose={onClose}
+      drawer
+    >
+      <div className={`drawer-identity${team ? " team-identity" : ""}`}>
         <Sigil player={p} large />
         <div>
           <TierBadge tier={p.tier} />
           <h2>{p.display_name}</h2>
           <p>
-            @{p.username} <span className="region-tag">{p.region}</span>
+            {team ? team.tag : `@${p.username}`}{" "}
+            <span className="region-tag">{p.region}</span>
           </p>
         </div>
       </div>
+      {team && (
+        <section className="team-roster">
+          <div className="section-label">
+            <h3>TEAM ROSTER</h3>
+            <span>{team.roster.length} players</span>
+          </div>
+          {team.roster.map((member) => (
+            <button
+              className="roster-member"
+              key={member.id}
+              onClick={() => onSelectPlayer?.(member)}
+            >
+              <Sigil player={member} />
+              <span>
+                <strong>{member.display_name}</strong>
+                <small>
+                  #{member.rank} solo · {member.region}
+                </small>
+              </span>
+              <span className="roster-member-rating">
+                {formatRating(member.rating)}
+                <small>SOLO PR</small>
+              </span>
+            </button>
+          ))}
+        </section>
+      )}
       <div className="profile-rating">
         <span>
           <small>GLOBAL RANK</small>
@@ -83,8 +125,8 @@ export function PlayerDrawer({
           >
             <defs>
               <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#eab308" stopOpacity=".24" />
-                <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+                <stop offset="0%" stopColor="#dddddd" stopOpacity=".24" />
+                <stop offset="100%" stopColor="#dddddd" stopOpacity="0" />
               </linearGradient>
             </defs>
             {[40, 90, 140].map((y) => (
@@ -105,7 +147,7 @@ export function PlayerDrawer({
             <polyline
               points={points}
               fill="none"
-              stroke="#eab308"
+              stroke="#dddddd"
               strokeWidth="2.5"
               strokeLinejoin="round"
             />
@@ -115,7 +157,7 @@ export function PlayerDrawer({
                 cx={20 + (i / Math.max(1, history.length - 1)) * 460}
                 cy={160 - ((h.rating - min) / (max - min)) * 130}
                 r="3"
-                fill="#eab308"
+                fill="#dddddd"
               >
                 <title>
                   {new Date(h.recorded_at).toLocaleDateString()}:{" "}
@@ -149,7 +191,7 @@ export function PlayerDrawer({
         </p>
       )}
       <div className="section-label">
-        <h3>RECENT DUELS</h3>
+        <h3>{team ? "RECENT TEAM MATCHES" : "RECENT DUELS"}</h3>
         <Activity size={16} />
       </div>
       {isError ? (
@@ -177,9 +219,7 @@ export function PlayerDrawer({
         </div>
       )}
       <p className="profile-note">
-        {source === "demo"
-          ? "Fictional players · Seeded match history"
-          : "Official ladder · Verified match results"}
+        Registered {team ? "team" : "player"} · Database profile
       </p>
     </Modal>
   );

@@ -1,5 +1,6 @@
 import hashlib
 import json
+from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Prefetch, Q, prefetch_related_objects
@@ -10,6 +11,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from .engine import process_completed_match, simulate_match_outcome
 from .models import Match, Player, RankingState
+from .eligibility import registered_players
 from .serializers import CompleteInput, PlayerSerializer, RatingHistorySerializer, SimulationInput, form_for_player
 
 class CanRecordMatch(BasePermission):
@@ -34,18 +36,18 @@ def rankings(request):
     key = "leaderboard:" + str(revision) + ":" + hashlib.sha256(json.dumps([tier, region, search]).encode()).hexdigest()
     data = cache.get(key)
     if data is None:
-        qs = Player.objects.all()
+        qs = registered_players().select_related("team_membership__team")
         if tier != "ALL": qs = qs.filter(tier=tier)
         if region != "ALL": qs = qs.filter(region=region)
         if search: qs = qs.filter(Q(username__icontains=search) | Q(display_name__icontains=search))
         players = list(qs[:500])
-        data = {"players": PlayerSerializer(players, many=True, context={"forms": recent_forms(players)}).data, "total": qs.count(), "revision": revision, "updated_at": state.updated_at.isoformat() if state else None, "source": "official"}
+        data = {"players": PlayerSerializer(players, many=True, context={"forms": recent_forms(players)}).data, "total": qs.count(), "revision": revision, "updated_at": state.updated_at.isoformat() if state else None, "source": "official", "realtime_enabled": settings.USE_REDIS}
         cache.set(key, data, 60)
     return Response(data)
 
 @api_view(["GET"])
 def player_detail(request, username):
-    player = get_object_or_404(Player, username__iexact=username)
+    player = get_object_or_404(registered_players().select_related("team_membership__team"), username__iexact=username)
     matches = list(Match.objects.filter(Q(player_a=player) | Q(player_b=player), status="COMPLETED", processed_at__isnull=False).select_related("player_a", "player_b")[:20])
     history = list(player.rating_history.order_by("-recorded_at", "-pk")[:120])
     return Response({**PlayerSerializer(player, context={"forms": {player.pk: matches}}).data, "history": RatingHistorySerializer(list(reversed(history)), many=True).data, "matches": form_for_player(player, matches)})

@@ -1,133 +1,158 @@
-# DAWEST RANKINGS
+# DAWEST
 
-A solo 1v1 competitive ladder with a dark frontier visual system, player trajectories, a match simulator, and shareable Top 10/20 lists. React 19 / TypeScript / Vite / Tailwind / Framer Motion / TanStack Query; Django 5.2 / DRF; Node 22 / Express / Socket.io; PostgreSQL 16 and Redis 7.
+A black-and-white competitive rankings platform with real player accounts, registered teams, an independent developer console, and persistent database storage. React 19 / TypeScript / Vite, Django 5.2 / DRF, Node / Socket.io, PostgreSQL, and Redis.
 
-## Try the interface
+## Run locally
 
-Requires Node 22 or newer. From this directory:
+Requires Node 22+ and Python 3.11+ (Python 3.12 is used in Docker). From the project directory, in PowerShell:
 
-```sh
+```powershell
 npm ci
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend-django/requirements.txt
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. The default is a self-contained, explicitly labeled demo with 20 fictional players, 301 processed matches, and actual engine-generated rating histories. Search, tier/region filters, sorting, profiles, chart tooltips, match-form details, the simulator, and the community builder all work without backend services. Lists can be dragged, moved with accessible buttons, and shared in URL hash state. Sharing preserves order; it doesn't write to the official ladder.
+`npm run dev` starts Django, applies database migrations, then starts Vite. It reuses existing local servers when they are already running. React, CSS, and Django development code reload automatically.
 
-The private Sites deployment serves this **static demo**. Sites does not run the Django/PostgreSQL/Redis services. Deploy the stack below on a Docker-capable server for the live official ladder.
+- Rankings: **http://127.0.0.1:5173/**
+- Player signup: **http://127.0.0.1:5173/signup**
+- Player login: **http://127.0.0.1:5173/login**
+- Team registration: **http://127.0.0.1:5173/register**
+- Developer login: **http://127.0.0.1:5173/dev/login**
+- Developer console: **http://127.0.0.1:5173/dev**
+- Django Admin: **http://127.0.0.1:8000/admin/**
 
-## Run all services
+Separate server commands are `npm run dev:frontend` and `npm run dev:api`. If filesystem events fail in a synced folder, set `VITE_USE_POLLING=1` in `frontend/.env.local` and restart Vite.
 
-Requires Docker Engine with Compose v2.
+## Create your developer account
 
-1. Copy `.env.example` to `.env`. Replace both example secrets with independently generated values. For example, generate a secret with `python -c "import secrets; print(secrets.token_urlsafe(64))"`.
-2. Run `docker compose up --build -d`.
-3. Run `docker compose exec backend python manage.py seed_dawest` to load the optional fictional demonstration season. The command refuses to overwrite a populated database.
-4. Run `docker compose exec backend python manage.py createsuperuser` and choose your own credentials.
-5. Open **http://localhost:8080**, and **http://localhost:8080/admin/** for competition control.
-
-PostgreSQL and Redis stay on the private Compose network; only the web server exposes a port. The one-shot migration service finishes before API startup. The event relay retries committed events every two seconds. Database and Redis data persist in named volumes. Nginx routes API, admin, static assets, and Socket.io through the same origin. No default administrator or password is created.
-
-For HTTPS deployment, terminate TLS at your reverse proxy, set your actual `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `SOCKET_ALLOWED_ORIGINS`, enable secure cookies (`COOKIE_SECURE=1` in the backend environment), and configure TLS redirects/HSTS at the edge. Keep Redis and PostgreSQL private. Set up database backups, monitoring, and secret management for your hosting environment.
-
-## Run Django without Docker
-
-Use Python 3.12 in deployment (local checks also support Python 3.11). For an isolated local SQLite database with an in-memory cache, in PowerShell:
+With migrations applied, run this in another terminal from the project directory:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r backend-django/requirements.txt
-$env:USE_SQLITE='1'
-$env:USE_REDIS='0'
-$env:DJANGO_DEBUG='1'
-Set-Location backend-django
-..\.venv\Scripts\python.exe manage.py migrate
-..\.venv\Scripts\python.exe manage.py seed_dawest
-..\.venv\Scripts\python.exe manage.py runserver 127.0.0.1:8000
+npm run create:dev -- --username owner
 ```
 
-SQLite is a convenience for local development and tests. Use PostgreSQL for transaction locking in the live ladder. In another terminal, set `$env:VITE_DATA_MODE='official'` and run `npm run dev` from the project root. Vite proxies `/api` to port 8000 and `/socket.io` to port 3001. The UI polls every minute while the websocket gateway is disconnected and accurately shows its connection state. To run the gateway separately, set `REDIS_URL` to your Redis instance and run `npm run dev --workspace realtime-node`.
+Enter your chosen password at the hidden prompt. Sign in at **/dev/login**. There is no public developer signup or built-in developer password. Existing Django superusers can also use the console. Developers are staff accounts with the `accounts.access_dev_console` permission. The management command assigns a developer group with review permissions.
 
-For a separately hosted frontend, set the build variables `VITE_DATA_MODE=official`, `VITE_API_URL=https://your-api.example/api/v1`, and `VITE_SOCKET_URL=https://your-gateway.example`. Add that frontend's exact origin to the backend and gateway allowlists. Rebuild after changing Vite variables.
+The console supports:
 
-## Rating behavior
+- Reviewing, approving, and rejecting team registrations with a public review note.
+- Creating ordinary player accounts with an initial password.
+- Creating approved teams from already registered players.
+- Removing and restoring players and teams on the public leaderboard.
+- Viewing the audit trail of account and moderation actions.
 
-This is **dynamic Elo**, not Glicko-2: the model does not claim to track rating deviation or volatility.
+Removing a player deactivates their account and revokes their tracked login sessions. Restoring it requires the player to sign in again. Removing a team hides it from the ladder; match history and roster data are retained. Staff account roles are managed through Django Admin.
 
-```text
-expected_A = 1 / (1 + 10 ^ ((rating_B - rating_A) / 400))
-margin = 1 + 0.35 * ln(1 + abs(score_A - score_B))
-delta_A = round(32 * event_weight * margin * (actual_A - expected_A), 2)
-delta_B = -delta_A
-```
+## Accounts, teams, and database rules
 
-Ranked 1v1: **1.0×**; showmatch: **1.2×**; qualifier: **1.25×**; tournament: **1.5×**. Transfers are capped at the losing player's available rating, so ratings remain nonnegative and points remain conserved. Scores must be distinct integers from 0 to 100. Ties and self-play are rejected. Sorting breaks rating ties by username, identically in simulations and committed results.
+All public rankings read the Django database. Only active players linked to registered user accounts appear; teams require an active owner, registration timestamp, and active team record. Legacy demo records are preserved in storage and excluded from the live ladders. Static JSON fixtures are used only by tests, never as the public data source.
 
-Tiers: **Legend ≥1900**, **Outlaw ≥1700**, **Gunslinger ≥1500**, **Deputy ≥1300**, **Rookie <1300**. Win rate is wins divided by completed matches; round K/D is rounds won divided by rounds lost (denominator floored at 1). Form is newest first. Rank deltas compare the latest verified match.
+Player signup creates a Django user, a linked solo profile, an initial 1,500 rating, rating history, and audit records. Passwords use Django's password hashers and validators. Username uniqueness is case insensitive. User accounts, Django sessions, tracked account sessions, players, teams, memberships, registrations, reviews, rating histories, and audit entries are stored persistently.
 
-`process_completed_match()` locks a singleton ladder-state row, then the match and players, inside one database transaction. It updates Elo, peak, tier, global/regional ranks, records, streaks, round K/D, history, and an outbox event together. A processed timestamp prevents duplicate rating transfers. Conflicting re-finalization via the API returns 409. Moderators need both staff status and the `rankings.change_match` permission. Session authentication retains CSRF protection.
+Team registration requires a signed-in registered captain and 2 to 10 registered roster members. It never creates accounts for unregistered names. The captain comes from the authenticated session. Registration has no email field or email database column; Discord is optional. Status receipts are available to the submitting account and developers.
 
-Leaderboards use revisioned, 60-second Redis cache keys with commit-time invalidation. The revision in PostgreSQL prevents stale keys from being reused even if Redis invalidation fails. Redis publication happens after commit; an outbox retains failed publications for the relay. Delivery is at least once, and the gateway deduplicates event IDs. Redis Pub/Sub isn't durable client replay: reconnecting clients fetch the latest authoritative ladder. Multiple gateway instances each subscribe and broadcast to their own clients; configure sticky sessions or websocket-only transport if balancing Socket.io polling across instances.
+Developer approval atomically creates the team and memberships, assigns initial team rating and ranks, records the review, updates cache revisions, and emits refresh events. Team match results and solo match results use independent Elo ladders. Each player belongs to one current team, and a team has at most one captain.
+
+The local database is **backend-django/db.sqlite3**, preserved across restarts. `SQLITE_PATH` can select a different SQLite file for isolated development/testing. Docker uses PostgreSQL with a persistent volume. No database reset is performed during startup or migrations.
+
+## Authentication and permissions
+
+Authentication uses Django sessions with an HttpOnly session cookie. Login, signup, and logout require CSRF protection, including anonymous login requests. The frontend first initializes the session/CSRF cookie, then submits credentials with the CSRF header. Session IDs rotate at login. Passwords and session credentials are not stored in localStorage or included in audit details.
+
+Public signup cannot assign staff roles. The developer login checks staff permissions, and every developer API action verifies them again on the server. Account/login attempts and registrations are throttled. Deactivating a player revokes tracked sessions and removes them from public rankings. Private registration receipts enforce ownership.
+
+## Deploy on Render
+
+The repository includes `render.yaml`, a production Blueprint for the complete stack. It uses paid compute plans in Singapore. Review Render's displayed cost before applying the Blueprint. No Render resources have been created from this workspace.
+
+| Resource | Purpose |
+| --- | --- |
+| `dawest` | Public Nginx service serving React and forwarding API and Socket.io requests |
+| `dawest-api` | Private Django service for accounts, teams, rankings, and admin |
+| `dawest-realtime` | Private Node / Socket.io gateway |
+| `dawest-relay` | Background worker retrying committed ranking events |
+| `dawest-db` | Persistent PostgreSQL 16 database |
+| `dawest-cache` | Redis-compatible Render Key Value instance |
+
+1. Create a GitHub repository and push the **contents of `dawest-rankings`** into its root. `render.yaml`, `package.json`, `package-lock.json`, `infra/`, `frontend/`, `backend-django/`, and `realtime-node/` must be included. Local `.env` files, `.venv`, `node_modules`, and SQLite files are ignored.
+2. Sign in at <https://dashboard.render.com>, choose **New > Blueprint**, connect that repository, and select its branch. Use `render.yaml` as the Blueprint path.
+3. Review the six resources and their paid plans, then apply the Blueprint. Render generates the Django secret and connects the internal database, cache, and services. The API's pre-deploy command applies database migrations automatically.
+4. Wait for deployment to complete, then open the public URL shown for **`dawest`**. The generated hostname can include a suffix; use the URL Render actually displays.
+5. Open **`dawest-api` > Shell** and run:
+
+   ```sh
+   python manage.py create_dev --username owner
+   ```
+
+   Choose your password at the hidden prompts. Sign in through your public site's `/dev/login` page.
+6. Create player accounts through `/signup`, submit teams through `/register`, and approve them through `/dev`.
+
+React, login requests, APIs, admin, and WebSockets all use the same HTTPS origin. Leave `VITE_API_URL` and `VITE_SOCKET_URL` unset for this Blueprint. The proxy preserves the public hostname and HTTPS scheme so session cookies and CSRF checks work. The frontend Docker build excludes local `.env` files.
+
+Render uses a **new PostgreSQL database**. Existing local SQLite accounts and registrations are not automatically transferred. Do not set `USE_SQLITE=1` on Render: the ordinary service filesystem is ephemeral. Free Render PostgreSQL databases expire after 30 days, so this Blueprint selects a paid database.
+
+For a custom domain, add it to the public **`dawest`** service and follow Render's DNS instructions. Add that hostname to `DJANGO_ALLOWED_HOSTS` in `render.yaml`, then push and sync the Blueprint. You can also replace `.onrender.com` with your exact assigned Render hostname after the first deployment. Keep the public proxy and Django's `TRUST_PROXY_HEADERS=1` together; that setting is for a trusted private proxy.
+
+For verification, check your public `/api/v1/health/` and `/gateway/health`, register a player, refresh to confirm the session persists, and approve a team. The first endpoint checks the API; the second checks the gateway's Redis subscription. Changes pushed to the connected branch trigger new deployments.
+
+References: [Render Django guide](https://render.com/docs/deploy-django), [Blueprint configuration](https://render.com/docs/blueprint-spec), [private networking](https://render.com/docs/private-network), and [free service limitations](https://render.com/docs/free).
+
+The Blueprint schema and HTTPS authentication behavior can be checked locally; the actual Render deployment and Docker images still require verification on Render because Docker is unavailable in this workspace.
+
+## Docker stack
+
+Requires Docker Engine and Compose v2:
+
+1. Copy `.env.example` to `.env` and replace the database password and Django secret with your own generated values.
+2. Run `docker compose up --build -d`.
+3. Create a developer with `docker compose exec backend python manage.py create_dev --username owner`.
+4. Open **http://localhost:8080** and create player accounts through **/signup**.
+
+PostgreSQL 16 and Redis 7 stay on the internal Compose network. Nginx routes API, static files, admin, and Socket.io through the same origin. The migration service runs before the API. The outbox relay retries committed ranking events after Redis failures.
+
+For public HTTPS deployment, configure the real `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `SOCKET_ALLOWED_ORIGINS`; enable secure cookies using `COOKIE_SECURE=1`; and configure TLS redirects/HSTS at your edge proxy. Configure database backups and operational monitoring for your host.
+
+The earlier private Sites deployment is a static build and does not host Django or a database. Use the Docker stack or a backend-capable server for authenticated production use.
 
 ## API
 
-| Method | Route | Behavior |
+| Method | Route | Purpose |
 | --- | --- | --- |
-| GET | `/api/v1/rankings/?tier=ALL&region=ALL&search=` | Ranked players, deltas, form, source, revision; up to 500 players per response |
-| GET | `/api/v1/players/<username>/` | Profile, latest 20 duels, latest 120 history points |
-| POST | `/api/v1/simulate/` | Read-only rating/rank projection |
-| POST | `/api/v1/matches/<id>/complete/` | Staff with match-change permission; idempotent completion |
-| GET | `/api/v1/health/` | API/database readiness |
-| GET | `/gateway/health` | Gateway/Redis subscription readiness through Nginx |
-| GET | `/api/recent-results` | Gateway's latest received match updates |
+| GET | `/api/v1/auth/session/` | Current account and CSRF bootstrap |
+| POST | `/api/v1/auth/signup/` | Register a normal player account |
+| POST | `/api/v1/auth/login/` | Player login |
+| POST | `/api/v1/auth/dev-login/` | Developer login with staff permission check |
+| POST | `/api/v1/auth/logout/` | End the current session |
+| GET | `/api/v1/auth/roster-players/` | Find registered available roster members |
+| GET | `/api/v1/rankings/` | Registered player ladder |
+| GET | `/api/v1/players/<username>/` | Registered player profile and history |
+| GET | `/api/v1/teams/rankings/` | Registered team ladder |
+| GET | `/api/v1/teams/<slug>/` | Registered team profile and roster |
+| POST | `/api/v1/teams/register/` | Authenticated captain's team application |
+| GET | `/api/v1/teams/registrations/<uuid>/` | Owner/developer registration status |
+| GET | `/api/v1/dev/dashboard/` | Developer applications, competitors, and activity |
+| POST | `/api/v1/dev/registrations/<uuid>/review/` | Approve/reject an application |
+| POST | `/api/v1/dev/players/` | Provision a normal player account |
+| PATCH / DELETE | `/api/v1/dev/players/<id>/` | Update, remove, or restore a player |
+| POST | `/api/v1/dev/teams/` | Create a team from registered players |
+| PATCH / DELETE | `/api/v1/dev/teams/<id>/` | Remove or restore a team |
 
-Simulation JSON:
+Existing simulation, match completion, and health routes remain available. Read-only simulation uses the same dynamic Elo formula as verified results. K=32, expected win chance follows standard Elo, margin weight is `1 + 0.35 * ln(1 + round difference)`, and event weights are ranked 1.0, showmatch 1.2, qualifier 1.25, tournament 1.5. Global ranks are recalculated among eligible registered competitors.
 
-```json
-{"player_a_id":1,"player_b_id":2,"score_a":5,"score_b":2,"match_type":"RANKED_1V1"}
-```
+## Checks
 
-Completion JSON: `{"score_a":5,"score_b":2}`. Create a match in Django Admin, enter its scores, and select **Completed** to process it on save. The bulk **Finalize scores and update rankings** action also processes results. For live matches, the **Broadcast selected live scores** action sends current scores to the ticker. Completed results are immutable in the admin.
-
-Gateway rooms: `rankings`, `matches`. Redis channels: `rankings:updated`, `match:live`. Client events: `RANKINGS_REFRESH`, `MATCH_LIVE`, `GATEWAY_STATUS`. The gateway validates broker payloads and never accepts client-supplied match results.
-
-## Validation
-
-```sh
+```powershell
 npm test
 npm run build
 npx playwright install chromium
-npm run test:e2e
-```
-
-Backend tests in PowerShell:
-
-```powershell
+npm run test:e2e -- --workers=2
 $env:USE_SQLITE='1'; $env:USE_REDIS='0'
 Set-Location backend-django
-..\.venv\Scripts\python.exe manage.py test rankings --noinput
+..\.venv\Scripts\python.exe manage.py test accounts rankings teams --noinput
 ```
 
-Tests cover conservation of points, event/margin weighting, tier boundaries, idempotency, rollback, read-only simulations, cache revisioning, database constraints, API filters and permissions, shared URL validation, gateway event schemas, and desktop/mobile browser workflows.
+Browser presentation tests use isolated API fixtures. Backend tests enforce real session authentication, CSRF, role boundaries, roster ownership, registered-only visibility, unique usernames, and transactional reviews. `tests/integration/auth-flow.mjs` exercises real browser signup, cookie persistence, team registration, developer approval, adding/removing/restoring competitors, and session revocation against an isolated API on port 8001. Set `SQLITE_PATH` to that isolated migrated database and optionally `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`; run it with the frontend on 5173. Never point integration fixtures at a production database.
 
-The current environment passed the TypeScript builds, 11 backend tests using SQLite, 7 JavaScript tests, 8 desktop/mobile Chromium tests, and an additional browser integration test reading the running Django API and requesting a server-side simulation. Docker is unavailable in this workspace, so the Compose services, PostgreSQL locking behavior, and actual Redis/socket delivery haven't been integration-tested here. Before a public production launch, run that integration suite against your deployed PostgreSQL/Redis infrastructure.
-
-The optional `playwright.integration.config.ts` test expects Django at port 8000 and an official-mode Vite server at port 5174. Start that frontend with `VITE_DATA_MODE=official npm exec --workspace frontend -- vite --host 127.0.0.1 --port 5174` (set the environment variable using your shell's syntax), then run `npx playwright test --config playwright.integration.config.ts`.
-
-To regenerate the committed demo snapshot from an existing seed database:
-
-```sh
-python manage.py seed_dawest --export ../frontend/src/data/seed.json
-```
-
-## Project structure
-
-```text
-frontend/src/          React components, hooks, shared simulation and demo data
-backend-django/        Django models, migrations, rating engine, API and admin
-realtime-node/src/     Express / Socket.io / Redis subscriber and event validation
-infra/                Dockerfiles and Nginx reverse proxy
-tests/browser/        Playwright desktop/mobile workflows
-docker-compose.yml    PostgreSQL, Redis, migrations, core API, relay, gateway, web
-```
-
-Visual reference: [VALORANT Global Power Rankings](https://valorantesports.com/vi-VN/gpr/2026/current). DaWest uses its own player identity, UI, and fictional competition data; no VALORANT logos, player data, or artwork are included.
+Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.

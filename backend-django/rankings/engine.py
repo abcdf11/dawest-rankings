@@ -7,9 +7,10 @@ from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 from .models import Match, Player, RankingEvent, RankingState, RatingHistory
+from .eligibility import registered_players
 
 logger = logging.getLogger(__name__)
-EVENT_WEIGHTS = {"RANKED_1V1": 1.0, "SHOWMATCH": 1.2, "TOURNAMENT": 1.5, "QUALIFIER": 1.25}
+EVENT_WEIGHTS = {"RANKED_1V1": 1.0, "RANKED_TEAM": 1.0, "SHOWMATCH": 1.2, "TOURNAMENT": 1.5, "QUALIFIER": 1.25}
 
 def tier_for_rating(rating: float) -> str:
     for threshold, tier in [(1900, "LEGEND"), (1700, "OUTLAW"), (1500, "GUNSLINGER"), (1300, "DEPUTY")]:
@@ -33,7 +34,7 @@ def simulate_match_outcome(player_a_id: int, player_b_id: int, score_a: int, sco
     if player_a_id == player_b_id:
         raise ValueError("Choose two different players.")
     # One query yields a consistent ladder snapshot without mutating it.
-    players = list(Player.objects.all())
+    players = list(registered_players())
     by_id = {p.pk: p for p in players}
     if player_a_id not in by_id or player_b_id not in by_id:
         raise ValueError("Player not found.")
@@ -95,7 +96,9 @@ def process_completed_match(match_id: int) -> Match:
         p.kd_ratio = round(p.rounds_won / max(1, p.rounds_lost), 2)
         p.updated_at = timezone.now()
     regions: dict[str, int] = {}
-    for i, p in enumerate(sorted(players, key=lambda p: (-p.rating, p.username)), 1):
+    eligible_ids = set(registered_players().values_list("pk", flat=True))
+    ranked = [p for p in players if p.pk in eligible_ids]
+    for i, p in enumerate(sorted(ranked, key=lambda p: (-p.rating, p.username)), 1):
         p.rank = i
         regions[p.region] = regions.get(p.region, 0) + 1
         p.regional_rank = regions[p.region]

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { demo } from "./api";
+import demoSnapshot from "../data/seed.json";
+import teamSnapshot from "../data/teams.json";
+import type { Player, Team } from "../types/rankings";
+const demo = demoSnapshot as unknown as { players: Player[] };
+const teamDemo = teamSnapshot as unknown as { teams: Team[] };
 import { simulateLocal, tierForRating } from "./rating";
 import { decodeRanking, movePlayer } from "./builder";
 describe("shared rating behavior", () => {
@@ -52,5 +56,27 @@ describe("community share links", () => {
     const ids = [1, 2, 3];
     expect(movePlayer(ids, 0, 2)).toEqual([2, 3, 1]);
     expect(ids).toEqual([1, 2, 3]);
+  });
+});
+describe("independent team simulations", () => {
+  it("uses team ratings and leaves both ladders unchanged", () => {
+    const before = JSON.stringify({
+      players: demo.players,
+      teams: teamDemo.teams,
+    });
+    const [a, b] = teamDemo.teams;
+    const result = simulateLocal(
+      teamDemo.teams,
+      a.id,
+      b.id,
+      5,
+      2,
+      "RANKED_TEAM",
+    );
+    expect(result.delta_a + result.delta_b).toBe(0);
+    expect(result.players[0].before).toBe(a.rating);
+    expect(
+      JSON.stringify({ players: demo.players, teams: teamDemo.teams }),
+    ).toBe(before);
   });
 });

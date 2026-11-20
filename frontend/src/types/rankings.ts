@@ -1,6 +1,12 @@
 export type Tier = "LEGEND" | "OUTLAW" | "GUNSLINGER" | "DEPUTY" | "ROOKIE";
 export type Region = "NA" | "EU" | "ASIA" | "SA" | "OCE";
-export type MatchType = "RANKED_1V1" | "TOURNAMENT" | "SHOWMATCH" | "QUALIFIER";
+export type MatchType =
+  | "RANKED_1V1"
+  | "RANKED_TEAM"
+  | "TOURNAMENT"
+  | "SHOWMATCH"
+  | "QUALIFIER";
+export type RankingKind = "players" | "teams";
 export interface Form {
   id: number;
   opponent: string;
@@ -11,7 +17,7 @@ export interface Form {
   played_at: string;
   delta: number;
 }
-export interface Player {
+export interface RankedCompetitor {
   id: number;
   username: string;
   display_name: string;
@@ -34,6 +40,20 @@ export interface Player {
   updated_at: string;
   last_five: Form[];
 }
+export interface TeamSummary {
+  username: string;
+  display_name: string;
+  tag: string;
+}
+export interface Player extends RankedCompetitor {
+  team?: TeamSummary | null;
+}
+export interface Team extends RankedCompetitor {
+  kind: "teams";
+  tag: string;
+  roster: Player[];
+}
+export type RankingEntry = Player | Team;
 export interface History {
   recorded_at: string;
   rating: number;
@@ -44,8 +64,20 @@ export interface PlayerDetail extends Player {
   history: History[];
   matches: Form[];
 }
-export interface Ladder {
-  players: Player[];
+export interface TeamDetail extends Team {
+  history: History[];
+  matches: Form[];
+}
+export interface TeamLadder {
+  teams: Team[];
+  total: number;
+  revision: number;
+  source: "demo" | "official";
+  updated_at: string;
+}
+export interface Ladder<T extends RankedCompetitor = Player> {
+  realtime_enabled?: boolean;
+  players: T[];
   total: number;
   revision: number;
   source: "demo" | "official";
@@ -71,6 +103,7 @@ export interface Simulation {
   }[];
 }
 export interface LiveMatch {
+  kind?: RankingKind;
   event_id: number;
   match_id: number;
   event: string;

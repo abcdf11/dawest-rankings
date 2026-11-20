@@ -1,0 +1,53 @@
+# Render terminates HTTPS before forwarding requests to this private container.
+map $http_x_forwarded_proto $dawest_forwarded_proto {
+    default $scheme;
+    https https;
+}
+map $http_upgrade $dawest_connection {
+    default upgrade;
+    '' close;
+}
+
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    client_max_body_size 1m;
+
+    # Refresh Render's private DNS records when another service is redeployed.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
+    set $dawest_api http://${DJANGO_UPSTREAM};
+    set $dawest_realtime http://${REALTIME_UPSTREAM};
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header X-Frame-Options SAMEORIGIN always;
+
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Proto $dawest_forwarded_proto;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    location /api/v1/ { proxy_pass $dawest_api; }
+    location /admin/ { proxy_pass $dawest_api; }
+    location /static/ { proxy_pass $dawest_api; }
+    location /socket.io/ {
+        proxy_pass $dawest_realtime;
+        proxy_http_version 1.1;
+        # Nginx replaces inherited proxy headers when a location defines its own.
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto $dawest_forwarded_proto;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $dawest_connection;
+        proxy_read_timeout 75s;
+        proxy_buffering off;
+    }
+    location = /api/recent-results { proxy_pass $dawest_realtime; }
+    location = /gateway/health { proxy_pass $dawest_realtime/health; }
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+    location / { try_files $uri $uri/ /index.html; }
+}

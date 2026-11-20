@@ -1,14 +1,14 @@
 import { Crosshair, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
-import type { Player } from "../types/rankings";
+import type { RankingEntry } from "../types/rankings";
 import { formatRating } from "../lib/rating";
 import { Delta, FormPills, Sigil, Streak, TierBadge } from "./Shared";
 export function PodiumHero({
   players,
   onSelect,
 }: {
-  players: Player[];
-  onSelect: (p: Player) => void;
+  players: RankingEntry[];
+  onSelect: (p: RankingEntry) => void;
 }) {
   return (
     <div className="podium">
@@ -37,7 +37,10 @@ export function PodiumHero({
               <TierBadge tier={player.tier} />
               <span className="player-title">{player.display_name}</span>
               <span className="player-meta">
-                {player.region} <span> / </span> @{player.username}
+                {player.region} <span> / </span>{" "}
+                {"tag" in player
+                  ? `${player.tag} · ${player.roster.length} players`
+                  : `@${player.username}`}
               </span>
             </span>
           </button>

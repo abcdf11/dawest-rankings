@@ -1,0 +1,1770 @@
+/* Monochrome VHS theme. Layout rules for the redesigned hero and introduction. */
+.team-ladder .podium-card .player-title {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+:root {
+  background: #050505;
+  color: #ededed;
+  --gold: #e8e8e8;
+  --muted: #929292;
+  --line: #ffffff12;
+  --green: #e1e1e1;
+  --red: #898989;
+  color-scheme: dark;
+}
+body {
+  background: #050505;
+  min-width: 320px;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.75' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  animation: tape-grain 1.2s steps(4) infinite;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1499;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    #0002 4px
+  );
+  opacity: 0.32;
+}
+h1,
+h2,
+h3 {
+  font-family: Inter, Arial, sans-serif;
+}
+.brand > span {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: -1px;
+  font-weight: 850;
+  line-height: 1;
+}
+.brand > svg {
+  width: 28px;
+  height: 32px;
+  color: #e0e0e0;
+}
+.brand-caption {
+  font-size: 0.5rem;
+  color: #747474;
+  letter-spacing: 2.8px;
+  margin-top: 7px;
+}
+.site-header {
+  background: #090909;
+  border-color: #242424;
+}
+.header-inner {
+  max-width: 1440px;
+}
+.site-header nav > button {
+  color: #888;
+}
+.site-header nav > button.active {
+  color: #eee;
+}
+.site-header nav > button.active::after {
+  background: #eee;
+  height: 2px;
+}
+.new-tag {
+  color: #aaa;
+  background: #ffffff07;
+  border-color: #fff2;
+}
+.season-badge {
+  color: #777;
+}
+.season-badge b {
+  color: #ddd;
+  background: #171717;
+  border-color: #333;
+}
+.hero,
+.team-ladder .hero {
+  display: block;
+  position: relative;
+  isolation: isolate;
+  max-width: 1344px;
+  margin: 28px auto 0;
+  min-height: 0;
+  padding: 25px 36px 0;
+  background: radial-gradient(
+    ellipse at 50% 38%,
+    #171717 0%,
+    #0b0b0b 50%,
+    #080808 85%
+  );
+  border: 1px solid #ffffff14;
+  overflow: hidden;
+  text-align: center;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  top: -30%;
+  height: 22%;
+  background: linear-gradient(transparent, #ffffff05, transparent);
+  pointer-events: none;
+  animation: tape-tracking 9s linear infinite;
+}
+.hero-topline,
+.hero-bottomline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  position: relative;
+  z-index: 2;
+}
+.hero-topline {
+  color: #686868;
+  font:
+    500 0.6875rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 1.3px;
+  text-align: left;
+}
+.hero-body {
+  display: block;
+  padding: 46px 15px 43px;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 720px;
+  margin: auto;
+}
+.hero-kicker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  font:
+    500 0.6875rem "JetBrains Mono",
+    monospace;
+  color: #858585;
+  letter-spacing: 2.5px;
+}
+.hero-kicker > span {
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: #a2a2a2;
+}
+.hero h1 {
+  color: #f0f0f0;
+  font-family: Inter, Arial, sans-serif;
+  font-size: clamp(3.8rem, 7.8vw, 7.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.065em;
+  font-weight: 900;
+  min-height: 1.12em;
+  margin: 13px auto 0;
+  text-shadow:
+    2px 0 #b6b6b630,
+    -2px 0 #fff2;
+}
+.hero-subtitle {
+  font:
+    400 0.8125rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 4px;
+  min-height: 20px;
+  color: #9a9a9a;
+  margin: 11px 0 0;
+}
+.hero-content > p {
+  color: #888;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  margin: 23px 0 0;
+}
+.hero-badges {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 23px;
+  margin-top: 23px;
+}
+.hero-badges > span {
+  color: #777;
+  font-size: 0.6875rem;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero-badges svg {
+  color: #aaa;
+}
+.hero-bottomline {
+  border-top: 1px solid #fff1;
+  min-height: 65px;
+  text-align: left;
+}
+.hero-counters {
+  display: flex;
+  align-items: center;
+  gap: 27px;
+  flex-wrap: wrap;
+}
+.hero-counters > span {
+  color: #777;
+  font:
+    400 0.625rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-counters b {
+  color: #ccc;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+.hero-counters .hero-season-label {
+  color: #535353;
+  font-size: 0.5625rem;
+  letter-spacing: 1px;
+}
+.replay-intro {
+  color: #9a9a9a;
+  font:
+    500 0.625rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 0.6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  padding: 12px 0;
+}
+.replay-intro:hover {
+  color: #fff;
+}
+.frame-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: #777;
+  border-style: solid;
+  pointer-events: none;
+}
+.frame-corner.top-left {
+  left: 0;
+  top: 0;
+  border-width: 1px 0 0 1px;
+}
+.frame-corner.top-right {
+  right: 0;
+  top: 0;
+  border-width: 1px 1px 0 0;
+}
+.frame-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 1px 1px;
+}
+.frame-corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  border-width: 0 1px 1px 0;
+}
+.typewriter {
+  display: inline-block;
+  position: relative;
+  min-height: 1em;
+}
+.typewriter-cursor {
+  display: inline-block;
+  vertical-align: -0.02em;
+  width: 0.055em;
+  min-width: 1px;
+  height: 0.8em;
+  margin-left: 0.09em;
+  background: currentColor;
+  animation: cursor-blink 0.8s steps(1) infinite;
+}
+.typewriter-complete .typewriter-cursor {
+  animation: cursor-settle 1.4s steps(1) forwards;
+}
+.vhs-title {
+  position: relative;
+}
+.vhs-title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  color: #ddd;
+  clip-path: inset(38% 0 36% 0);
+  animation: title-tracking 8s steps(1) infinite;
+}
+.content-wrap {
+  max-width: 1440px;
+}
+.ranking-kind-switch {
+  border-color: #fff1;
+  gap: 10px;
+  margin-top: 28px;
+  padding-bottom: 22px;
+}
+.ranking-kind-switch > button {
+  background: #0c0c0c;
+  border-color: #ffffff14;
+  color: #777;
+  border-radius: 3px;
+  box-shadow: none;
+  min-width: 205px;
+}
+.ranking-kind-switch > button.active {
+  color: #eee;
+  border-color: #777;
+  background: linear-gradient(120deg, #1b1b1b, #101010);
+  box-shadow: inset 0 1px #fff4;
+}
+.ranking-kind-switch > button:hover {
+  border-color: #666;
+}
+.ranking-kind-switch small,
+.ranking-kind-switch > button.active small {
+  color: #7d7d7d;
+}
+.ranking-kind-switch > p {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.6875rem;
+  color: #5c5c5c;
+  letter-spacing: 0.4px;
+}
+.page-heading {
+  padding: 30px 0 25px;
+}
+.page-heading h2 {
+  font-size: 1.9rem;
+  letter-spacing: -1.1px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.page-heading .eyebrow {
+  color: #717171;
+  font-size: 0.625rem;
+  letter-spacing: 1.5px;
+}
+.heading-slice {
+  color: #454545;
+  letter-spacing: -4px;
+}
+.sync-label,
+.sync-label.is-live {
+  color: #aaa;
+}
+.status-dot,
+.is-live .status-dot {
+  background: #bbb;
+  box-shadow: none;
+}
+.last-updated {
+  color: #666;
+}
+.mode-tabs {
+  border-color: #fff1;
+  gap: 28px;
+}
+.mode-tabs > button {
+  font-size: 0.8125rem;
+  color: #818181;
+  font-weight: 450;
+}
+.mode-tabs > button.active {
+  color: #e8e8e8;
+}
+.mode-tabs > button.active::after {
+  background: #ddd;
+  height: 1px;
+}
+.mode-tabs > .methodology-link {
+  color: #777;
+}
+.spotlight-heading {
+  color: #666;
+  font-size: 0.625rem;
+  letter-spacing: 1.4px;
+}
+.spotlight-heading > span:first-child {
+  color: #aaa;
+}
+.gold-dot {
+  background: #bbb;
+}
+.podium {
+  gap: 14px;
+  grid-template-columns: 1.14fr 1fr 1fr;
+}
+.podium-card,
+.podium-card.place-1,
+.podium-card.place-3 {
+  background: linear-gradient(120deg, #131313, #0d0d0d);
+  border-color: #ffffff16;
+  border-radius: 3px;
+  padding: 19px 21px;
+}
+.podium-card.place-1 {
+  background: radial-gradient(ellipse at 0 0, #ffffff08, transparent 70%), #111;
+  border-color: #ffffff3a;
+}
+.podium-card::before,
+.podium-card.place-1::before {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #fff5, transparent);
+}
+.podium-card::after {
+  border-color: #ffffff03;
+  box-shadow:
+    0 0 0 17px #ffffff01,
+    0 0 0 35px #ffffff01;
+}
+.podium-placement,
+.place-1 .podium-placement,
+.place-3 .podium-placement {
+  color: #999;
+  font-size: 0.625rem;
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: 0.7px;
+}
+.place-number,
+.place-1 .place-number,
+.place-3 .place-number {
+  color: #ffffff18;
+  font-family: Inter, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+.podium-player {
+  padding: 22px 0 23px;
+}
+.player-title {
+  font-family: Inter, sans-serif;
+  font-size: 2rem;
+  letter-spacing: -1px;
+  font-weight: 750;
+}
+.team-ladder .player-title {
+  font-size: 1.75rem;
+}
+.player-meta,
+.podium-identity .player-meta {
+  color: #777;
+  font-size: 0.6875rem;
+}
+.podium-bottom {
+  border-color: #fff1;
+  padding-top: 16px;
+}
+.rating-label {
+  color: #777;
+  font-size: 0.625rem;
+  letter-spacing: 1px;
+}
+.podium-rating,
+.place-1 .podium-rating {
+  color: #e7e7e7;
+  font-size: 1.65rem;
+  font-weight: 550;
+}
+.podium-rating > small {
+  color: #707070;
+}
+.podium-form > .streak,
+.streak.hot {
+  color: #b4b4b4;
+}
+.rank-delta.neutral {
+  color: #505050;
+}
+.sigil {
+  filter: grayscale(1);
+}
+.tier-badge.legend {
+  color: #d2d2d2;
+}
+.tier-badge.outlaw {
+  color: #b2b2b2;
+}
+.tier-badge.gunslinger {
+  color: #999;
+}
+.tier-badge.deputy {
+  color: #858585;
+}
+.tier-badge.rookie {
+  color: #777;
+}
+.tier-badge,
+.podium-identity .tier-badge {
+  font-size: 0.625rem;
+}
+.form-pill.w {
+  color: #c3c3c3;
+  background: #ffffff08;
+  border-color: #fff1;
+}
+.form-pill.l {
+  color: #6f6f6f;
+  background: #ffffff02;
+  border-color: #ffffff08;
+}
+.form-pill:hover {
+  border-color: #777;
+  filter: none;
+}
+.podium-form .form-pill {
+  width: 20px;
+  height: 22px;
+  font-size: 0.625rem;
+}
+.positive {
+  color: #ddd;
+}
+.negative {
+  color: #828282;
+}
+.ladder-controls {
+  background: #0c0c0c;
+  border-color: #fff1;
+  border-radius: 3px 3px 0 0;
+}
+.tier-filters {
+  border-color: #fff1;
+  gap: 25px;
+}
+.tier-filters > button {
+  color: #777;
+  font-size: 0.6875rem;
+  letter-spacing: 1px;
+}
+.tier-filters > button.active {
+  color: #ddd;
+}
+.tier-filters > button.active::after {
+  height: 1px;
+  background: #ccc;
+}
+.tier-filters > button > span {
+  color: #b9b9b9;
+  background: #ffffff08;
+  border-color: #fff1;
+}
+.search-field {
+  background: #080808;
+  border-color: #ffffff14;
+  color: #777;
+}
+.search-field input {
+  font-size: 0.8125rem;
+}
+.search-field input::placeholder {
+  color: #616161;
+}
+.search-field:focus-within {
+  border-color: #666;
+}
+.select-field {
+  color: #888;
+}
+.select-field select {
+  background-color: #111;
+  border-color: #fff1;
+  color: #bdbdbd;
+  font-size: 0.75rem;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  line-height: 1.2;
+}
+.sort-field {
+  color: #777;
+  font-size: 0.75rem;
+}
+.sort-field select {
+  color: #bcbcbc;
+  font-size: 0.75rem;
+}
+select {
+  background-color: #121212;
+  color: #bbb;
+  border-color: #fff2;
+}
+.table-scroll {
+  border-color: #ffffff12;
+}
+.rankings-table th {
+  background: #0e0e0e;
+  color: #707070;
+  font-size: 0.625rem;
+  border-color: #ffffff12;
+  letter-spacing: 1.2px;
+}
+.rankings-table tr,
+.rankings-table .top-row {
+  background: #090909;
+}
+.rankings-table tr:nth-child(even) {
+  background: #0c0c0c;
+}
+.rankings-table tr:hover {
+  background: #161616;
+}
+.rankings-table td {
+  border-color: #ffffff09;
+  height: 78px;
+}
+.table-player strong {
+  color: #dedede;
+  font-size: 0.875rem;
+}
+.rank-value {
+  color: #797979;
+}
+.rank-value.gold {
+  color: #dadada;
+}
+.rating-cell > span:first-child {
+  color: #d2d2d2;
+}
+.rating-cell small,
+.record-cell i {
+  color: #616161;
+}
+.strength-track {
+  background: #ffffff08;
+  height: 2px;
+}
+.strength-track > span,
+.top-row .strength-track > span {
+  background: #7e7e7e;
+}
+.record-cell {
+  color: #bcbcbc;
+}
+.record-cell small {
+  color: #737373;
+}
+.record-separator {
+  color: #4b4b4b;
+}
+.region-tag {
+  background: #ffffff04;
+  border-color: #fff1;
+  color: #777;
+}
+.team-affiliation {
+  color: #9b9b9b;
+  border-color: #fff1;
+}
+.row-open {
+  color: #4a4a4a;
+}
+.rankings-table tr:hover .row-open {
+  color: #ddd;
+}
+.table-footer {
+  background: #0d0d0d;
+  border-color: #fff1;
+  color: #696969;
+}
+.table-footer b {
+  color: #a2a2a2;
+}
+.table-footer > span:first-child > button {
+  color: #bbb;
+}
+.verified-note svg {
+  color: #888;
+}
+.show-more {
+  color: #aaa;
+  font-size: 0.75rem;
+}
+.latest-result,
+.build-promo {
+  background: #0d0d0d;
+  border-color: #ffffff16;
+  border-radius: 3px;
+}
+.build-promo {
+  background: linear-gradient(110deg, #141414, #0d0d0d);
+}
+.build-promo > svg,
+.mini-icon {
+  color: #999;
+}
+.latest-result p,
+.build-promo strong {
+  color: #bcbcbc;
+}
+.latest-result p > b {
+  color: #dedede;
+}
+.latest-result p > span,
+.latest-result .eyebrow,
+.build-promo small {
+  color: #707070;
+}
+.promo-label {
+  color: #aaa;
+  border-color: #555;
+}
+.build-promo:hover {
+  border-color: #777;
+}
+.data-note {
+  color: #5f5f5f;
+  font-size: 0.6875rem;
+}
+.site-footer {
+  background: #060606;
+  border-color: #fff1;
+}
+.brand.small > svg,
+.brand.small > span {
+  color: #aaa;
+}
+.site-footer > span,
+.site-footer > div,
+.site-footer > div > span {
+  color: #666;
+}
+.site-footer button:hover {
+  color: #ddd;
+}
+.button.primary {
+  background: linear-gradient(#ededed, #c0c0c0);
+  border-color: #fff4;
+  color: #0a0a0a;
+  box-shadow: 0 1px 0 #fff3 inset;
+}
+.button.primary:hover:not(:disabled) {
+  background: #fff;
+}
+.button.secondary,
+.builder-list .icon-button {
+  background: #191919;
+  border-color: #fff2;
+  color: #bbb;
+}
+.button.secondary:hover {
+  background: #242424;
+}
+.icon-button {
+  color: #888;
+}
+.icon-button:hover {
+  color: #eee;
+  background: #ffffff08;
+}
+.empty-state,
+.loading-state,
+.mode-panel {
+  background: #0d0d0d;
+  border-color: #fff1;
+}
+.empty-state > svg,
+.loading-state > svg,
+.icon-square {
+  color: #aaa;
+}
+.empty-state h3,
+.loading-state h3 {
+  color: #ddd;
+  font-size: 1.6rem;
+}
+.mode-panel {
+  border-radius: 3px;
+}
+.mode-header h2 {
+  font-size: 1.9rem;
+  font-weight: 750;
+  letter-spacing: -0.8px;
+}
+.mode-header p {
+  color: #888;
+  font-size: 0.875rem;
+}
+.icon-square {
+  border-color: #fff2;
+  background: #ffffff04;
+}
+.duelist {
+  background:
+    radial-gradient(ellipse at 50% 20%, #ffffff04, transparent 65%), #111;
+  border-color: #fff2;
+}
+.duelist-profile h3 {
+  font-size: 2rem;
+  letter-spacing: -0.8px;
+}
+.duelist-rating,
+.score-input {
+  color: #ddd;
+}
+.score-input {
+  background: #090909;
+  border-color: #fff2;
+}
+.duelist > label,
+.duel-options > label,
+.builder-toolbar > label,
+.mode-footnote {
+  color: #777;
+}
+.validation {
+  color: #aaa;
+}
+.simulation-result {
+  border-color: #ffffff2b;
+  background: #ffffff03;
+}
+.result-rating {
+  color: #ddd;
+}
+.builder-list > li {
+  background: #111;
+  border-color: #fff1;
+}
+.builder-list > li.drag-over {
+  background: #242424;
+  box-shadow: inset 0 2px #aaa;
+}
+.builder-rank {
+  color: #aaa;
+}
+.builder-pr {
+  color: #bbb;
+}
+.builder-pr > small,
+.drag-handle {
+  color: #666;
+}
+.builder-message {
+  color: #8c8c8c;
+}
+.modal-backdrop {
+  background: #000b;
+  backdrop-filter: blur(7px);
+}
+.modal-panel {
+  background: #101010;
+  border-color: #ffffff20;
+  border-radius: 4px;
+}
+.drawer-panel {
+  border-radius: 0;
+}
+.modal-heading {
+  border-color: #fff1;
+}
+.modal-heading > .eyebrow {
+  color: #888;
+}
+.drawer-identity h2 {
+  font-size: 2.65rem;
+  font-weight: 750;
+  letter-spacing: -1.2px;
+}
+.team-identity h2 {
+  font-size: 2.3rem;
+  overflow-wrap: anywhere;
+}
+.drawer-identity p {
+  color: #888;
+}
+.profile-rating {
+  border-color: #fff1;
+}
+.profile-rating small,
+.profile-stats small {
+  color: #777;
+}
+.profile-stats > div {
+  background: #151515;
+  border-color: #fff1;
+}
+.profile-stats svg {
+  color: #aaa;
+}
+.section-label h3,
+.section-label > span {
+  color: #999;
+}
+.trajectory {
+  background: #090909;
+  border-color: #fff1;
+}
+.trajectory polyline {
+  stroke: #ddd;
+}
+.trajectory circle {
+  fill: #ddd;
+}
+.trajectory linearGradient stop {
+  stop-color: #eee;
+}
+.chart-labels,
+.profile-note {
+  color: #666;
+}
+.match-history-row {
+  border-color: #fff1;
+}
+.match-opponent small {
+  color: #737373;
+}
+.result-box.w {
+  color: #ccc;
+  background: #ffffff0a;
+}
+.result-box.l {
+  color: #777;
+  background: #ffffff04;
+}
+.roster-member {
+  background: #151515;
+  border-color: #fff1;
+}
+.roster-member:hover {
+  border-color: #666;
+  background: #1a1a1a;
+}
+.roster-member-rating {
+  color: #ddd;
+}
+.roster-member small {
+  color: #777;
+}
+.methodology h2 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.methodology > p,
+.method-row p {
+  color: #999;
+}
+.method-row {
+  border-color: #fff1;
+}
+.method-row strong {
+  color: #999;
+}
+.method-row strong > span {
+  color: #ddd;
+}
+.tier-guide {
+  border-color: #fff1;
+}
+.tier-guide strong {
+  color: #bbb;
+}
+.tier-guide small {
+  color: #777;
+}
+
+/* Intro: a fixed, self-contained layer so it never disrupts the page layout. */
+.intro-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #030303;
+  color: #efefef;
+  overflow: hidden;
+  padding: 32px 44px;
+  isolation: isolate;
+}
+.intro-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    ellipse at 50% 48%,
+    #141414 0%,
+    #080808 30%,
+    #030303 65%
+  );
+}
+.intro-screen::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  height: 100px;
+  top: -100px;
+  background: linear-gradient(transparent, #ffffff04, transparent);
+  pointer-events: none;
+  animation: tape-tracking 5s linear infinite;
+}
+.intro-topline,
+.intro-bottomline {
+  position: absolute;
+  left: 44px;
+  right: 44px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  color: #666;
+  font:
+    400 0.625rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 1.1px;
+  z-index: 3;
+}
+.intro-topline {
+  top: 30px;
+}
+.intro-wordmark {
+  font-family: Inter, sans-serif;
+  font-size: 1.25rem;
+  letter-spacing: -1px;
+  font-weight: 850;
+  color: #ddd;
+}
+.intro-wordmark > span {
+  font-size: 0.5rem;
+  vertical-align: top;
+  margin-left: 2px;
+}
+.intro-bottomline {
+  bottom: 30px;
+  letter-spacing: 0.5px;
+}
+.intro-bottomline > div {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.intro-bottomline > div > span {
+  color: #777;
+  font-size: 0.625rem;
+}
+.intro-bottomline button {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid #fff2;
+  border-radius: 2px;
+  background: #141414;
+  color: #ddd;
+  padding: 12px 18px;
+  font:
+    600 0.75rem Inter,
+    sans-serif;
+  letter-spacing: 1px;
+}
+.intro-bottomline button:hover {
+  background: #202020;
+  border-color: #888;
+}
+.intro-bottomline kbd {
+  font:
+    400 0.5625rem "JetBrains Mono",
+    monospace;
+  color: #777;
+  border: 1px solid #fff1;
+  padding: 3px 4px;
+  border-radius: 2px;
+}
+.intro-frame {
+  position: relative;
+  width: min(1050px, 90%);
+  height: clamp(290px, 52vh, 490px);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  padding: 30px 20px;
+}
+.intro-frame > i {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #555;
+}
+.intro-frame > i:nth-child(1) {
+  left: 0;
+  top: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+.intro-frame > i:nth-child(2) {
+  right: 0;
+  top: 0;
+  border-left: 0;
+  border-bottom: 0;
+}
+.intro-frame > i:nth-child(3) {
+  left: 0;
+  bottom: 0;
+  border-right: 0;
+  border-top: 0;
+}
+.intro-frame > i:nth-child(4) {
+  right: 0;
+  bottom: 0;
+  border-left: 0;
+  border-top: 0;
+}
+.intro-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  width: min(800px, 100%);
+  margin: 10px 0 0;
+}
+.intro-title h1 {
+  font-family: Inter, Arial, sans-serif;
+  font-size: clamp(3rem, 7.2vw, 7rem);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.065em;
+  color: #f2f2f2;
+  min-height: 1.2em;
+  text-align: center;
+  min-width: 4.9em;
+  text-shadow:
+    2px 0 #fff2,
+    -2px 0 #7775;
+}
+.intro-title-rule {
+  height: 1px;
+  flex: 1;
+  max-width: 110px;
+  background: linear-gradient(90deg, transparent, #777);
+}
+.intro-title-rule:last-child {
+  transform: rotate(180deg);
+}
+.intro-credit {
+  font-size: 0.875rem;
+  letter-spacing: 0.3px;
+  color: #777;
+  margin: 20px 0 42px;
+}
+.intro-progress {
+  width: 210px;
+  height: 2px;
+  background: #262626;
+  border-radius: 1px;
+  position: relative;
+}
+.intro-progress > span {
+  display: block;
+  height: 100%;
+  background: #ddd;
+  box-shadow: 0 0 6px #ffffff50;
+  max-width: 100%;
+}
+.intro-percentage {
+  margin-top: 15px;
+  color: #777;
+  font:
+    400 0.6875rem "JetBrains Mono",
+    monospace;
+}
+.intro-status {
+  margin-top: 28px;
+  color: #505050;
+  font:
+    400 0.5625rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 1.8px;
+  text-align: center;
+}
+.intro-screen .vhs-title::after {
+  animation-duration: 3s;
+}
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes cursor-settle {
+  0%,
+  24%,
+  50%,
+  74% {
+    opacity: 1;
+  }
+  25%,
+  49%,
+  75%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes tape-grain {
+  0%,
+  100% {
+    background-position: 0 0;
+  }
+  25% {
+    background-position: 37px 16px;
+  }
+  50% {
+    background-position: -24px 39px;
+  }
+  75% {
+    background-position: 15px -33px;
+  }
+}
+@keyframes tape-tracking {
+  0% {
+    top: -25%;
+  }
+  100% {
+    top: 120%;
+  }
+}
+@keyframes title-tracking {
+  0%,
+  42%,
+  45%,
+  73%,
+  76%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  43% {
+    opacity: 0.5;
+    transform: translateX(-3px);
+  }
+  44% {
+    opacity: 0.25;
+    transform: translateX(3px);
+  }
+  74% {
+    opacity: 0.35;
+    transform: translateX(2px);
+  }
+  75% {
+    opacity: 0;
+    transform: translateX(-2px);
+  }
+}
+@media (min-width: 1600px) {
+  .hero {
+    max-width: 1382px;
+    margin-top: 32px;
+  }
+  .hero-body {
+    padding-top: 55px;
+    padding-bottom: 50px;
+  }
+}
+@media (max-width: 1180px) {
+  .hero {
+    margin: 22px 28px 0;
+    padding: 22px 26px 0;
+  }
+  .hero-counters {
+    gap: 20px;
+  }
+  .hero-counters .hero-season-label {
+    display: none;
+  }
+  .podium-card,
+  .podium-card.place-1,
+  .podium-card.place-3 {
+    padding: 16px;
+  }
+  .podium-placement {
+    font-size: 0.5625rem;
+  }
+  .player-title {
+    font-size: 1.7rem;
+  }
+  .team-ladder .player-title {
+    font-size: 1.55rem;
+  }
+  .podium-form .form-pill {
+    width: 17px;
+    height: 20px;
+  }
+  .tier-filters {
+    gap: 22px;
+  }
+  .hero-topline {
+    font-size: 0.625rem;
+    letter-spacing: 0.8px;
+  }
+}
+@media (max-width: 900px) {
+  .hero h1 {
+    font-size: 5.3rem;
+  }
+  .hero-body {
+    padding: 38px 10px;
+  }
+  .ranking-kind-switch > p {
+    font-size: 0.625rem;
+  }
+  .podium {
+    gap: 10px;
+  }
+  .podium-card,
+  .podium-card.place-1,
+  .podium-card.place-3 {
+    padding: 14px;
+  }
+  .player-title {
+    font-size: 1.5rem;
+  }
+  .team-ladder .player-title {
+    font-size: 1.35rem;
+  }
+  .podium-form .form-pill {
+    width: 19px;
+    height: 21px;
+  }
+  .tier-filters {
+    gap: 20px;
+  }
+  .tier-filters > button {
+    font-size: 0.625rem;
+  }
+  .mode-tabs {
+    gap: 24px;
+  }
+  .mode-tabs > button {
+    font-size: 0.75rem;
+  }
+}
+@media (max-width: 680px) {
+  .header-inner {
+    padding: 0 17px;
+    gap: 15px;
+  }
+  .brand > span {
+    font-size: 1.15rem;
+    letter-spacing: -0.7px;
+  }
+  .brand > svg {
+    width: 23px;
+  }
+  .brand-caption {
+    font-size: 0.375rem;
+    letter-spacing: 1.8px;
+  }
+  .site-header nav > button {
+    font-size: 0.625rem;
+  }
+  .hero,
+  .team-ladder .hero {
+    margin: 16px 16px 0;
+    padding: 17px 17px 0;
+  }
+  .hero-topline {
+    font-size: 0.5rem;
+    letter-spacing: 0.6px;
+    gap: 10px;
+  }
+  .hero-topline > span:first-child {
+    max-width: 130px;
+    line-height: 1.8;
+  }
+  .hero-body {
+    padding: 34px 0 30px;
+  }
+  .hero-kicker {
+    font-size: 0.5625rem;
+    letter-spacing: 1.7px;
+    gap: 7px;
+  }
+  .hero-kicker > span {
+    width: 11px;
+  }
+  .hero h1 {
+    font-size: clamp(3.4rem, 15vw, 5.7rem);
+    letter-spacing: -0.07em;
+    margin-top: 18px;
+  }
+  .hero-subtitle {
+    font-size: 0.625rem;
+    letter-spacing: 2.6px;
+    margin-top: 9px;
+  }
+  .hero-content > p {
+    font-size: 0.75rem;
+    line-height: 1.8;
+    margin-top: 17px;
+  }
+  .hero-badges {
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .hero-badges > span {
+    font-size: 0.5rem;
+    letter-spacing: 0.4px;
+    gap: 4px;
+  }
+  .hero-badges svg {
+    width: 11px;
+    height: 11px;
+  }
+  .hero-bottomline {
+    min-height: 62px;
+    gap: 10px;
+  }
+  .hero-counters {
+    gap: 16px;
+  }
+  .hero-counters > span {
+    font-size: 0.4375rem;
+    letter-spacing: 0.5px;
+    gap: 5px;
+  }
+  .hero-counters b {
+    font-size: 0.6875rem;
+  }
+  .replay-intro {
+    font-size: 0.4375rem;
+    letter-spacing: 0.5px;
+    gap: 4px;
+  }
+  .replay-intro svg {
+    width: 9px;
+  }
+  .ranking-kind-switch {
+    margin-top: 20px;
+    gap: 9px;
+    padding-bottom: 20px;
+  }
+  .ranking-kind-switch > button {
+    min-width: 0;
+    padding: 12px 13px;
+    gap: 10px;
+    flex: 1;
+  }
+  .ranking-kind-switch strong {
+    font-size: 0.75rem;
+  }
+  .ranking-kind-switch small {
+    font-size: 0.625rem;
+  }
+  .ranking-kind-switch > p {
+    display: none;
+  }
+  .page-heading {
+    padding: 25px 0 22px;
+  }
+  .page-heading h2 {
+    font-size: 1.45rem;
+    letter-spacing: -0.8px;
+  }
+  .team-ladder .page-heading h2 {
+    font-size: 1.22rem;
+  }
+  .heading-slice {
+    display: none;
+  }
+  .page-heading .eyebrow {
+    font-size: 0.5rem;
+    letter-spacing: 1px;
+  }
+  .last-updated {
+    font-size: 0.625rem;
+  }
+  .sync-label {
+    font-size: 0.5rem;
+  }
+  .mode-tabs {
+    gap: 17px;
+  }
+  .mode-tabs > button {
+    font-size: 0.625rem;
+    gap: 5px;
+  }
+  .spotlight-heading {
+    font-size: 0.5625rem;
+    margin-top: 24px;
+  }
+  .podium {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .podium-card.place-1 {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 10px;
+    padding: 15px 16px;
+  }
+  .place-1 .podium-top {
+    grid-column: 1/-1;
+  }
+  .place-1 .podium-player {
+    gap: 8px;
+    padding: 18px 0 5px;
+  }
+  .place-1 .player-title {
+    font-size: 1.9rem;
+  }
+  .place-1 .podium-identity .player-meta {
+    font-size: 0.625rem;
+  }
+  .place-1 .podium-identity .tier-badge {
+    font-size: 0.5625rem;
+  }
+  .place-1 .podium-rating {
+    font-size: 1.6rem;
+  }
+  .place-1 .rating-label {
+    font-size: 0.5rem;
+    text-align: right;
+  }
+  .place-1 .podium-bottom {
+    border: 0;
+    flex-direction: column;
+    align-items: flex-end;
+    padding-top: 14px;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+  .place-1 .podium-form {
+    width: auto;
+    align-items: flex-end;
+    gap: 7px;
+  }
+  .place-1 .podium-form .form-pill {
+    width: 16px;
+    height: 19px;
+    font-size: 0.625rem;
+  }
+  .podium-card:not(.place-1) {
+    padding: 14px;
+  }
+  .podium-card:not(.place-1) .podium-player {
+    gap: 6px;
+    padding: 18px 0;
+  }
+  .podium-card:not(.place-1) .player-title {
+    font-size: 1.4rem;
+    letter-spacing: -0.6px;
+  }
+  .team-ladder .podium-card .player-title {
+    font-size: 1.25rem;
+    overflow-wrap: anywhere;
+  }
+  .team-ladder .place-1 .player-title {
+    font-size: 1.5rem;
+  }
+  .podium-card:not(.place-1) .player-meta,
+  .team-ladder .podium-card .player-meta {
+    font-size: 0.5625rem;
+  }
+  .podium-placement,
+  .podium-card:not(.place-1) .podium-placement {
+    font-size: 0.5rem;
+    letter-spacing: 0.1px;
+    gap: 4px;
+  }
+  .podium-card:not(.place-1) .podium-bottom {
+    gap: 11px;
+    flex-wrap: wrap;
+    padding-top: 13px;
+  }
+  .podium-card:not(.place-1) .rating-label {
+    font-size: 0.5rem;
+  }
+  .podium-card:not(.place-1) .podium-rating {
+    font-size: 1.35rem;
+  }
+  .podium-card:not(.place-1) .podium-form {
+    width: 100%;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+  }
+  .podium-card:not(.place-1) .podium-form .form-pill {
+    width: 16px;
+    height: 20px;
+    font-size: 0.625rem;
+  }
+  .tier-filters {
+    gap: 23px;
+  }
+  .tier-filters > button {
+    font-size: 0.6875rem;
+  }
+  .mode-header h2 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  .mode-header p {
+    font-size: 0.8125rem;
+  }
+  .duelist-profile h3,
+  .team-ladder .duelist-profile h3 {
+    font-size: 1.6rem;
+  }
+  .table-player strong {
+    font-size: 0.8125rem;
+  }
+  .record-cell small,
+  .table-player .player-meta {
+    font-size: 0.6875rem;
+  }
+  .data-note {
+    font-size: 0.625rem;
+  }
+  .intro-screen {
+    padding: 22px;
+  }
+  .intro-topline,
+  .intro-bottomline {
+    left: 22px;
+    right: 22px;
+    font-size: 0.5rem;
+  }
+  .intro-topline {
+    top: 22px;
+  }
+  .intro-topline > span:nth-child(2) {
+    display: none;
+  }
+  .intro-wordmark {
+    font-size: 1rem;
+  }
+  .intro-frame {
+    width: 100%;
+    height: 42vh;
+    min-height: 285px;
+    padding: 25px 12px;
+  }
+  .intro-title {
+    gap: 13px;
+  }
+  .intro-title h1 {
+    font-size: clamp(2.7rem, 12vw, 5rem);
+    min-width: 4.85em;
+  }
+  .intro-title-rule {
+    max-width: 40px;
+  }
+  .intro-credit {
+    font-size: 0.75rem;
+    margin: 17px 0 35px;
+  }
+  .intro-progress {
+    width: 165px;
+  }
+  .intro-status {
+    font-size: 0.5rem;
+    letter-spacing: 1.2px;
+  }
+  .intro-bottomline {
+    bottom: 22px;
+    align-items: flex-end;
+  }
+  .intro-bottomline > span {
+    font-size: 0.4375rem;
+    max-width: 120px;
+    line-height: 1.7;
+  }
+  .intro-bottomline > div {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 9px;
+  }
+  .intro-bottomline > div > span {
+    font-size: 0.5rem;
+  }
+  .intro-bottomline button {
+    padding: 10px 14px;
+    font-size: 0.625rem;
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  .hero::after,
+  .intro-screen::after,
+  .vhs-title::after,
+  .typewriter-cursor {
+    animation: none !important;
+  }
+  .vhs-title::after {
+    display: none;
+  }
+  .typewriter-cursor {
+    display: none;
+  }
+  .intro-screen {
+    scroll-behavior: auto;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .team-ladder .podium-card:not(.place-1) .player-title {
+    font-size: 1.05rem;
+    letter-spacing: -0.6px;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+  .replay-intro {
+    font-size: 0.625rem;
+    letter-spacing: 0.3px;
+  }
+  .hero-counters > span {
+    font-size: 0.5625rem;
+  }
+  .hero-counters {
+    gap: 13px;
+  }
+  .hero-bottomline {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 14px 0;
+    gap: 12px;
+  }
+}

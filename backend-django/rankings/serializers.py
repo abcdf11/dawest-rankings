@@ -21,12 +21,19 @@ def form_for_player(player: Player, matches: list[Match]) -> list[dict]:
     return result
 
 class PlayerSerializer(serializers.ModelSerializer):
+    team = serializers.SerializerMethodField()
     rank_delta = serializers.SerializerMethodField()
     win_rate = serializers.SerializerMethodField()
     last_five = serializers.SerializerMethodField()
     class Meta:
         model = Player
-        fields = ["id", "username", "display_name", "region", "tier", "avatar_url", "accent_color", "rating", "previous_rating", "peak_rating", "rank", "previous_rank", "regional_rank", "rank_delta", "wins", "losses", "win_rate", "current_streak", "kd_ratio", "updated_at", "last_five"]
+        fields = ["id", "username", "display_name", "region", "tier", "avatar_url", "accent_color", "rating", "previous_rating", "peak_rating", "rank", "previous_rank", "regional_rank", "rank_delta", "wins", "losses", "win_rate", "current_streak", "kd_ratio", "updated_at", "last_five", "team"]
+    def get_team(self, obj):
+        membership = getattr(obj, "team_membership", None)
+        if membership is None:
+            return None
+        team = membership.team
+        return {"username": team.username, "display_name": team.display_name, "tag": team.tag}
     def get_rank_delta(self, obj):
         return obj.previous_rank - obj.rank
     def get_win_rate(self, obj):
