@@ -27,6 +27,7 @@ import { RankingsTable } from "./components/RankingsTable";
 import { Modal } from "./components/Modal";
 import { FrontierHero } from "./components/FrontierHero";
 import { AccountMenu } from "./components/AccountMenu";
+import { MainNavigation } from "./components/MainNavigation";
 import {
   LoadingScreen,
   INTRO_STORAGE_KEY,
@@ -154,12 +155,7 @@ export default function App() {
               <Brand />
             </a>
             <span className="header-divider" />
-            <nav aria-label="Main navigation">
-              <a href="/" className="active" aria-current="page">
-                Rankings
-              </a>
-              <a href="/factions">Factions</a>
-            </nav>
+            <MainNavigation />
             <div className="header-right">
               <AccountMenu />
               <button

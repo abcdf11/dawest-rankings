@@ -1,6 +1,12 @@
 from django.contrib import admin, messages
 from .engine import process_completed_match
-from .models import Match, Player, RankingEvent, RatingHistory
+from .models import CompetitionEvent, Match, Player, RankingEvent, RatingHistory
+
+@admin.register(CompetitionEvent)
+class CompetitionEventAdmin(admin.ModelAdmin):
+    list_display = ["title", "format", "region", "starts_at", "status", "is_published"]
+    list_filter = ["format", "status", "is_published", "region"]
+    search_fields = ["title"]
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
@@ -22,7 +28,7 @@ class MatchAdmin(admin.ModelAdmin):
             process_completed_match(obj.pk)
     def get_readonly_fields(self, request, obj=None):
         base = list(self.readonly_fields)
-        return base + [f.name for f in Match._meta.fields if f.name not in base and f.name != "id"] if obj and obj.processed_at else base
+        return base + [f.name for f in Match._meta.fields if f.name not in base and f.name not in {"id", "event"}] if obj and obj.processed_at else base
     def has_delete_permission(self, request, obj=None):
         return super().has_delete_permission(request, obj) and not (obj and obj.processed_at)
     @admin.action(description="Finalize scores and update rankings")

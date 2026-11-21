@@ -18,6 +18,7 @@ import { Modal } from "./Modal";
 import { useSession } from "../hooks/useSession";
 import { request } from "../lib/api";
 import { AdminTerminal, EloControls } from "./AdminTools";
+import { EventManager } from "./EventManager";
 import "../developer.css";
 
 interface DevPlayer {
@@ -69,12 +70,20 @@ interface Dashboard {
   }[];
 }
 type Tab =
-  "applications" | "players" | "teams" | "activity" | "elo" | "terminal";
+  | "applications"
+  | "players"
+  | "teams"
+  | "activity"
+  | "elo"
+  | "terminal"
+  | "events";
 
 export default function DeveloperPage() {
   const session = useSession();
   const client = useQueryClient();
-  const [tab, setTab] = useState<Tab>("applications");
+  const [tab, setTab] = useState<Tab>(
+    window.location.hash === "#events" ? "events" : "applications",
+  );
   const [form, setForm] = useState<"player" | "team" | null>(null);
   const [filter, setFilter] = useState("PENDING");
   const [search, setSearch] = useState("");
@@ -199,6 +208,7 @@ export default function DeveloperPage() {
                   ["applications", "Applications"],
                   ["players", "Players"],
                   ["teams", "Teams"],
+                  ["events", "Events"],
                   ["elo", "Elo controls"],
                   ["terminal", "Terminal"],
                   ["activity", "Activity"],
@@ -489,6 +499,7 @@ export default function DeveloperPage() {
                     </div>
                   </>
                 )}
+                {tab === "events" && <EventManager />}
                 {tab === "elo" && (
                   <EloControls
                     players={data.players}

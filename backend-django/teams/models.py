@@ -1,5 +1,6 @@
 import uuid
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models import F, Q
@@ -113,6 +114,7 @@ class TeamMatch(models.Model):
 
     played_at = models.DateTimeField(default=timezone.now, db_index=True)
     event_name = models.CharField(max_length=120, default="Frontier Team Circuit")
+    event = models.ForeignKey("rankings.CompetitionEvent", null=True, blank=True, on_delete=models.PROTECT, related_name="faction_matches")
     match_type = models.CharField(max_length=16, choices=Type.choices, default=Type.RANKED_TEAM)
     team_a = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="matches_a")
     team_b = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="matches_b")
@@ -129,6 +131,11 @@ class TeamMatch(models.Model):
 
     def __str__(self):
         return f"{self.team_a} {self.score_a}–{self.score_b} {self.team_b}"
+
+    def clean(self):
+        super().clean()
+        if self.event_id and self.event.format != "FACTION":
+            raise ValidationError({"event": "Choose a faction event for a faction match."})
 
 
 class TeamRatingHistory(models.Model):

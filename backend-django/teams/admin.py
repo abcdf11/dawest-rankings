@@ -87,7 +87,7 @@ class TeamMatchAdmin(admin.ModelAdmin):
     actions = ["finalize", "broadcast_live"]
 
     def get_readonly_fields(self, request, obj=None):
-        return [f.name for f in TeamMatch._meta.fields] if obj and obj.processed_at else self.readonly_fields
+        return [f.name for f in TeamMatch._meta.fields if f.name != "event"] if obj and obj.processed_at else self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
         return False

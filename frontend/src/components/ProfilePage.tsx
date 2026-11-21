@@ -28,6 +28,7 @@ import { formatRating, tierLabel } from "../lib/rating";
 import { useSession } from "../hooks/useSession";
 import type { Form, History, PlayerDetail, Region } from "../types/rankings";
 import { AccountMenu } from "./AccountMenu";
+import { MainNavigation } from "./MainNavigation";
 import { Brand, Delta, TierBadge } from "./Shared";
 import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
 import { ProfileMediaImage } from "./ProfileMediaImage";
@@ -64,11 +65,7 @@ function ProfileFrame({ children }: { children: ReactNode }) {
           <a href="/" aria-label="DaWest rankings home">
             <Brand />
           </a>
-          <nav aria-label="Main navigation">
-            <a href="/">Rankings</a>
-            <a href="/?ranking=teams">Teams</a>
-            <a href="/register">Register a faction</a>
-          </nav>
+          <MainNavigation />
           <AccountMenu />
         </div>
       </header>

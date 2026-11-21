@@ -22,6 +22,7 @@ import type {
   MyFactions,
 } from "../types/factions";
 import { AccountMenu } from "./AccountMenu";
+import { MainNavigation } from "./MainNavigation";
 import { Brand, Sigil, TierBadge } from "./Shared";
 import { ProfileMediaImage } from "./ProfileMediaImage";
 import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
@@ -36,11 +37,7 @@ function Frame({ children }: { children: ReactNode }) {
           <a href="/" aria-label="DaWest rankings home">
             <Brand />
           </a>
-          <nav aria-label="Main navigation">
-            <a href="/">Rankings</a>
-            <a href="/factions">Factions</a>
-            <a href="/faction">My faction</a>
-          </nav>
+          <MainNavigation />
           <AccountMenu />
         </div>
       </header>

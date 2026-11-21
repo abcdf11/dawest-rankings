@@ -75,6 +75,16 @@ Authentication uses Django sessions with an HttpOnly session cookie. Login, sign
 
 Public signup cannot assign staff roles. The developer login checks staff permissions, and every developer API action verifies them again on the server. Account/login attempts and registrations are throttled. Deactivating a player revokes tracked sessions and removes them from public rankings. Private registration receipts enforce ownership.
 
+## Events
+
+The **Events** navigation tab opens `/events`, available on desktop and mobile. Published events can be searched and filtered by upcoming/live/past status or solo/faction format. `/events/<uuid>` displays the description, region, location, schedule, optional registration link, and verified linked match results. Times use the visitor's browser timezone. Public pages refresh their data every minute; drafts return 404.
+
+Developers manage events at **`/dev` → Events** (or `/dev#events`). They can create drafts, edit details and schedules, publish/unpublish, and mark events live, completed, or cancelled. Scheduled events automatically become live at their start time and completed at their end time; manual completed/cancelled states take priority. An event without an end time remains live until a developer completes it. Registration links accept HTTP(S) only. These are external links; this feature does not add a separate participant signup system.
+
+Select an event in the **Event** field of a solo or faction match in Django Admin to associate its results. The association remains editable after verification while scores and rating fields stay locked. Only completed, processed matches appear in event results, and player/faction names link to their profiles. Formats must match the linked matches; events with existing matches cannot change format through the developer UI.
+
+Events use the `CompetitionEvent` table with optional match foreign keys, so existing results are retained. Creation and updates require developer permissions and session CSRF protection and are recorded in the audit log. Unpublishing hides an event without deleting its match associations. The existing Render startup script applies both event migrations automatically; no new environment variables are needed.
+
 ## Admin Elo controls and moderation terminal
 
 Sign in through `/dev/login`, open `/dev`, and select **Elo controls** to add or subtract player or faction Elo. Choose a ladder and target, enter a signed amount, and give a reason. Player adjustments affect solo Elo; faction adjustments affect team Elo. Each adjustment updates previous/peak rating, tier, global/regional ranks, rating history, audit records, and cache revisions without creating match wins or losses. Amounts support two decimal places and must produce an Elo between 0 and 1,000,000.
@@ -214,6 +224,10 @@ The earlier private Sites deployment is a static build and does not host Django 
 | POST | `/api/v1/auth/profile/appearance/` | Upload/remove the signed-in player's picture and banner using multipart form data |
 | GET / HEAD | `/api/v1/players/<username>/media/<kind>/<version>/` | Public fitted image; `?still=1` selects an animation poster |
 | GET | `/api/v1/factions/` | Public faction directory; optional `search` query |
+| GET | `/api/v1/events/` | Published event schedules and statuses; optional `search` query |
+| GET | `/api/v1/events/<uuid>/` | Published event details and verified linked results |
+| GET / POST | `/api/v1/dev/events/` | Developer event list and draft/published event creation |
+| PATCH / DELETE | `/api/v1/dev/events/<uuid>/` | Developer event editing; DELETE unpublishes without deleting results |
 | GET | `/api/v1/factions/mine/` | Signed-in player's owned factions, membership, and requests |
 | GET | `/api/v1/factions/<slug>/` | Public faction profile, roster, leader, and matches |
 | GET | `/api/v1/factions/<slug>/manage/` | Owner-only dashboard and private member requests |
@@ -261,5 +275,7 @@ Against the same isolated service, `node tests/integration/profile-images.mjs` c
 `node tests/integration/factions.mjs` runs the real faction workflow on that isolated service: player signup, team registration, developer approval, faction redirects, private leader dashboard, join request and acceptance, leaderboard roster update, and fitted faction logo/GIF banner uploads. It creates a developer fixture only in an SQLite database under `artifacts/` (default `native-render-smoke.sqlite3`). `SQLITE_PATH` must match the test server's database. Only public profile/image URLs are written to ignored `artifacts/faction-smoke.json` for restart verification.
 
 `node tests/integration/admin-tools.mjs` checks real developer login, player/faction Elo controls, restriction/profile visibility, session revocation and login denial after a ban, recovery through unban/unrestrict, rejected unknown commands, and audit entries. Use the same isolated localhost service and database; credentials stay in process memory. Ignored `artifacts/admin-smoke.json` contains only public usernames and expected ratings for restart verification.
+
+`node tests/integration/events.mjs` checks real event creation, editing, publishing/unpublishing, draft privacy, anonymous write denial, timezone serialization, direct public detail reloads, and mobile navigation. It uses the same isolated localhost service/database and keeps credentials in memory. Ignored `artifacts/events-smoke.json` contains public event metadata for a server restart check.
 
 Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.

@@ -15,7 +15,7 @@ class FrontendDeploymentTests(SimpleTestCase):
             (root / "assets").mkdir()
             (root / "assets" / "app-test.js").write_text('console.log("DAWEST");', encoding="utf-8")
             with override_settings(FRONTEND_DIST=root, WHITENOISE_ROOT=root, DEBUG=False):
-                for path in ("/", "/login", "/signup", "/register", "/profile", "/players/registered_player", "/players/registered_player/", "/faction", "/factions", "/factions/frontier", "/factions/frontier/manage", "/teams/frontier", "/dev", "/dev/login", "/dev/login/"):
+                for path in ("/", "/login", "/signup", "/register", "/profile", "/players/registered_player", "/players/registered_player/", "/faction", "/factions", "/factions/frontier", "/factions/frontier/manage", "/teams/frontier", "/events", "/events/11111111-1111-1111-1111-111111111111", "/dev", "/dev/login", "/dev/login/"):
                     response = self.client.get(path)
                     self.assertEqual(response.status_code, 200, path)
                     self.assertIn(b'DAWEST', b"".join(response.streaming_content))

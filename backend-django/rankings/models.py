@@ -1,4 +1,5 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
@@ -83,6 +84,55 @@ class ProfileMedia(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["player", "kind"], name="one_profile_image_per_kind")]
 
+class CompetitionEvent(models.Model):
+    class Format(models.TextChoices):
+        SOLO = "SOLO", "Solo 1v1"
+        FACTION = "FACTION", "Faction"
+
+    class Status(models.TextChoices):
+        UPCOMING = "UPCOMING", "Upcoming"
+        LIVE = "LIVE", "Live"
+        COMPLETED = "COMPLETED", "Completed"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=120)
+    description = models.TextField(blank=True, max_length=3000)
+    format = models.CharField(max_length=8, choices=Format.choices, default=Format.SOLO)
+    region = models.CharField(max_length=6, choices=[("GLOBAL", "Global"), *Player.Region.choices], default="GLOBAL")
+    location = models.CharField(max_length=120, default="Online")
+    starts_at = models.DateTimeField(db_index=True)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.UPCOMING)
+    registration_url = models.URLField(blank=True, max_length=500)
+    is_published = models.BooleanField(default=False, db_index=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["starts_at", "title"]
+        constraints = [models.CheckConstraint(condition=Q(ends_at__isnull=True) | Q(ends_at__gt=F("starts_at")), name="event_end_after_start")]
+
+    def __str__(self):
+        return self.title
+
+    def current_status(self, now=None):
+        now = now or timezone.now()
+        if self.status in {self.Status.CANCELLED, self.Status.COMPLETED}:
+            return self.status
+        if self.ends_at and self.ends_at <= now:
+            return self.Status.COMPLETED
+        if self.status == self.Status.LIVE or self.starts_at <= now:
+            return self.Status.LIVE
+        return self.Status.UPCOMING
+
+    def clean(self):
+        super().clean()
+        if self.format == "SOLO" and self.faction_matches.exists() or self.format == "FACTION" and self.solo_matches.exists():
+            raise ValidationError({"format": "The event format must match its linked matches."})
+
+
 class Match(models.Model):
     class Type(models.TextChoices):
         RANKED_1V1 = "RANKED_1V1", "Ranked 1v1"
@@ -95,6 +145,7 @@ class Match(models.Model):
         COMPLETED = "COMPLETED", "Completed"
     played_at = models.DateTimeField(default=timezone.now, db_index=True)
     event_name = models.CharField(max_length=120, default="Frontier Ranked")
+    event = models.ForeignKey(CompetitionEvent, null=True, blank=True, on_delete=models.PROTECT, related_name="solo_matches")
     match_type = models.CharField(max_length=16, choices=Type.choices, default=Type.RANKED_1V1)
     player_a = models.ForeignKey(Player, on_delete=models.PROTECT, related_name="matches_a")
     player_b = models.ForeignKey(Player, on_delete=models.PROTECT, related_name="matches_b")
@@ -110,6 +161,11 @@ class Match(models.Model):
         constraints = [models.CheckConstraint(condition=~Q(player_a=F("player_b")), name="distinct_opponents"), models.CheckConstraint(condition=~Q(status="COMPLETED") | ~Q(score_a=F("score_b")), name="completed_no_ties"), models.CheckConstraint(condition=Q(score_a__lte=100, score_b__lte=100), name="scores_max_100")]
     def __str__(self):
         return f"{self.player_a} {self.score_a}–{self.score_b} {self.player_b}"
+
+    def clean(self):
+        super().clean()
+        if self.event_id and self.event.format != "SOLO":
+            raise ValidationError({"event": "Choose a solo event for a player match."})
 
 class RatingHistory(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="rating_history")
