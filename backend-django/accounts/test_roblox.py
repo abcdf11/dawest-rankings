@@ -1,3 +1,5 @@
+import io
+import urllib.error
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
@@ -72,6 +74,20 @@ class RobloxLinkTests(TestCase):
         res = self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": state})
         self.assertEqual(res["Location"], "/players/gunslinger?roblox=taken")
         self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
+
+    def test_rejected_secret_reports_reason(self):
+        body = io.BytesIO(b'{"error":"invalid_client","error_description":"Client authentication failed"}')
+        err = urllib.error.HTTPError("https://apis.roblox.com/oauth/v1/token", 401, "Unauthorized", {}, body)
+        state = self.start()
+        with patch("accounts.roblox.urllib.request.urlopen", side_effect=err):
+            res = self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": state})
+        self.assertEqual(res["Location"], "/players/gunslinger?roblox=failed&reason=token_invalid_client")
+        self.assertNotIn("secret-xyz", res["Location"])
+
+    @override_settings(ROBLOX_OAUTH_CLIENT_ID="  client-123 \n", ROBLOX_OAUTH_CLIENT_SECRET=" secret-xyz ")
+    def test_keys_are_trimmed(self):
+        res = self.client.get("/api/v1/auth/roblox/start/")
+        self.assertIn("client_id=client-123&", res["Location"])
 
     def test_denied_on_roblox_page(self):
         state = self.start()

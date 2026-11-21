@@ -14,6 +14,16 @@ const outcomes: Record<string, { tone: "ok" | "error"; text: string }> = {
   unavailable: { tone: "error", text: "Roblox login isn't set up on this site yet." },
 };
 
+// Roblox's error code from the failed exchange -> what the site owner should check
+function reasonHint(reason: string) {
+  if (reason === "token_invalid_client")
+    return "Roblox rejected the site's Client ID / Secret: check ROBLOX_OAUTH_CLIENT_ID and ROBLOX_OAUTH_CLIENT_SECRET in Render";
+  if (reason === "token_invalid_grant")
+    return "Roblox rejected the login code: check the redirect URL matches exactly, then try again";
+  if (reason.endsWith("_unreachable")) return "couldn't reach Roblox";
+  return `error: ${reason}`;
+}
+
 /** Own profile only: Log in with Roblox to link the account the game reads your rating for. */
 export function RobloxLinkCard({ user }: { user: SessionUser }) {
   const queryClient = useQueryClient();
@@ -25,8 +35,15 @@ export function RobloxLinkCard({ user }: { user: SessionUser }) {
     const url = new URL(window.location.href);
     const outcome = url.searchParams.get("roblox");
     if (!outcome) return;
-    setNotice(outcomes[outcome] ?? null);
+    const reason = url.searchParams.get("reason");
+    const base = outcomes[outcome] ?? null;
+    setNotice(
+      base && reason
+        ? { tone: base.tone, text: `${base.text} (${reasonHint(reason)})` }
+        : base,
+    );
     url.searchParams.delete("roblox");
+    url.searchParams.delete("reason");
     window.history.replaceState(null, "", url);
     void queryClient.invalidateQueries({ queryKey: ["session"] });
   }, [queryClient]);

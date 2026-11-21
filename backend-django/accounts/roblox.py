@@ -14,6 +14,8 @@ redirect URL registered on the OAuth app in the Roblox Creator Dashboard exactly
 import base64
 import hashlib
 import json
+import logging
+import re
 import secrets
 import urllib.error
 import urllib.parse
@@ -35,41 +37,76 @@ AUTHORIZE_URL = "https://apis.roblox.com/oauth/v1/authorize"
 TOKEN_URL = "https://apis.roblox.com/oauth/v1/token"
 USERINFO_URL = "https://apis.roblox.com/oauth/v1/userinfo"
 SESSION_KEY = "roblox_oauth"
+log = logging.getLogger(__name__)
+
+
+class RobloxError(Exception):
+    """A failed exchange with Roblox. `code` is safe to show (an OAuth error code or HTTP status, never a secret)."""
+
+    def __init__(self, code):
+        super().__init__(code)
+        self.code = code
+
+
+def client_id():
+    return (settings.ROBLOX_OAUTH_CLIENT_ID or "").strip()
+
+
+def client_secret():
+    return (settings.ROBLOX_OAUTH_CLIENT_SECRET or "").strip()
 
 
 def configured():
-    return bool(settings.ROBLOX_OAUTH_CLIENT_ID and settings.ROBLOX_OAUTH_CLIENT_SECRET)
+    return bool(client_id() and client_secret())
 
 
 def redirect_uri(request):
-    return settings.ROBLOX_OAUTH_REDIRECT_URI or request.build_absolute_uri("/api/v1/auth/roblox/callback/")
+    return (settings.ROBLOX_OAUTH_REDIRECT_URI or "").strip() or request.build_absolute_uri("/api/v1/auth/roblox/callback/")
 
 
-def _back(player, outcome):
-    """Back to the member's profile with ?roblox=<outcome> for the page to show."""
+def _back(player, outcome, reason=""):
+    """Back to the member's profile with ?roblox=<outcome>[&reason=<code>] for the page to show."""
     path = f"/players/{player.username}" if player else "/profile"
-    return HttpResponseRedirect(f"{path}?roblox={outcome}")
+    extra = f"&{urllib.parse.urlencode({'reason': reason})}" if reason else ""
+    return HttpResponseRedirect(f"{path}?roblox={outcome}{extra}")
 
 
 def _player(user):
     return getattr(user, "player_profile", None) if user.is_authenticated else None
 
 
+def _call(stage, req):
+    """Run a request to Roblox; on failure raise RobloxError("<stage>_<oauth error or HTTP status>")."""
+    try:
+        with urllib.request.urlopen(req, timeout=15) as res:
+            return json.loads(res.read().decode())
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode(errors="replace")[:500]
+        try:
+            err = str(json.loads(body).get("error") or exc.code)
+        except (ValueError, AttributeError):
+            err = str(exc.code)
+        log.warning("Roblox OAuth %s failed: HTTP %s %s", stage, exc.code, body)
+        raise RobloxError(f"{stage}_{re.sub(r'[^a-z0-9_]', '', err.lower())[:40]}") from exc
+    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
+        log.warning("Roblox OAuth %s failed: %r", stage, exc)
+        raise RobloxError(f"{stage}_unreachable") from exc
+
+
+HEADERS = {"Accept": "application/json", "User-Agent": "DaWestRankings/1.0"}
+
+
 def _post_form(url, data):
-    req = urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), method="POST", headers={"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=10) as res:
-        return json.loads(res.read().decode())
+    return _call("token", urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), method="POST", headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"}))
 
 
 def _get_json(url, token):
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}", "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=10) as res:
-        return json.loads(res.read().decode())
+    return _call("userinfo", urllib.request.Request(url, headers={**HEADERS, "Authorization": f"Bearer {token}"}))
 
 
 def roblox_identity(code, verifier):
     """Swap the authorization code for an access token and read the Roblox user. Returns (id, username, display name)."""
-    token = _post_form(TOKEN_URL, {"client_id": settings.ROBLOX_OAUTH_CLIENT_ID, "client_secret": settings.ROBLOX_OAUTH_CLIENT_SECRET, "grant_type": "authorization_code", "code": code, "code_verifier": verifier})
+    token = _post_form(TOKEN_URL, {"client_id": client_id(), "client_secret": client_secret(), "grant_type": "authorization_code", "code": code, "code_verifier": verifier})
     info = _get_json(USERINFO_URL, token["access_token"])
     user_id = int(info["sub"])
     username = str(info.get("preferred_username") or info.get("name") or "")[:40]
@@ -88,7 +125,7 @@ def start(request):
     verifier = secrets.token_urlsafe(64)
     challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
     request.session[SESSION_KEY] = {"state": state, "verifier": verifier, "player": player.pk}
-    params = {"client_id": settings.ROBLOX_OAUTH_CLIENT_ID, "redirect_uri": redirect_uri(request), "scope": "openid profile", "response_type": "code", "state": state, "code_challenge": challenge, "code_challenge_method": "S256"}
+    params = {"client_id": client_id(), "redirect_uri": redirect_uri(request), "scope": "openid profile", "response_type": "code", "state": state, "code_challenge": challenge, "code_challenge_method": "S256"}
     return HttpResponseRedirect(f"{AUTHORIZE_URL}?{urllib.parse.urlencode(params)}")
 
 
@@ -107,8 +144,11 @@ def callback(request):
         return _back(player, "expired")
     try:
         user_id, username, display = roblox_identity(code, pending["verifier"])
-    except (urllib.error.URLError, KeyError, ValueError, TypeError):
-        return _back(player, "failed")
+    except RobloxError as exc:
+        return _back(player, "failed", exc.code)
+    except (KeyError, ValueError, TypeError) as exc:
+        log.warning("Roblox OAuth gave an unexpected answer: %r", exc)
+        return _back(player, "failed", "unexpected_response")
     if Player.objects.filter(roblox_user_id=user_id).exclude(pk=player.pk).exists():
         return _back(player, "taken")
     try:
