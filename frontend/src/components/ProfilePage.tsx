@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode, KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -14,6 +14,7 @@ import {
   Link2,
   LoaderCircle,
   Medal,
+  Pencil,
   ShieldCheck,
   Swords,
   Target,
@@ -28,6 +29,8 @@ import { useSession } from "../hooks/useSession";
 import type { Form, History, PlayerDetail, Region } from "../types/rankings";
 import { AccountMenu } from "./AccountMenu";
 import { Brand, Delta, TierBadge } from "./Shared";
+import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
+import { ProfileMediaImage } from "./ProfileMediaImage";
 import "../profile.css";
 
 const regions: Record<Region, string> = {
@@ -128,6 +131,14 @@ export default function ProfilePage({ username }: { username: string }) {
   );
   const [copied, setCopied] = useState<"idle" | "copied" | "error">("idle");
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const [editingAppearance, setEditingAppearance] = useState(false);
+  const closeAppearance = useCallback(() => setEditingAppearance(false), []);
+  const savedAppearance = useCallback(() => {
+    setAvatarFailed(false);
+    setBannerFailed(false);
+    setEditingAppearance(false);
+  }, []);
   const player = profile.data;
   const ownProfile = Boolean(
     player && session.data?.user?.player?.username === player.username,
@@ -235,13 +246,24 @@ export default function ProfilePage({ username }: { username: string }) {
         <strong>@{player.username}</strong>
       </div>
       <article className="player-profile">
-        <div className="profile-cover">
-          <div className="profile-cover-art" aria-hidden="true">
-            <span>DAWEST</span>
-            <i />
-            <i />
-            <i />
-          </div>
+        <div
+          className={`profile-cover${player.banner_url && !bannerFailed ? " has-custom-banner" : ""}`}
+        >
+          {player.banner_url && !bannerFailed ? (
+            <ProfileMediaImage
+              className="profile-banner-image"
+              src={player.banner_url}
+              alt={`${player.display_name}'s banner`}
+              onError={() => setBannerFailed(true)}
+            />
+          ) : (
+            <div className="profile-cover-art" aria-hidden="true">
+              <span>DAWEST</span>
+              <i />
+              <i />
+              <i />
+            </div>
+          )}
           <div className="profile-cover-top">
             <span>
               <UserRound size={14} /> PLAYER PROFILE
@@ -262,7 +284,7 @@ export default function ProfilePage({ username }: { username: string }) {
             aria-label={`${player.display_name}'s avatar`}
           >
             {player.avatar_url && !avatarFailed ? (
-              <img
+              <ProfileMediaImage
                 src={player.avatar_url}
                 alt=""
                 onError={() => setAvatarFailed(true)}
@@ -288,6 +310,15 @@ export default function ProfilePage({ username }: { username: string }) {
             </p>
           </div>
           <div className="profile-identity-actions">
+            {ownProfile && (
+              <button
+                className="profile-copy profile-customize"
+                onClick={() => setEditingAppearance(true)}
+              >
+                <Pencil size={15} />
+                Customize profile
+              </button>
+            )}
             <button
               className="profile-copy"
               onClick={() => void copyProfile()}
@@ -560,6 +591,13 @@ export default function ProfilePage({ username }: { username: string }) {
           </div>
         </div>
       </article>
+      {editingAppearance && ownProfile && (
+        <ProfileAppearanceEditor
+          player={player}
+          onClose={closeAppearance}
+          onSaved={savedAppearance}
+        />
+      )}
     </ProfileFrame>
   );
 }

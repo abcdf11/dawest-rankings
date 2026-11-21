@@ -27,6 +27,7 @@ function csrfCookie() {
 export async function request<T>(
   path: string,
   options?: RequestInit,
+  timeoutMs = 7000,
 ): Promise<T> {
   const unsafe =
     options?.method &&
@@ -44,9 +45,11 @@ export async function request<T>(
   const response = await fetch(`${base}${path}`, {
     ...options,
     credentials: "include",
-    signal: AbortSignal.timeout(7000),
+    signal: options?.signal ?? AbortSignal.timeout(timeoutMs),
     headers: {
-      "Content-Type": "application/json",
+      ...(options?.body instanceof FormData
+        ? {}
+        : { "Content-Type": "application/json" }),
       ...(csrfCookie()
         ? { "X-CSRFToken": decodeURIComponent(csrfCookie()!) }
         : {}),

@@ -1,0 +1,224 @@
+.appearance-editor {
+  color: #ddd;
+}
+.appearance-heading {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 25px;
+}
+.appearance-heading > span {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  background: #242424;
+  border: 1px solid #fff1;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.appearance-heading h2 {
+  font:
+    650 1.45rem/1.3 Inter,
+    sans-serif;
+  letter-spacing: -0.6px;
+}
+.appearance-heading p {
+  color: #8c8c8c;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-top: 5px;
+}
+.appearance-preview {
+  border: 1px solid #fff1;
+  border-radius: 9px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  background: #111;
+}
+.appearance-preview-cover {
+  aspect-ratio: 1280 / 240;
+  background: linear-gradient(115deg, #373737, #242424);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.appearance-preview-cover > span {
+  font:
+    850 3.5rem/1 Inter,
+    sans-serif;
+  letter-spacing: -4px;
+  color: #ffffff12;
+  transform: skew(-7deg);
+  padding-right: 15px;
+}
+.appearance-preview-cover > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.appearance-preview-person {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 15px 20px 18px;
+}
+.appearance-preview-avatar {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  margin-top: -35px;
+  display: grid;
+  place-items: center;
+  border: 4px solid #111;
+  border-radius: 13px;
+  overflow: hidden;
+  background: #303030;
+  flex-shrink: 0;
+  font-size: 1.6rem;
+  font-weight: 750;
+}
+.appearance-preview-avatar > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.appearance-preview-person > span:last-child {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.appearance-preview-person strong {
+  font-weight: 600;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.appearance-preview-person small {
+  color: #777;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.appearance-editor fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+.appearance-upload-card {
+  border: 1px solid #fff1;
+  background: #141414;
+  border-radius: 7px;
+  padding: 18px;
+}
+.appearance-upload-card > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #b4b4b4;
+}
+.appearance-upload-card > div:first-child > span {
+  display: grid;
+  gap: 6px;
+}
+.appearance-upload-card strong {
+  font-size: 0.9375rem;
+  font-weight: 550;
+  color: #d3d3d3;
+}
+.appearance-upload-card small {
+  color: #7a7a7a;
+  font-size: 0.75rem;
+}
+.appearance-file-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 17px;
+}
+.appearance-file-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  padding: 10px 13px;
+}
+.appearance-remove {
+  color: #999;
+  font-size: 0.8125rem;
+  padding: 8px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.appearance-remove:hover {
+  color: #eee;
+}
+.appearance-filename {
+  color: #aaa;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+.appearance-help {
+  font-size: 0.8125rem;
+  color: #818181;
+  line-height: 1.8;
+  margin: 18px 0;
+}
+.appearance-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #fff1;
+  padding-top: 19px;
+  margin-top: 20px;
+}
+.appearance-footer .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 0.875rem;
+}
+@media (max-width: 460px) {
+  .appearance-heading {
+    gap: 11px;
+  }
+  .appearance-heading h2 {
+    font-size: 1.3rem;
+  }
+  .appearance-heading p {
+    font-size: 0.8125rem;
+  }
+  .appearance-preview-person {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .appearance-preview-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 10px;
+    margin-top: -30px;
+  }
+  .appearance-preview-person strong {
+    font-size: 0.875rem;
+  }
+  .appearance-upload-card {
+    padding: 15px;
+  }
+  .appearance-upload-card strong {
+    font-size: 0.875rem;
+  }
+  .appearance-footer .button {
+    flex: 1;
+    padding: 12px;
+  }
+}

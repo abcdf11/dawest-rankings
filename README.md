@@ -59,9 +59,15 @@ The local database is **backend-django/db.sqlite3**, preserved across restarts. 
 
 ## Authentication and permissions
 
+Players can customize their own picture and banner through **Customize profile** on `/profile`. PNG, JPG, static WebP, and GIF uploads are supported, with a live preview and remove/restore-default controls. The server center-crops and resizes pictures to **256 × 256** and banners to **1280 × 240**. Animated GIF frames, frame durations, transparency, and loop settings are preserved; static images become optimized WebP files. Reduced-motion visitors receive a still first-frame image.
+
+Each image is limited to **8 MB**, **16 megapixels per source frame**, and **120 GIF frames**, with an additional total decoding budget. Images are validated by their contents and re-encoded without EXIF metadata. The authenticated session determines the owner; the upload endpoint cannot target another player. Both selected images are processed before the database transaction, so a failed upload does not partially replace the existing profile.
+
+Processed images and animation posters are stored in the existing database in a separate `ProfileMedia` table. Player rows contain only version identifiers, keeping leaderboard queries lightweight. Only the latest picture and banner are retained per player. This works on Render Free without a persistent disk, a Shell session, or another storage account. The existing Render startup script applies the new migration automatically. Images survive service restarts as long as the database is retained. Public image URLs are versioned and support ETag caching; image updates refresh the leaderboard cache revisions and team roster pictures.
+
 Player signup and login open the player's own profile at `/players/<username>`, unless an explicit return destination such as team registration was requested. `/profile` opens the current player's page or sends an anonymous visitor to login. Developer accounts keep their `/dev` destination. Leaderboard names, podium cards, team roster members, and the account menu link to profiles.
 
-The osu!-inspired profile layout keeps the monochrome DaWest theme, with a cover, avatar, region and team details, global/regional ranks, an interactive rating/rank graph, career statistics, filtered recent matches, rating activity, and milestones derived from recorded results. Empty accounts show their registration point and an empty match record. Public profile URLs work directly and after refresh on the native Render deployment; no new database migration is needed.
+The osu!-inspired profile layout keeps the monochrome DaWest theme, with a cover, avatar, region and team details, global/regional ranks, an interactive rating/rank graph, career statistics, filtered recent matches, rating activity, and milestones derived from recorded results. Empty accounts show their registration point and an empty match record. Public profile URLs work directly and after refresh on the native Render deployment.
 
 Authentication uses Django sessions with an HttpOnly session cookie. Login, signup, and logout require CSRF protection, including anonymous login requests. The frontend first initializes the session/CSRF cookie, then submits credentials with the CSRF header. Session IDs rotate at login. Passwords and session credentials are not stored in localStorage or included in audit details.
 
@@ -168,6 +174,8 @@ The earlier private Sites deployment is a static build and does not host Django 
 | POST | `/api/v1/auth/dev-login/` | Developer login with staff permission check |
 | POST | `/api/v1/auth/logout/` | End the current session |
 | GET | `/api/v1/auth/roster-players/` | Find registered available roster members |
+| POST | `/api/v1/auth/profile/appearance/` | Upload/remove the signed-in player's picture and banner using multipart form data |
+| GET / HEAD | `/api/v1/players/<username>/media/<kind>/<version>/` | Public fitted image; `?still=1` selects an animation poster |
 | GET | `/api/v1/rankings/` | Registered player ladder |
 | GET | `/api/v1/players/<username>/` | Registered player profile and history |
 | GET | `/api/v1/teams/rankings/` | Registered team ladder |
@@ -198,5 +206,7 @@ Set-Location backend-django
 Browser presentation tests use isolated API fixtures. Backend tests enforce real session authentication, CSRF, role boundaries, roster ownership, registered-only visibility, unique usernames, and transactional reviews. `tests/integration/auth-flow.mjs` exercises real browser signup, cookie persistence, team registration, developer approval, adding/removing/restoring competitors, and session revocation against an isolated API on port 8001. Set `SQLITE_PATH` to that isolated migrated database and optionally `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`; run it with the frontend on 5173. Never point integration fixtures at a production database.
 
 `tests/integration/native-deployment.mjs` checks the production React build served directly by Django, without Vite or API mocks. Build React, migrate an isolated SQLite database, collect static files, and run Django with `DEBUG=0` on localhost port 8002; then run `node tests/integration/native-deployment.mjs`. It verifies same-origin signup/session persistence, leaderboard visibility, registration and developer pages, assets, and genuine API 404s. It creates test accounts only on localhost.
+
+Against the same isolated service, `node tests/integration/profile-images.mjs` checks real authenticated picture and GIF banner uploads, fitted dimensions, browser animation, persistence after reload, and public viewing without edit access. It writes public image URLs to ignored `artifacts/profile-media-smoke.json` for checking them again after a service restart.
 
 Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.

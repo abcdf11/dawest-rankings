@@ -3,6 +3,8 @@ import type { Form, Player, RankingEntry } from "../types/rankings";
 import { tierLabel } from "../lib/rating";
 import { profileUrl } from "../lib/profile";
 import type { ReactNode } from "react";
+import { useState } from "react";
+import { ProfileMediaImage } from "./ProfileMediaImage";
 
 export function CompetitorLink({
   player,
@@ -68,67 +70,79 @@ export function Sigil({
   large?: boolean;
 }) {
   const variant = player.id % 3;
+  const [failedImage, setFailedImage] = useState("");
+  const hasPicture = Boolean(
+    player.avatar_url && failedImage !== player.avatar_url,
+  );
   return (
     <span
-      className={`sigil ${large ? "large" : ""} ${"tag" in player ? "team-sigil" : ""}`}
+      className={`sigil ${large ? "large" : ""} ${"tag" in player ? "team-sigil" : ""}${hasPicture ? " has-picture" : ""}`}
       style={{ "--player-color": player.accent_color } as React.CSSProperties}
       aria-hidden="true"
     >
-      <svg viewBox="0 0 100 100">
-        <path className="sigil-frame" d="m50 3 39 22v50L50 97 11 75V25Z" />
-        {"tag" in player ? (
-          <>
-            <path
-              d="M22 23h56v38L50 82 22 61Z"
-              fill="currentColor"
-              opacity=".14"
-            />
-            <path
-              d="m27 27 23-12 23 12M27 71l23 16 23-16"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-            />
-            <path
-              d="m50 23 4 8 9 1-7 6 2 9-8-4-8 4 2-9-7-6 9-1Z"
-              fill="currentColor"
-            />
-            <text
-              x="50"
-              y="65"
-              textAnchor="middle"
-              fill="currentColor"
-              fontFamily="Inter, sans-serif"
-              fontSize="19"
-              fontWeight="800"
-              letterSpacing="1"
-            >
-              {player.tag}
-            </text>
-          </>
-        ) : (
-          <>
-            <path
-              d={
-                variant === 0
-                  ? "M24 40 36 24 50 30 64 24 76 40 63 49 70 77 50 88 30 77 37 49Z"
-                  : variant === 1
-                    ? "M23 39 35 31 39 17 61 17 66 32 78 39 68 47 68 71 50 85 32 71 32 47Z"
-                    : "M25 25 43 34 50 20 57 34 75 25 70 60 50 84 30 60Z"
-              }
-              fill="currentColor"
-              opacity=".85"
-            />
-            <path d="m32 43 18 6 18-6-8 18H40Z" fill="#17191d" />
-            <path
-              d="m34 46 11 3-2 5-8-3m31-5-11 3 2 5 8-3"
-              fill="currentColor"
-            />
-            <path d="m38 64 12 4 12-4-12 13Z" fill="#17191d" />
-            <path d="M21 38h58" stroke="currentColor" strokeWidth="4" />
-          </>
-        )}
-      </svg>
+      {hasPicture ? (
+        <ProfileMediaImage
+          src={player.avatar_url}
+          alt=""
+          onError={() => setFailedImage(player.avatar_url)}
+        />
+      ) : (
+        <svg viewBox="0 0 100 100">
+          <path className="sigil-frame" d="m50 3 39 22v50L50 97 11 75V25Z" />
+          {"tag" in player ? (
+            <>
+              <path
+                d="M22 23h56v38L50 82 22 61Z"
+                fill="currentColor"
+                opacity=".14"
+              />
+              <path
+                d="m27 27 23-12 23 12M27 71l23 16 23-16"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                d="m50 23 4 8 9 1-7 6 2 9-8-4-8 4 2-9-7-6 9-1Z"
+                fill="currentColor"
+              />
+              <text
+                x="50"
+                y="65"
+                textAnchor="middle"
+                fill="currentColor"
+                fontFamily="Inter, sans-serif"
+                fontSize="19"
+                fontWeight="800"
+                letterSpacing="1"
+              >
+                {player.tag}
+              </text>
+            </>
+          ) : (
+            <>
+              <path
+                d={
+                  variant === 0
+                    ? "M24 40 36 24 50 30 64 24 76 40 63 49 70 77 50 88 30 77 37 49Z"
+                    : variant === 1
+                      ? "M23 39 35 31 39 17 61 17 66 32 78 39 68 47 68 71 50 85 32 71 32 47Z"
+                      : "M25 25 43 34 50 20 57 34 75 25 70 60 50 84 30 60Z"
+                }
+                fill="currentColor"
+                opacity=".85"
+              />
+              <path d="m32 43 18 6 18-6-8 18H40Z" fill="#17191d" />
+              <path
+                d="m34 46 11 3-2 5-8-3m31-5-11 3 2 5 8-3"
+                fill="currentColor"
+              />
+              <path d="m38 64 12 4 12-4-12 13Z" fill="#17191d" />
+              <path d="M21 38h58" stroke="currentColor" strokeWidth="4" />
+            </>
+          )}
+        </svg>
+      )}
     </span>
   );
 }

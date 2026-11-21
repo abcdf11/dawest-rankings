@@ -19,4 +19,5 @@ unset DAWEST_BOOTSTRAP_DEV_USERNAME DAWEST_BOOTSTRAP_DEV_PASSWORD
 exec python -m gunicorn --chdir backend-django config.wsgi:application \
     --bind "0.0.0.0:${PORT:-10000}" \
     --workers "${WEB_CONCURRENCY:-1}" \
+    --timeout "${GUNICORN_TIMEOUT:-60}" \
     --access-logfile - --error-logfile -

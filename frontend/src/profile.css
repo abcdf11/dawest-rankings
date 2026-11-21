@@ -201,7 +201,7 @@
   height: 100%;
   object-fit: cover;
   border-radius: 11px;
-  filter: grayscale(1);
+  filter: none;
 }
 .profile-avatar .profile-avatar-badge {
   position: absolute;
@@ -254,10 +254,48 @@
   padding-left: 13px;
 }
 .profile-identity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
   margin-left: auto;
   align-self: flex-start;
   padding-top: 5px;
   flex-shrink: 0;
+}
+.profile-banner-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.profile-cover.has-custom-banner::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(#0005, transparent 45%, #0009);
+  pointer-events: none;
+}
+.profile-cover.has-custom-banner .profile-cover-top,
+.profile-cover.has-custom-banner .profile-cover-bottom,
+.profile-cover.has-custom-banner .profile-cover-bottom > span:last-child {
+  color: #eee;
+  text-shadow: 0 1px 6px #000;
+}
+.sigil.has-picture {
+  overflow: hidden;
+  border-radius: 9px;
+  filter: none;
+  background: #242424;
+}
+.sigil.has-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: none;
 }
 .profile-copy {
   display: inline-flex;

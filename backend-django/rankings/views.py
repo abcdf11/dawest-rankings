@@ -50,7 +50,7 @@ def player_detail(request, username):
     player = get_object_or_404(registered_players().select_related("team_membership__team"), username__iexact=username)
     matches = list(Match.objects.filter(Q(player_a=player) | Q(player_b=player), status="COMPLETED", processed_at__isnull=False).select_related("player_a", "player_b")[:20])
     history = list(player.rating_history.order_by("-recorded_at", "-pk")[:120])
-    return Response({**PlayerSerializer(player, context={"forms": {player.pk: matches}}).data, "registered_at": player.registered_at, "rounds_won": player.rounds_won, "rounds_lost": player.rounds_lost, "history": RatingHistorySerializer(list(reversed(history)), many=True).data, "matches": form_for_player(player, matches)})
+    return Response({**PlayerSerializer(player, context={"forms": {player.pk: matches}}).data, "banner_url": player.profile_banner_url, "registered_at": player.registered_at, "rounds_won": player.rounds_won, "rounds_lost": player.rounds_lost, "history": RatingHistorySerializer(list(reversed(history)), many=True).data, "matches": form_for_player(player, matches)})
 
 @api_view(["POST"])
 def simulate(request):

@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import F, Q
 from django.db.models.functions import Lower
 from django.utils import timezone
+import uuid
 
 class Player(models.Model):
     class Region(models.TextChoices):
@@ -26,6 +27,8 @@ class Player(models.Model):
     region = models.CharField(max_length=4, choices=Region.choices)
     tier = models.CharField(max_length=12, choices=Tier.choices, default=Tier.GUNSLINGER)
     avatar_url = models.URLField(blank=True)
+    avatar_version = models.CharField(max_length=64, blank=True)
+    banner_version = models.CharField(max_length=64, blank=True)
     accent_color = models.CharField(max_length=7, default="#EAB308")
     rating = models.FloatField(default=1500, validators=[MinValueValidator(0)])
     previous_rating = models.FloatField(default=1500)
@@ -46,6 +49,37 @@ class Player(models.Model):
         constraints = [models.CheckConstraint(condition=Q(rating__gte=0), name="rating_nonnegative"), models.UniqueConstraint(Lower("username"), name="username_case_insensitive")]
     def __str__(self):
         return self.display_name
+
+    @property
+    def profile_avatar_url(self):
+        return f"/api/v1/players/{self.username}/media/avatar/{self.avatar_version}/" if self.avatar_version else self.avatar_url
+
+    @property
+    def profile_banner_url(self):
+        return f"/api/v1/players/{self.username}/media/banner/{self.banner_version}/" if self.banner_version else ""
+
+
+class ProfileMedia(models.Model):
+    class Kind(models.TextChoices):
+        AVATAR = "avatar", "Profile picture"
+        BANNER = "banner", "Profile banner"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="profile_media")
+    kind = models.CharField(max_length=8, choices=Kind.choices)
+    version = models.CharField(max_length=64)
+    content_type = models.CharField(max_length=32)
+    data = models.BinaryField(editable=False)
+    poster = models.BinaryField(default=b"", editable=False)
+    byte_size = models.PositiveIntegerField()
+    poster_size = models.PositiveIntegerField(default=0)
+    width = models.PositiveSmallIntegerField()
+    height = models.PositiveSmallIntegerField()
+    frames = models.PositiveSmallIntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["player", "kind"], name="one_profile_image_per_kind")]
 
 class Match(models.Model):
     class Type(models.TextChoices):

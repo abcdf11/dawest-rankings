@@ -7,11 +7,13 @@ export function Modal({
   title,
   onClose,
   drawer = false,
+  dismissible = true,
 }: {
   children: ReactNode;
   title: string;
   onClose: () => void;
   drawer?: boolean;
+  dismissible?: boolean;
 }) {
   const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -20,12 +22,23 @@ export function Modal({
     document.body.style.overflow = "hidden";
     panel.current?.focus();
     const listener = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && dismissible) onClose();
       if (e.key === "Tab") {
-        const focusable = panel.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), a[href], input, select, [tabindex="0"]',
+        const focusable = Array.from(
+          panel.current?.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), a[href], input, select, [tabindex="0"]',
+          ) ?? [],
+        ).filter(
+          (element) =>
+            !element.matches(":disabled") &&
+            element.tabIndex >= 0 &&
+            element.getClientRects().length > 0,
         );
-        if (!focusable?.length) return;
+        if (!focusable.length) {
+          e.preventDefault();
+          panel.current?.focus();
+          return;
+        }
         const first = focusable[0],
           last = focusable[focusable.length - 1];
         if (
@@ -47,14 +60,14 @@ export function Modal({
       window.removeEventListener("keydown", listener);
       previous?.focus();
     };
-  }, [onClose]);
+  }, [onClose, dismissible]);
   return (
     <motion.div
       className={`modal-backdrop ${drawer ? "drawer-backdrop" : ""}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={onClose}
+      onClick={dismissible ? onClose : undefined}
     >
       <motion.div
         ref={panel}
@@ -72,6 +85,7 @@ export function Modal({
           <button
             className="icon-button"
             aria-label="Close dialog"
+            disabled={!dismissible}
             onClick={onClose}
           >
             <X size={20} />

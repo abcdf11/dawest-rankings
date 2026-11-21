@@ -13,7 +13,7 @@ server {
     server_name _;
     root /usr/share/nginx/html;
     index index.html;
-    client_max_body_size 1m;
+    client_max_body_size 20m;
 
     # Refresh Render's private DNS records when another service is redeployed.
     resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;

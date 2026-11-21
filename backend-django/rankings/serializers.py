@@ -21,6 +21,7 @@ def form_for_player(player: Player, matches: list[Match]) -> list[dict]:
     return result
 
 class PlayerSerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
     team = serializers.SerializerMethodField()
     rank_delta = serializers.SerializerMethodField()
     win_rate = serializers.SerializerMethodField()
@@ -34,6 +35,8 @@ class PlayerSerializer(serializers.ModelSerializer):
             return None
         team = membership.team
         return {"username": team.username, "display_name": team.display_name, "tag": team.tag}
+    def get_avatar_url(self, obj):
+        return getattr(obj, "profile_avatar_url", obj.avatar_url)
     def get_rank_delta(self, obj):
         return obj.previous_rank - obj.rank
     def get_win_rate(self, obj):
