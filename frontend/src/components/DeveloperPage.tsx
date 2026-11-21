@@ -17,6 +17,7 @@ import { AccountMenu } from "./AccountMenu";
 import { Modal } from "./Modal";
 import { useSession } from "../hooks/useSession";
 import { request } from "../lib/api";
+import { AdminTerminal, EloControls } from "./AdminTools";
 import "../developer.css";
 
 interface DevPlayer {
@@ -27,6 +28,7 @@ interface DevPlayer {
   rating: number;
   rank: number;
   is_active: boolean;
+  is_restricted?: boolean;
 }
 interface DevTeam {
   id: number;
@@ -66,7 +68,8 @@ interface Dashboard {
     created_at: string;
   }[];
 }
-type Tab = "applications" | "players" | "teams" | "activity";
+type Tab =
+  "applications" | "players" | "teams" | "activity" | "elo" | "terminal";
 
 export default function DeveloperPage() {
   const session = useSession();
@@ -105,6 +108,20 @@ export default function DeveloperPage() {
     },
   });
   const data = dashboard.data;
+  const refreshAdminData = () => {
+    for (const key of [
+      "developer",
+      "rankings",
+      "player-profile",
+      "player",
+      "team",
+      "faction",
+      "factions",
+      "my-factions",
+      "session",
+    ])
+      void client.invalidateQueries({ queryKey: [key] });
+  };
   const matches = (value: string) =>
     value.toLowerCase().includes(search.toLowerCase());
   return (
@@ -182,6 +199,8 @@ export default function DeveloperPage() {
                   ["applications", "Applications"],
                   ["players", "Players"],
                   ["teams", "Teams"],
+                  ["elo", "Elo controls"],
+                  ["terminal", "Terminal"],
                   ["activity", "Activity"],
                 ] as const
               ).map(([key, label]) => (
@@ -346,7 +365,7 @@ export default function DeveloperPage() {
                           <ClipboardList size={30} />
                           <h3>No applications here</h3>
                           <p>
-                            New team registrations will appear when captains
+                            New faction registrations will appear when captains
                             submit them.
                           </p>
                         </div>
@@ -396,7 +415,11 @@ export default function DeveloperPage() {
                                       {Math.round(p.rating)}
                                     </td>
                                     <td>
-                                      {p.is_active ? "Active" : "Removed"}
+                                      {p.is_active
+                                        ? p.is_restricted
+                                          ? "Restricted"
+                                          : "Active"
+                                        : "Banned"}
                                     </td>
                                     <td>
                                       <button
@@ -465,6 +488,16 @@ export default function DeveloperPage() {
                       </table>
                     </div>
                   </>
+                )}
+                {tab === "elo" && (
+                  <EloControls
+                    players={data.players}
+                    factions={data.teams}
+                    onSaved={refreshAdminData}
+                  />
+                )}
+                {tab === "terminal" && (
+                  <AdminTerminal onSaved={refreshAdminData} />
                 )}
                 {tab === "activity" && (
                   <div className="dev-activity">

@@ -67,7 +67,7 @@ function ProfileFrame({ children }: { children: ReactNode }) {
           <nav aria-label="Main navigation">
             <a href="/">Rankings</a>
             <a href="/?ranking=teams">Teams</a>
-            <a href="/register">Register a team</a>
+            <a href="/register">Register a faction</a>
           </nav>
           <AccountMenu />
         </div>
@@ -340,6 +340,21 @@ export default function ProfilePage({ username }: { username: string }) {
             />
           </div>
         )}
+        {player.is_restricted && (
+          <div className="profile-restriction" role="status">
+            <ShieldCheck size={20} />
+            <div>
+              <strong>Restricted account</strong>
+              <p>
+                This player is currently unranked and cannot participate in
+                ranked matches or faction activities.
+              </p>
+              {ownProfile && session.data?.user?.player?.restriction_reason && (
+                <p>{session.data.user.player.restriction_reason}</p>
+              )}
+            </div>
+          </div>
+        )}
         <div
           className="profile-tabs"
           role="tablist"
@@ -470,8 +485,14 @@ export default function ProfilePage({ username }: { username: string }) {
                   <Trophy size={15} /> Global ranking
                 </span>
                 <strong>
-                  #{player.rank.toLocaleString()}
-                  <Delta value={player.rank_delta} />
+                  {player.is_restricted ? (
+                    "Unranked"
+                  ) : (
+                    <>
+                      <span>#{player.rank.toLocaleString()}</span>
+                      <Delta value={player.rank_delta} />
+                    </>
+                  )}
                 </strong>
               </div>
               <div>
@@ -479,7 +500,9 @@ export default function ProfilePage({ username }: { username: string }) {
                   <Globe2 size={15} /> Regional ranking
                 </span>
                 <strong>
-                  #{player.regional_rank.toLocaleString()}
+                  {player.is_restricted
+                    ? "Unranked"
+                    : `#${player.regional_rank.toLocaleString()}`}
                   <small>{player.region}</small>
                 </strong>
               </div>

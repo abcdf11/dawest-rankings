@@ -73,6 +73,27 @@ Authentication uses Django sessions with an HttpOnly session cookie. Login, sign
 
 Public signup cannot assign staff roles. The developer login checks staff permissions, and every developer API action verifies them again on the server. Account/login attempts and registrations are throttled. Deactivating a player revokes tracked sessions and removes them from public rankings. Private registration receipts enforce ownership.
 
+## Admin Elo controls and moderation terminal
+
+Sign in through `/dev/login`, open `/dev`, and select **Elo controls** to add or subtract player or faction Elo. Choose a ladder and target, enter a signed amount, and give a reason. Player adjustments affect solo Elo; faction adjustments affect team Elo. Each adjustment updates previous/peak rating, tier, global/regional ranks, rating history, audit records, and cache revisions without creating match wins or losses. Amounts support two decimal places and must produce an Elo between 0 and 1,000,000.
+
+The **Terminal** tab supports these commands:
+
+```text
+help
+status username
+ban username Abusive behavior
+unban username Appeal approved
+restrict username Competitive review pending
+unrestrict username Review complete
+elo player username +25 Verified rating correction
+elo faction faction-slug +50 Verified faction correction
+```
+
+Bans disable login, revoke tracked sessions, and hide the player from public profiles and solo rankings. Restrictions keep login and profile access, show an unranked notice, exclude the player from solo rankings/simulations, and block new faction registrations, joins, leader management, and ranked match participation. Existing memberships/history remain stored; a faction cannot record a new match with a banned/restricted roster member. Unban restores login without clearing a separate restriction; use `unrestrict` to restore competitive participation. Restriction reasons are visible only to the player and developer accounts.
+
+The terminal accepts only the documented commands and never executes OS shell commands. Both endpoints require developer permission and session CSRF protection. Staff accounts cannot be targeted. Mutations require a reason, run under the existing ladder locks, and use a UUID request key so a retried Elo submission applies once. Reasons and before/after Elo values are retained in the audit database. The new restriction columns are applied automatically by the existing Render startup migration step; no new environment variables are required.
+
 ## Factions and leader dashboard
 
 Approved teams are factions: they keep their existing team ratings, registration, owner, and roster. Register a faction through `/register`; developer approval creates its public faction profile. The approved registration receipt and team leaderboard names open the faction page.
@@ -211,6 +232,8 @@ The earlier private Sites deployment is a static build and does not host Django 
 | POST | `/api/v1/dev/players/` | Provision a normal player account |
 | PATCH / DELETE | `/api/v1/dev/players/<id>/` | Update, remove, or restore a player |
 | POST | `/api/v1/dev/teams/` | Create a team from registered players |
+| POST | `/api/v1/dev/ratings/` | Add/subtract player or faction Elo with a reason and UUID request key |
+| POST | `/api/v1/dev/commands/` | Allowlisted admin terminal commands: moderation, Elo, status, help |
 | PATCH / DELETE | `/api/v1/dev/teams/<id>/` | Remove or restore a team |
 
 Existing simulation, match completion, and health routes remain available. Read-only simulation uses the same dynamic Elo formula as verified results. K=32, expected win chance follows standard Elo, margin weight is `1 + 0.35 * ln(1 + round difference)`, and event weights are ranked 1.0, showmatch 1.2, qualifier 1.25, tournament 1.5. Global ranks are recalculated among eligible registered competitors.
@@ -234,5 +257,7 @@ Browser presentation tests use isolated API fixtures. Backend tests enforce real
 Against the same isolated service, `node tests/integration/profile-images.mjs` checks real authenticated picture and GIF banner uploads, fitted dimensions, browser animation, persistence after reload, and public viewing without edit access. It writes public image URLs to ignored `artifacts/profile-media-smoke.json` for checking them again after a service restart.
 
 `node tests/integration/factions.mjs` runs the real faction workflow on that isolated service: player signup, team registration, developer approval, faction redirects, private leader dashboard, join request and acceptance, leaderboard roster update, and fitted faction logo/GIF banner uploads. It creates a developer fixture only in an SQLite database under `artifacts/` (default `native-render-smoke.sqlite3`). `SQLITE_PATH` must match the test server's database. Only public profile/image URLs are written to ignored `artifacts/faction-smoke.json` for restart verification.
+
+`node tests/integration/admin-tools.mjs` checks real developer login, player/faction Elo controls, restriction/profile visibility, session revocation and login denial after a ban, recovery through unban/unrestrict, rejected unknown commands, and audit entries. Use the same isolated localhost service and database; credentials stay in process memory. Ignored `artifacts/admin-smoke.json` contains only public usernames and expected ratings for restart verification.
 
 Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.

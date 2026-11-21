@@ -38,8 +38,8 @@ const receipt = {
   team_username: null,
 };
 async function fillForm(page: import("@playwright/test").Page) {
-  await page.getByLabel("Team name", { exact: true }).fill("New Frontier");
-  await page.getByLabel("Team tag", { exact: true }).fill("nfr");
+  await page.getByLabel("Faction name", { exact: true }).fill("New Frontier");
+  await page.getByLabel("Faction tag", { exact: true }).fill("nfr");
   await expect(
     page.getByLabel("Captain username", { exact: true }),
   ).toHaveValue("captain_new");
@@ -64,7 +64,7 @@ test("separate registration page submits a roster and saves a reloadable receipt
   );
   await page.goto("/register");
   await expect(
-    page.getByRole("heading", { name: "REGISTER A TEAM", exact: true }),
+    page.getByRole("heading", { name: "REGISTER A FACTION", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".intro-screen")).toHaveCount(0);
   await fillForm(page);
@@ -85,7 +85,7 @@ test("separate registration page submits a roster and saves a reloadable receipt
     path: `artifacts/registration-${testInfo.project.name}.png`,
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Submit team registration" }).click();
+  await page.getByRole("button", { name: "Submit faction registration" }).click();
   await expect(
     page.getByRole("heading", { name: "REGISTRATION RECEIVED." }),
   ).toBeVisible();
@@ -116,11 +116,11 @@ test("registration conflicts preserve the form and a receipt can show approval",
   );
   await page.goto("/register");
   await fillForm(page);
-  await page.getByRole("button", { name: "Submit team registration" }).click();
+  await page.getByRole("button", { name: "Submit faction registration" }).click();
   await expect(page.getByRole("alert")).toContainText(
     "That team tag is already registered",
   );
-  await expect(page.getByLabel("Team name", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("Faction name", { exact: true })).toHaveValue(
     "New Frontier",
   );
   await page.route(`**/api/v1/teams/registrations/${id}/`, (route) =>

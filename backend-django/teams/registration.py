@@ -11,7 +11,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rankings.engine import _after_commit
 from rankings.models import Player, RankingEvent, RankingState, RatingHistory
-from rankings.eligibility import registered_players, registered_teams
+from rankings.eligibility import competitive_players, registered_teams
 from .models import RegistrationMember, RegistrationReview, Team, TeamMembership, TeamRatingHistory, TeamRegistration
 
 
@@ -58,10 +58,10 @@ class RegistrationInput(serializers.Serializer):
         profile = getattr(request.user, "player_profile", None) if request else None
         if not self.context.get("developer") and (not profile or not profile.is_active or profile.username != data["captain_username"]):
             raise serializers.ValidationError({"captain_username": "Sign in as the registered captain to submit this team."})
-        registered = {p.username.lower(): p for p in registered_players().filter(username__in=names)}
+        registered = {p.username.lower(): p for p in competitive_players().filter(username__in=names)}
         missing = [name for name in names if name not in registered]
         if missing:
-            raise serializers.ValidationError({"members": "These players must create an account first: " + ", ".join(missing)})
+            raise serializers.ValidationError({"members": "These players need an active, unrestricted player account: " + ", ".join(missing)})
         for member in data["members"]:
             member["display_name"] = registered[member["username"]].display_name
         return data
@@ -100,7 +100,7 @@ def submit_registration(data, user):
 
 
 def _place_competitors(model, newcomers):
-    qs = registered_players() if model is Player else registered_teams()
+    qs = competitive_players() if model is Player else registered_teams()
     rows = list(qs.select_for_update().order_by("-rating", "username"))
     regions = {}
     for rank, row in enumerate(rows, 1):
@@ -141,7 +141,7 @@ def review_registration(registration_id, actor, approve, note=""):
         team = Team.objects.create(username=slug, display_name=registration.team_name, tag=registration.tag, region=registration.region, accent_color="#dddddd", owner=registration.submitted_by, registered_at=timezone.now())
         created_players = set()
         for member in members:
-            player = registered_players().filter(username__iexact=member.username).first()
+            player = competitive_players().filter(username__iexact=member.username).first()
             if player is None:
                 raise RegistrationConflict(f"{member.username} must register an active player account first.")
             TeamMembership.objects.create(team=team, player=player, is_captain=member.is_captain)

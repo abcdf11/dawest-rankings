@@ -22,6 +22,8 @@ class Player(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="player_profile")
     registered_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True, db_index=True)
+    is_restricted = models.BooleanField(default=False, db_index=True)
+    restriction_reason = models.CharField(max_length=500, blank=True)
     username = models.SlugField(max_length=40, unique=True)
     display_name = models.CharField(max_length=64)
     region = models.CharField(max_length=4, choices=Region.choices)

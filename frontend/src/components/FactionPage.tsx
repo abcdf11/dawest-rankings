@@ -395,6 +395,7 @@ export default function FactionPage({
   if (profile.error) return <State error={profile.error} />;
   if (!faction || !profile.data) return <State />;
   const owner = Boolean(
+    !session.data?.user?.player?.is_restricted &&
     mine.data?.owned.some((team) => team.username === faction.username),
   );
   const member = faction.members.find(
@@ -527,6 +528,8 @@ export default function FactionPage({
               >
                 Log in to join
               </a>
+            ) : session.data.user?.player?.is_restricted ? (
+              <p>Your account is restricted from joining factions.</p>
             ) : mine.isPending ? (
               <span role="status">Checking membership…</span>
             ) : mine.error ? (

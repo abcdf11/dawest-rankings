@@ -120,5 +120,9 @@ def complete(request, match_id):
     if not match.processed_at:
         match.score_a, match.score_b = scores["score_a"], scores["score_b"]
         match.save(update_fields=["score_a", "score_b"])
-    result = process_team_match(match.pk)
+    try:
+        result = process_team_match(match.pk)
+    except ValueError as exc:
+        transaction.set_rollback(True)
+        return Response({"detail": str(exc)}, status=400)
     return Response({"id": result.pk, "status": result.status, "rating_delta": result.rating_delta})

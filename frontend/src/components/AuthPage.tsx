@@ -89,7 +89,7 @@ export default function AuthPage({
             {developer
               ? "Sign in with your developer account to review applications and manage registered competitors."
               : signup
-                ? "Create a player account to appear on the leaderboard, build your record, and register your team."
+                ? "Create a player account to appear on the leaderboard, build your record, and register your faction."
                 : "Sign in to your registered player account and get back to the frontier."}
           </p>
           <div className="auth-note">

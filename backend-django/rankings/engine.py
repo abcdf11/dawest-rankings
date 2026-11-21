@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 from .models import Match, Player, RankingEvent, RankingState, RatingHistory
-from .eligibility import registered_players
+from .eligibility import competitive_players
 
 logger = logging.getLogger(__name__)
 EVENT_WEIGHTS = {"RANKED_1V1": 1.0, "RANKED_TEAM": 1.0, "SHOWMATCH": 1.2, "TOURNAMENT": 1.5, "QUALIFIER": 1.25}
@@ -34,7 +34,7 @@ def simulate_match_outcome(player_a_id: int, player_b_id: int, score_a: int, sco
     if player_a_id == player_b_id:
         raise ValueError("Choose two different players.")
     # One query yields a consistent ladder snapshot without mutating it.
-    players = list(registered_players())
+    players = list(competitive_players())
     by_id = {p.pk: p for p in players}
     if player_a_id not in by_id or player_b_id not in by_id:
         raise ValueError("Player not found.")
@@ -80,6 +80,9 @@ def process_completed_match(match_id: int) -> Match:
     players = list(Player.objects.select_for_update().order_by("pk"))
     by_id = {p.pk: p for p in players}
     a, b = by_id[match.player_a_id], by_id[match.player_b_id]
+    eligible_ids = set(competitive_players().values_list("pk", flat=True))
+    if a.pk not in eligible_ids or b.pk not in eligible_ids:
+        raise ValueError("Both players must have active, unrestricted registered accounts.")
     outcome = calculate_outcome(a.rating, b.rating, match.score_a, match.score_b, match.match_type)
     for p in players:
         p.previous_rank = p.rank
@@ -96,7 +99,6 @@ def process_completed_match(match_id: int) -> Match:
         p.kd_ratio = round(p.rounds_won / max(1, p.rounds_lost), 2)
         p.updated_at = timezone.now()
     regions: dict[str, int] = {}
-    eligible_ids = set(registered_players().values_list("pk", flat=True))
     ranked = [p for p in players if p.pk in eligible_ids]
     for i, p in enumerate(sorted(ranked, key=lambda p: (-p.rating, p.username)), 1):
         p.rank = i

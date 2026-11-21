@@ -80,7 +80,7 @@ test("anonymous registration and ordinary developer access are gated", async ({
     0,
   );
   await expect(
-    page.getByRole("button", { name: "Submit team registration" }),
+    page.getByRole("button", { name: "Submit faction registration" }),
   ).toHaveCount(0);
   await page.goto("/dev");
   await expect(

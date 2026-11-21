@@ -175,9 +175,7 @@ export default function App() {
             </button>
             <span className="header-divider" />
             <nav aria-label="Main navigation">
-              <a href="/factions" className="faction-nav-link">
-                Factions
-              </a>
+              <a href="/factions">Factions</a>
               <button
                 className={mode === "rankings" ? "active" : ""}
                 onClick={() => setMode("rankings")}
@@ -253,7 +251,7 @@ export default function App() {
               <p>Two ladders. One frontier.</p>
               <a href="/register" className="register-team-link">
                 <UsersRound size={15} />
-                Register a team
+                Register a faction
               </a>
             </div>
             <div className="page-heading">

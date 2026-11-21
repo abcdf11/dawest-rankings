@@ -1,5 +1,6 @@
 """Team Elo uses team results only; roster members' solo ratings never change."""
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from rankings.engine import _after_commit, calculate_outcome, tier_for_rating
 from rankings.models import RankingEvent, RankingState
@@ -37,6 +38,11 @@ def process_team_match(match_id: int) -> TeamMatch:
     teams = list(Team.objects.select_for_update().order_by("pk"))
     by_id = {t.pk: t for t in teams}
     a, b = by_id[match.team_a_id], by_id[match.team_b_id]
+    if not registered_teams().filter(pk=a.pk).exists() or not registered_teams().filter(pk=b.pk).exists():
+        raise ValueError("Both factions must be active and registered.")
+    for faction in (a, b):
+        if faction.memberships.filter(Q(player__is_restricted=True) | Q(player__is_active=False) | Q(player__user__is_active=False)).exists():
+            raise ValueError("Faction rosters cannot include banned or restricted players in a ranked match.")
     outcome = calculate_outcome(a.rating, b.rating, match.score_a, match.score_b, match.match_type)
     for team in teams:
         team.previous_rank = team.rank

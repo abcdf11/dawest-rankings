@@ -126,7 +126,7 @@ export default function TeamRegistrationPage() {
         <a href="/" aria-label="DaWest rankings home">
           <Brand />
         </a>
-        <span className="registration-header-label">TEAM REGISTRATION</span>
+        <span className="registration-header-label">FACTION REGISTRATION</span>
         <AccountMenu />
         <a className="registration-back" href="/?ranking=teams">
           Power rankings
@@ -135,7 +135,7 @@ export default function TeamRegistrationPage() {
       <main className="registration-layout">
         <aside className="registration-intro">
           <span className="registration-eyebrow">
-            THE TEAM CIRCUIT / SEASON 04
+            THE FACTION CIRCUIT / SEASON 04
           </span>
           <h1>
             <TypewriterText text="MAKE YOUR NAME." speed={45} />
@@ -143,14 +143,14 @@ export default function TeamRegistrationPage() {
           <p>
             A name. A crew. A place on the frontier.
             <br />
-            Register your team and enter the DaWest competitive circuit.
+            Register your faction and enter the DaWest competitive circuit.
           </p>
           <div className="registration-process">
             <div>
               <span>01</span>
               <section>
                 <h2>Build your identity</h2>
-                <p>Choose a team name, tag, and home region.</p>
+                <p>Choose a faction name, tag, and home region.</p>
               </section>
             </div>
             <div>
@@ -165,7 +165,7 @@ export default function TeamRegistrationPage() {
               <section>
                 <h2>Enter the circuit</h2>
                 <p>
-                  After review, your team starts at 1,500 PR. Match results
+                  After review, your faction starts at 1,500 PR. Match results
                   decide what comes next.
                 </p>
               </section>
@@ -174,8 +174,8 @@ export default function TeamRegistrationPage() {
           <div className="registration-note">
             <ShieldCheck size={19} />
             <p>
-              One team per player. Independent team and solo ratings. Every
-              result verified.
+              One faction per player. Independent faction and solo ratings.
+              Every result verified.
             </p>
           </div>
           <span className="registration-aside-footer">
@@ -188,13 +188,25 @@ export default function TeamRegistrationPage() {
               <LoaderCircle size={28} className="registration-spin" />
               <h2>CHECKING YOUR SESSION.</h2>
             </div>
+          ) : profile?.is_restricted ? (
+            <div className="auth-gate">
+              <ShieldCheck size={32} />
+              <h2>ACCOUNT RESTRICTED.</h2>
+              <p>
+                You can still view your profile, but faction registration is
+                unavailable while your account is restricted.
+              </p>
+              <a href="/profile" className="button secondary">
+                View your profile
+              </a>
+            </div>
           ) : !session.data?.authenticated || !profile?.is_active ? (
             <div className="auth-gate">
               <ShieldCheck size={32} />
               <h2>REGISTERED PLAYERS ONLY.</h2>
               <p>
-                Sign in as your team’s captain. Each roster member must create a
-                player account before you submit your team.
+                Sign in as your faction’s leader. Each roster member must create
+                a player account before you submit your faction.
               </p>
               <div className="auth-gate-links">
                 <a className="button primary" href="/login?next=/register">
@@ -224,14 +236,14 @@ export default function TeamRegistrationPage() {
               </h2>
               <p>
                 {receipt.status === "APPROVED"
-                  ? "Your team has been approved and added to the official ladder."
+                  ? "Your faction has been approved and added to the official ladder."
                   : receipt.status === "REJECTED"
                     ? "Your application was not approved. Review the moderator's note below."
-                    : "Your team details and roster have been saved. A moderator will review your application before your team joins the official ladder."}
+                    : "Your faction details and roster have been saved. A moderator will review your application before your faction joins the official ladder."}
               </p>
               <dl className="receipt-details">
                 <div>
-                  <dt>TEAM</dt>
+                  <dt>FACTION</dt>
                   <dd>
                     {receipt.team_name} <span>[{receipt.tag}]</span>
                   </dd>
@@ -323,27 +335,27 @@ export default function TeamRegistrationPage() {
                   <UsersRound size={23} />
                 </span>
                 <div>
-                  <h2>REGISTER A TEAM</h2>
+                  <h2>REGISTER A FACTION</h2>
                   <p>Your next chapter starts here.</p>
                 </div>
               </div>
               <fieldset disabled={mutation.isPending}>
-                <legend>TEAM IDENTITY</legend>
+                <legend>FACTION IDENTITY</legend>
                 <label className="registration-field">
-                  Team name
+                  Faction name
                   <input
                     required
                     minLength={2}
                     maxLength={64}
                     value={draft.team_name}
                     onChange={(e) => field("team_name", e.target.value)}
-                    placeholder="Your team name"
+                    placeholder="Your faction name"
                     autoComplete="organization"
                   />
                 </label>
                 <div className="registration-two-columns">
                   <label className="registration-field">
-                    Team tag
+                    Faction tag
                     <input
                       required
                       minLength={2}
@@ -372,7 +384,7 @@ export default function TeamRegistrationPage() {
                   </label>
                 </div>
                 <label className="registration-field">
-                  About your team <span>Optional</span>
+                  About your faction <span>Optional</span>
                   <textarea
                     maxLength={500}
                     value={draft.description}
@@ -501,7 +513,7 @@ export default function TeamRegistrationPage() {
                 <p className="registration-help">
                   Each player must register an account first. Include at least
                   one player in addition to your captain. Players may belong to
-                  one team at a time.
+                  one faction at a time.
                 </p>
               </fieldset>
               {mutation.isError && (
@@ -521,18 +533,18 @@ export default function TeamRegistrationPage() {
                 )}{" "}
                 {mutation.isPending
                   ? "Submitting registration…"
-                  : "Submit team registration"}
+                  : "Submit faction registration"}
               </button>
               <p className="registration-submit-note">
-                You’ll receive a private status link after submitting. Your team
-                joins the official ladder after review.
+                You’ll receive a private status link after submitting. Your
+                faction joins the official ladder after review.
               </p>
             </form>
           )}
         </section>
       </main>
       <footer className="registration-footer">
-        <span>DAWEST / TEAM REGISTRATION</span>
+        <span>DAWEST / FACTION REGISTRATION</span>
         <span>
           <Globe2 size={12} />
           ONE FRONTIER. EVERY REGION.

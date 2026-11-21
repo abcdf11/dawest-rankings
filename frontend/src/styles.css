@@ -187,7 +187,7 @@ small {
   align-items: stretch;
   gap: 31px;
 }
-.site-header nav > button {
+.site-header nav > :is(button, a) {
   position: relative;
   padding: 0 1px;
   color: #a2a4aa;
@@ -196,12 +196,14 @@ small {
   display: flex;
   align-items: center;
   gap: 9px;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.site-header nav > button:hover,
-.site-header nav > button.active {
+.site-header nav > :is(button, a):hover,
+.site-header nav > :is(button, a).active {
   color: #f2f2ed;
 }
-.site-header nav > button.active:after {
+.site-header nav > :is(button, a).active:after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -2104,7 +2106,7 @@ small {
   .site-header nav {
     gap: 18px;
   }
-  .site-header nav > button {
+  .site-header nav > :is(button, a) {
     font-size: 0.75rem;
   }
   .new-tag {
@@ -2317,11 +2319,12 @@ small {
     gap: 16px;
     margin-left: auto;
   }
-  .site-header nav > button {
+  .site-header nav > :is(button, a) {
     font-size: 0.6875rem;
     max-width: 72px;
     text-align: left;
     line-height: 1.5;
+    white-space: normal;
   }
   .site-header nav > button:last-child {
     display: none;

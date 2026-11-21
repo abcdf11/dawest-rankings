@@ -55,7 +55,7 @@ export function RankingsTable({
         )}
         {emptyLadder && kind === "teams" && (
           <a className="empty-signup-link" href="/register">
-            Register a team
+            Register a faction
           </a>
         )}
       </div>

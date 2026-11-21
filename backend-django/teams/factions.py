@@ -15,7 +15,7 @@ from rest_framework.throttling import UserRateThrottle
 from accounts.appearance import AppearanceInput, ImageUploadThrottle, media_response
 from accounts.models import AuditEntry
 from accounts.services import lock_ladders
-from rankings.eligibility import registered_players, registered_teams
+from rankings.eligibility import competitive_players, registered_players, registered_teams, require_unrestricted
 from rankings.engine import publish_pending_events
 from rankings.models import RankingEvent
 from rankings.profile_images import normalize_image
@@ -44,6 +44,7 @@ def factions():
 
 
 def own_faction(request, username, lock=False):
+    require_unrestricted(request.user)
     queryset = registered_teams().filter(owner=request.user)
     if lock:
         queryset = queryset.select_for_update()
@@ -151,6 +152,7 @@ class JoinInput(serializers.Serializer):
 @throttle_classes([JoinThrottle])
 @transaction.atomic
 def join(request, username):
+    require_unrestricted(request.user)
     lock_ladders()
     team = get_object_or_404(registered_teams().select_for_update(), username__iexact=username)
     player = get_object_or_404(registered_players().select_for_update(), user=request.user)
@@ -191,7 +193,7 @@ def review(request, username, request_id):
     if row.status != "PENDING":
         raise FactionConflict("This request has already been resolved.")
     if decision == "ACCEPTED":
-        player = get_object_or_404(registered_players().select_for_update(), pk=row.player_id)
+        player = get_object_or_404(competitive_players().select_for_update(), pk=row.player_id)
         if TeamMembership.objects.filter(player=player).exists():
             raise FactionConflict("This player has already joined another faction.")
         if RegistrationMember.objects.filter(username__iexact=player.username, registration__status="PENDING").exists():
@@ -228,6 +230,8 @@ def remove_member(request, username, player_id):
     membership = get_object_or_404(TeamMembership.objects.select_for_update().select_related("player"), team=team, player_id=player_id)
     if request.user.pk != team.owner_id and membership.player.user_id != request.user.pk:
         return Response({"detail": "Only the faction leader or this member can remove their membership."}, status=403)
+    if request.user.pk == team.owner_id:
+        require_unrestricted(request.user)
     if membership.is_captain or membership.player.user_id == team.owner_id:
         raise FactionConflict("The faction leader must remain in the faction.")
     member_username = membership.player.username

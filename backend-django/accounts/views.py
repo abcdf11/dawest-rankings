@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
-from rankings.eligibility import registered_players
+from rankings.eligibility import competitive_players
 from .services import SignupInput, create_player_account, is_developer, user_payload
 from .models import AccountSession
 
@@ -94,5 +94,5 @@ def signout(request):
 def roster_players(request):
     from django.db.models import Q
     search = request.query_params.get("search", "").strip()[:40]
-    rows = registered_players().filter(Q(username__icontains=search) | Q(display_name__icontains=search)).filter(team_membership__isnull=True).order_by("username")[:50]
+    rows = competitive_players().filter(Q(username__icontains=search) | Q(display_name__icontains=search)).filter(team_membership__isnull=True).order_by("username")[:50]
     return Response({"players": [{"id": p.pk, "username": p.username, "display_name": p.display_name, "region": p.region} for p in rows]})

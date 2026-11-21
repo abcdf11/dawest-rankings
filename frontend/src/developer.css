@@ -63,7 +63,214 @@
 }
 .dev-toolbar nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
+}
+.dev-elo-panel,
+.dev-terminal-panel {
+  border: 1px solid #ffffff24;
+  border-radius: 8px;
+  padding: 28px;
+  background: #111;
+}
+.dev-tools-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.dev-tools-heading > svg {
+  color: #aaa;
+  margin-top: 3px;
+}
+.dev-tools-heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.dev-tools-heading h2 {
+  font:
+    650 1.35rem/1.4 Inter,
+    sans-serif;
+  letter-spacing: -0.5px;
+}
+.dev-tools-heading p {
+  margin-top: 8px;
+  color: #999;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.dev-tools-heading .button {
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+.dev-elo-panel form {
+  max-width: 700px;
+}
+.dev-elo-panel fieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+.dev-elo-fields {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+.dev-elo-panel .dev-field-help {
+  display: block;
+  color: #888;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  position: static;
+  margin-top: 4px;
+}
+.dev-elo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  padding: 20px;
+  margin: 4px 0 22px;
+  border: 1px solid #ffffff14;
+  background: #181818;
+  border-radius: 5px;
+}
+.dev-elo-preview span {
+  display: grid;
+  gap: 10px;
+  font-size: 0.8125rem;
+  color: #999;
+}
+.dev-elo-preview strong {
+  color: #eee;
+  font-size: 1.5rem;
+  font-weight: 650;
+}
+.dev-elo-panel .button {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+}
+.dev-terminal-output {
+  font:
+    400 0.875rem/1.9 "JetBrains Mono",
+    monospace;
+  padding: 22px;
+  background: #080808;
+  border: 1px solid #ffffff14;
+  border-radius: 6px 6px 0 0;
+  min-height: 300px;
+  max-height: 480px;
+  overflow: auto;
+  color: #bbb;
+}
+.dev-terminal-output > div {
+  margin-bottom: 20px;
+}
+.dev-terminal-output pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  margin: 8px 0 0;
+}
+.dev-terminal-command {
+  color: #eee;
+  overflow-wrap: anywhere;
+}
+.dev-terminal-command span {
+  color: #777;
+}
+.dev-terminal-output .command-error pre {
+  color: #e8a4a4;
+}
+.dev-terminal-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #ffffff24;
+  border-top: 0;
+  background: #181818;
+  border-radius: 0 0 6px 6px;
+}
+.dev-terminal-input > span {
+  color: #888;
+  font:
+    400 0.875rem "JetBrains Mono",
+    monospace;
+  white-space: nowrap;
+}
+.dev-terminal-input input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #eee;
+  flex: 1;
+  min-width: 0;
+  font:
+    400 0.875rem/1.7 "JetBrains Mono",
+    monospace;
+}
+.dev-terminal-input:focus-within {
+  border-color: #888;
+}
+.dev-terminal-input .button {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+.dev-terminal-help {
+  margin-top: 22px;
+  color: #999;
+  font-size: 0.8125rem;
+  line-height: 1.9;
+}
+.dev-terminal-help p {
+  margin-top: 10px;
+}
+.dev-terminal-help code {
+  color: #ccc;
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .dev-toolbar {
+    flex-wrap: wrap;
+  }
+  .dev-toolbar nav {
+    width: 100%;
+  }
+  .dev-elo-panel,
+  .dev-terminal-panel {
+    padding: 20px 16px;
+  }
+  .dev-tools-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .dev-tools-heading h2 {
+    font-size: 1.2rem;
+  }
+  .dev-tools-heading p {
+    font-size: 0.8125rem;
+  }
+  .dev-elo-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .dev-terminal-output {
+    padding: 16px 12px;
+    font-size: 0.75rem;
+  }
+  .dev-terminal-input {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .dev-terminal-input input {
+    font-size: 0.8125rem;
+  }
+  .dev-terminal-input .button {
+    margin-left: auto;
+  }
 }
 .dev-toolbar nav > button {
   font-size: 0.875rem;

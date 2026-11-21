@@ -11,7 +11,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from .engine import process_completed_match, simulate_match_outcome
 from .models import Match, Player, RankingState
-from .eligibility import registered_players
+from .eligibility import competitive_players, registered_players
 from .serializers import CompleteInput, PlayerSerializer, RatingHistorySerializer, SimulationInput, form_for_player
 
 class CanRecordMatch(BasePermission):
@@ -36,7 +36,7 @@ def rankings(request):
     key = "leaderboard:" + str(revision) + ":" + hashlib.sha256(json.dumps([tier, region, search]).encode()).hexdigest()
     data = cache.get(key)
     if data is None:
-        qs = registered_players().select_related("team_membership__team")
+        qs = competitive_players().select_related("team_membership__team")
         if tier != "ALL": qs = qs.filter(tier=tier)
         if region != "ALL": qs = qs.filter(region=region)
         if search: qs = qs.filter(Q(username__icontains=search) | Q(display_name__icontains=search))
@@ -50,7 +50,7 @@ def player_detail(request, username):
     player = get_object_or_404(registered_players().select_related("team_membership__team"), username__iexact=username)
     matches = list(Match.objects.filter(Q(player_a=player) | Q(player_b=player), status="COMPLETED", processed_at__isnull=False).select_related("player_a", "player_b")[:20])
     history = list(player.rating_history.order_by("-recorded_at", "-pk")[:120])
-    return Response({**PlayerSerializer(player, context={"forms": {player.pk: matches}}).data, "banner_url": player.profile_banner_url, "registered_at": player.registered_at, "rounds_won": player.rounds_won, "rounds_lost": player.rounds_lost, "history": RatingHistorySerializer(list(reversed(history)), many=True).data, "matches": form_for_player(player, matches)})
+    return Response({**PlayerSerializer(player, context={"forms": {player.pk: matches}}).data, "is_restricted": player.is_restricted, "banner_url": player.profile_banner_url, "registered_at": player.registered_at, "rounds_won": player.rounds_won, "rounds_lost": player.rounds_lost, "history": RatingHistorySerializer(list(reversed(history)), many=True).data, "matches": form_for_player(player, matches)})
 
 @api_view(["POST"])
 def simulate(request):
@@ -76,7 +76,11 @@ def complete(request, match_id):
         match.score_a = serializer.validated_data["score_a"]
         match.score_b = serializer.validated_data["score_b"]
         match.save(update_fields=["score_a", "score_b"])
-    match = process_completed_match(match.pk)
+    try:
+        match = process_completed_match(match.pk)
+    except ValueError as exc:
+        transaction.set_rollback(True)
+        return Response({"detail": str(exc)}, status=400)
     return Response({"id": match.pk, "status": match.status, "rating_delta": match.rating_delta})
 
 @api_view(["GET"])

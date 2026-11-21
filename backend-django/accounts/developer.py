@@ -20,7 +20,7 @@ class DeveloperOnly(BasePermission):
 
 
 def player_row(player):
-    return {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active and player.user.is_active}
+    return {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active and player.user.is_active, "is_restricted": player.is_restricted, "restriction_reason": player.restriction_reason}
 
 
 def team_row(team):

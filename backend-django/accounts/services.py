@@ -5,7 +5,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rankings.eligibility import registered_players, registered_teams
+from rankings.eligibility import competitive_players, registered_players, registered_teams
 from rankings.engine import _after_commit
 from rankings.models import Player, RankingEvent, RankingState, RatingHistory
 from teams.models import TeamRatingHistory
@@ -20,7 +20,7 @@ def is_developer(user):
 
 def user_payload(user):
     player = getattr(user, "player_profile", None)
-    return {"id": user.pk, "username": user.username, "is_developer": is_developer(user), "player": {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active} if player else None}
+    return {"id": user.pk, "username": user.username, "is_developer": is_developer(user), "player": {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active, "is_restricted": player.is_restricted, "restriction_reason": player.restriction_reason} if player else None}
 
 
 def lock_ladders():
@@ -29,10 +29,10 @@ def lock_ladders():
     return [RankingState.objects.select_for_update().get(pk=pk) for pk in (2, 1)]
 
 
-def refresh_ladders(actor, action, target_type, target_id="", details=None):
+def refresh_ladders(actor, action, target_type, target_id="", details=None, request_key=None):
     """Called inside the transaction holding both ladder locks; never stores secrets."""
-    audit = AuditEntry.objects.create(actor=actor, action=action, target_type=target_type, target_id=str(target_id), details=details or {})
-    for pk, kind, qs in ((1, "players", registered_players()), (2, "teams", registered_teams())):
+    audit = AuditEntry.objects.create(**({"id": request_key} if request_key else {}), actor=actor, action=action, target_type=target_type, target_id=str(target_id), details=details or {})
+    for pk, kind, qs in ((1, "players", competitive_players()), (2, "teams", registered_teams())):
         rows = list(qs.select_for_update().order_by("-rating", "username"))
         regions = {}
         for rank, row in enumerate(rows, 1):

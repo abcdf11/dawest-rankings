@@ -12,6 +12,8 @@ export interface SessionUser {
     rating: number;
     rank: number;
     is_active: boolean;
+    is_restricted?: boolean;
+    restriction_reason?: string;
   } | null;
 }
 export interface Session {
