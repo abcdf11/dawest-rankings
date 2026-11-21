@@ -85,6 +85,14 @@ Select an event in the **Event** field of a solo or faction match in Django Admi
 
 Events use the `CompetitionEvent` table with optional match foreign keys, so existing results are retained. Creation and updates require developer permissions and session CSRF protection and are recorded in the audit log. Unpublishing hides an event without deleting its match associations. The existing Render startup script applies both event migrations automatically; no new environment variables are needed.
 
+### Pick'ems
+
+In **`/dev` → Event maker**, choose **Pick'ems** on an event to add matchups (two options, optional label, 1–100 points, lock time defaulting to the event start). Developers can lock a matchup early, set or clear its winner, and delete it (removing its picks). Options cannot change once players have picked.
+
+**Faction events take team registrations.** On a published faction event's page, a faction leader can register (or withdraw) their faction until the event starts; restricted accounts cannot register. In the Pick'ems window, developers see the registered teams, can add any registered team from the Teams list (even after registration closes), and can remove one unless it is in a matchup. Faction-event matchups are built by choosing Team A and Team B from the registered teams; solo events keep free-text options. An event with registered teams or pick'ems cannot change format. Entries live in `EventEntry`.
+
+On a published event's page, signed-in registered players pick one option per matchup and can change it until it locks. Pick distributions stay hidden until lock. Setting a winner scores correct picks and updates the event's standings (points, then correct picks; ties share a rank). Matchups live in `PickemMatchup` and picks in `PickemPick`; creation, updates, results, and deletions are audited. The migration applies automatically on startup.
+
 ## Admin Elo controls and moderation terminal
 
 Sign in through `/dev/login`, open `/dev`, and select **Elo controls** to add or subtract player or faction Elo. Choose a ladder and target, enter a signed amount, and give a reason. Player adjustments affect solo Elo; faction adjustments affect team Elo. Each adjustment updates previous/peak rating, tier, global/regional ranks, rating history, audit records, and cache revisions without creating match wins or losses. Amounts support two decimal places and must produce an Elo between 0 and 1,000,000.
@@ -228,6 +236,14 @@ The earlier private Sites deployment is a static build and does not host Django 
 | GET | `/api/v1/events/<uuid>/` | Published event details and verified linked results |
 | GET / POST | `/api/v1/dev/events/` | Developer event list and draft/published event creation |
 | PATCH / DELETE | `/api/v1/dev/events/<uuid>/` | Developer event editing; DELETE unpublishes without deleting results |
+| GET | `/api/v1/events/<uuid>/pickems/` | Pick'em matchups, the viewer's picks, and standings |
+| POST | `/api/v1/events/<uuid>/pickems/<id>/pick/` | Signed-in player picks `A` or `B` before lock |
+| GET / POST | `/api/v1/events/<uuid>/entries/` | Registered teams; a faction leader registers their own faction |
+| DELETE | `/api/v1/events/<uuid>/entries/<team-slug>/` | Leader withdraws before the event starts |
+| GET / POST | `/api/v1/dev/events/<uuid>/entries/` | Developer view of entrants/available teams; add a team |
+| DELETE | `/api/v1/dev/events/<uuid>/entries/<team-slug>/` | Developer removes a team not used in a matchup |
+| GET / POST | `/api/v1/dev/events/<uuid>/pickems/` | Developer pick'em list and matchup creation |
+| PATCH / DELETE | `/api/v1/dev/events/<uuid>/pickems/<id>/` | Edit, lock, resolve, or delete a matchup |
 | GET | `/api/v1/factions/mine/` | Signed-in player's owned factions, membership, and requests |
 | GET | `/api/v1/factions/<slug>/` | Public faction profile, roster, leader, and matches |
 | GET | `/api/v1/factions/<slug>/manage/` | Owner-only dashboard and private member requests |

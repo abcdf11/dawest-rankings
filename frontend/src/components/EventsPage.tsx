@@ -19,6 +19,8 @@ import type {
 import { Brand } from "./Shared";
 import { AccountMenu } from "./AccountMenu";
 import { MainNavigation } from "./MainNavigation";
+import { PickemPanel } from "./PickemPanel";
+import { EventTeams } from "./EventTeams";
 
 export const eventStatusLabel: Record<EventStatus, string> = {
   UPCOMING: "Upcoming",
@@ -282,6 +284,8 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
                 </aside>
               </div>
             </article>
+            {event.format === "FACTION" && <EventTeams eventId={event.id} />}
+            <PickemPanel eventId={event.id} />
             <section className="event-results">
               <h2>Results</h2>
               {event.matches.length ? (

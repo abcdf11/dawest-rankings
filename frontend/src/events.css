@@ -601,3 +601,306 @@
     transition: none;
   }
 }
+
+/* Pick'ems */
+.pickem-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.pickem-panel-heading h2 {
+  font:
+    650 1.3rem/1.5 Inter,
+    sans-serif;
+}
+.pickem-panel-heading span {
+  color: #888;
+  font-size: 0.8125rem;
+}
+.pickem-panel .registration-help a {
+  color: #ddd;
+}
+.pickem-list,
+.pickem-dev-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.pickem-card {
+  padding: 18px 20px;
+  border: 1px solid #ffffff12;
+  border-radius: 6px;
+  background: #141414;
+}
+.pickem-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #888;
+  font:
+    400 0.6875rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.pickem-card-top span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.pickem-options {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.pickem-vs {
+  color: #666;
+  font-size: 0.75rem;
+}
+.pickem-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #ffffff24;
+  border-radius: 5px;
+  background: #0d0d0d;
+  color: #ddd;
+  font: inherit;
+  font-size: 0.9375rem;
+  text-align: left;
+  cursor: pointer;
+}
+.pickem-option span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.pickem-option small {
+  color: #888;
+  font-family: "JetBrains Mono", monospace;
+}
+.pickem-option:hover:not(:disabled) {
+  border-color: #ffffff70;
+}
+.pickem-option:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.pickem-option:disabled {
+  cursor: default;
+}
+.pickem-option.chosen {
+  border-color: #fff;
+  background: #fff;
+  color: #000;
+}
+.pickem-option.chosen small {
+  color: #444;
+}
+.pickem-option.lost {
+  opacity: 0.45;
+}
+.pickem-option.won:not(.chosen) {
+  border-color: #ffffff90;
+}
+.pickem-option.lost.chosen {
+  text-decoration: line-through;
+}
+.pickem-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font:
+    600 1rem/1.5 Inter,
+    sans-serif;
+  margin: 22px 0 12px;
+}
+.pickem-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  white-space: nowrap;
+}
+.pickem-panel .dev-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #fff2;
+  border-radius: 3px;
+}
+.pickem-table th {
+  background: #121212;
+  font:
+    400 0.625rem "JetBrains Mono",
+    monospace;
+  color: #777;
+  letter-spacing: 1px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #fff2;
+}
+.pickem-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #ffffff09;
+  color: #999;
+  font-size: 0.8125rem;
+}
+.pickem-table a {
+  color: #ddd;
+  text-decoration: none;
+}
+.pickem-table tr.pickem-me td {
+  background: #ffffff0d;
+  color: #ddd;
+}
+.pickem-manager .registration-help {
+  margin-bottom: 16px;
+}
+.pickem-dev-list article {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid #ffffff20;
+  border-radius: 6px;
+  background: #111;
+}
+.pickem-dev-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-top: 10px;
+  color: #ddd;
+  overflow-wrap: anywhere;
+}
+.pickem-dev-options small,
+.pickem-dev-options span {
+  color: #777;
+  font-size: 0.75rem;
+}
+.pickem-winner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #888;
+  font-size: 0.75rem;
+}
+.pickem-winner select {
+  max-width: 180px;
+}
+@media (max-width: 760px) {
+  .pickem-options {
+    grid-template-columns: 1fr;
+  }
+  .pickem-vs {
+    text-align: center;
+  }
+  .pickem-dev-list article {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+.pickem-entries {
+  margin-bottom: 8px;
+}
+.pickem-entry-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.pickem-entry-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid #ffffff20;
+  border-radius: 5px;
+  background: #111;
+}
+.pickem-entry-list a {
+  color: #ddd;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.pickem-entry-list b {
+  color: #888;
+  font:
+    400 0.75rem "JetBrains Mono",
+    monospace;
+}
+.pickem-entry-add {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pickem-entry-add select {
+  flex: 1;
+  min-width: 0;
+}
+.event-team-register {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.event-teams .registration-help a {
+  color: #ddd;
+}
+.event-team-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+.event-team-grid a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #ffffff12;
+  border-radius: 6px;
+  background: #141414;
+  color: #ddd;
+  text-decoration: none;
+}
+.event-team-grid a:hover {
+  border-color: #ffffff50;
+}
+.event-team-grid img,
+.event-team-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex: none;
+}
+.event-team-logo {
+  display: grid;
+  place-items: center;
+  background: #222;
+  color: #888;
+}
+.event-team-grid span {
+  display: grid;
+  min-width: 0;
+}
+.event-team-grid b {
+  overflow-wrap: anywhere;
+  font-weight: 550;
+}
+.event-team-grid small {
+  color: #777;
+  font:
+    400 0.6875rem "JetBrains Mono",
+    monospace;
+}

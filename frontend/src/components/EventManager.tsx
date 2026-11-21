@@ -1,10 +1,11 @@
 import { useCallback, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Plus, Trophy } from "lucide-react";
 import { request } from "../lib/api";
 import type { CompetitionEvent, EventStatus } from "../types/events";
 import { eventDate, eventStatusLabel } from "./EventsPage";
 import { Modal } from "./Modal";
+import { PickemManager } from "./PickemManager";
 
 function localDate(value?: string | null) {
   if (!value) return "";
@@ -21,6 +22,8 @@ export function EventManager() {
     queryFn: () => request<{ events: CompetitionEvent[] }>("/dev/events/"),
   });
   const [editing, setEditing] = useState<CompetitionEvent | "new" | null>(null);
+  const [pickems, setPickems] = useState<CompetitionEvent | null>(null);
+  const closePickems = useCallback(() => setPickems(null), []);
   const close = useCallback(() => setEditing(null), []);
   const refresh = () => {
     for (const key of ["developer-events", "events", "event", "developer"])
@@ -38,8 +41,11 @@ export function EventManager() {
     <section className="dev-events">
       <div className="dev-events-heading">
         <div>
-          <h2>Events</h2>
-          <p>Published events appear on the public Events page.</p>
+          <h2>Event maker</h2>
+          <p>
+            Create events and their pick'ems. Published events appear on the
+            public Events page, where players make their picks.
+          </p>
         </div>
         <button className="button primary" onClick={() => setEditing("new")}>
           <Plus size={15} /> Create event
@@ -84,6 +90,12 @@ export function EventManager() {
                 </button>
                 <button
                   className="button secondary"
+                  onClick={() => setPickems(event)}
+                >
+                  <Trophy size={15} /> Pick'ems
+                </button>
+                <button
+                  className="button secondary"
                   disabled={publish.isPending}
                   onClick={() => publish.mutate(event)}
                 >
@@ -99,6 +111,7 @@ export function EventManager() {
           <h3>No events yet</h3>
         </div>
       )}
+      {pickems && <PickemManager event={pickems} onClose={closePickems} />}
       {editing && (
         <EventEditor
           event={editing === "new" ? undefined : editing}

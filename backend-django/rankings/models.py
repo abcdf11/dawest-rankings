@@ -133,6 +133,61 @@ class CompetitionEvent(models.Model):
             raise ValidationError({"format": "The event format must match its linked matches."})
 
 
+class EventEntry(models.Model):
+    """A registered team (faction) taking part in a faction event."""
+    event = models.ForeignKey(CompetitionEvent, on_delete=models.CASCADE, related_name="entries")
+    team = models.ForeignKey("teams.Team", on_delete=models.CASCADE, related_name="event_entries")
+    registered_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+        constraints = [models.UniqueConstraint(fields=["event", "team"], name="one_entry_per_team")]
+
+
+class PickemMatchup(models.Model):
+    """A pick'em question on an event: players predict A or B before it locks."""
+    class Side(models.TextChoices):
+        A = "A", "Option A"
+        B = "B", "Option B"
+
+    event = models.ForeignKey(CompetitionEvent, on_delete=models.CASCADE, related_name="pickems")
+    label = models.CharField(max_length=80, blank=True)
+    option_a = models.CharField(max_length=80)
+    option_b = models.CharField(max_length=80)
+    # Set for faction events; option_a/option_b keep the team names as shown when created.
+    team_a = models.ForeignKey("teams.Team", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    team_b = models.ForeignKey("teams.Team", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    points =models.PositiveSmallIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(100)])
+    locks_at = models.DateTimeField()
+    winner = models.CharField(max_length=1, choices=Side.choices, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["order", "locks_at", "id"]
+        constraints = [models.CheckConstraint(condition=Q(points__gte=1) & Q(points__lte=100), name="pickem_points_range")]
+
+    def __str__(self):
+        return f"{self.option_a} vs {self.option_b}"
+
+    def is_locked(self, now=None):
+        now = now or timezone.now()
+        return bool(self.winner) or self.locks_at <= now or self.event.current_status(now) == CompetitionEvent.Status.CANCELLED
+
+
+class PickemPick(models.Model):
+    matchup = models.ForeignKey(PickemMatchup, on_delete=models.CASCADE, related_name="picks")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pickem_picks")
+    choice = models.CharField(max_length=1, choices=PickemMatchup.Side.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["matchup", "user"], name="one_pick_per_matchup")]
+
+
 class Match(models.Model):
     class Type(models.TextChoices):
         RANKED_1V1 = "RANKED_1V1", "Ranked 1v1"

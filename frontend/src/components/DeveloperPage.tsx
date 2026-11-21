@@ -208,7 +208,7 @@ export default function DeveloperPage() {
                   ["applications", "Applications"],
                   ["players", "Players"],
                   ["teams", "Teams"],
-                  ["events", "Events"],
+                  ["events", "Event maker"],
                   ["elo", "Elo controls"],
                   ["terminal", "Terminal"],
                   ["activity", "Activity"],

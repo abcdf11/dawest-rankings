@@ -26,6 +26,8 @@ class EventInput(serializers.ModelSerializer):
         if self.instance and values.get("format", self.instance.format) != self.instance.format:
             if self.instance.solo_matches.exists() or self.instance.faction_matches.exists():
                 raise serializers.ValidationError({"format": "An event with linked matches cannot change format."})
+            if self.instance.entries.exists() or self.instance.pickems.exists():
+                raise serializers.ValidationError({"format": "An event with registered teams or pick'ems cannot change format."})
         starts = values.get("starts_at", getattr(self.instance, "starts_at", None))
         ends = values.get("ends_at", getattr(self.instance, "ends_at", None))
         if starts and ends and ends <= starts:
