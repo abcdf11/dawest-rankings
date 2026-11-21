@@ -1,0 +1,117 @@
+/* Player and faction theme audio */
+.faction-theme {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 30px 22px;
+  padding: 12px 16px;
+  border: 1px solid #ffffff1c;
+  border-radius: 8px;
+  background: #101010;
+}
+.faction-theme-play {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+}
+.faction-theme-play:focus-visible,
+.faction-theme-auto:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.faction-theme-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.faction-theme-text span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #777;
+  font:
+    400 0.6875rem "JetBrains Mono",
+    monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.faction-theme-text strong {
+  color: #ddd;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.faction-theme-text small {
+  color: #999;
+  font-size: 0.75rem;
+}
+.faction-theme-auto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-size: 0.75rem;
+}
+.faction-audio-help {
+  color: #999;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.faction-audio-preview {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 18px;
+}
+.faction-audio-form fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  border: 0;
+  margin: 0 0 14px;
+  padding: 0;
+}
+.faction-audio-form label {
+  display: grid;
+  gap: 8px;
+  color: #aaa;
+  font-size: 0.8125rem;
+}
+.faction-audio-form label small {
+  color: #666;
+}
+.faction-audio-form input {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #ffffff24;
+  border-radius: 5px;
+  background: #0d0d0d;
+  color: #ddd;
+  font: inherit;
+}
+.faction-audio-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.faction-audio-actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 760px) {
+  .faction-theme {
+    margin: 0 16px 18px;
+    flex-wrap: wrap;
+  }
+  .faction-audio-form fieldset {
+    grid-template-columns: 1fr;
+  }
+}

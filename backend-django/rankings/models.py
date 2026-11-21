@@ -32,6 +32,8 @@ class Player(models.Model):
     avatar_url = models.URLField(blank=True)
     avatar_version = models.CharField(max_length=64, blank=True)
     banner_version = models.CharField(max_length=64, blank=True)
+    audio_version = models.CharField(max_length=64, blank=True)
+    audio_title = models.CharField(max_length=80, blank=True)
     accent_color = models.CharField(max_length=7, default="#EAB308")
     rating = models.FloatField(default=1500, validators=[MinValueValidator(0)])
     previous_rating = models.FloatField(default=1500)
@@ -60,6 +62,26 @@ class Player(models.Model):
     @property
     def profile_banner_url(self):
         return f"/api/v1/players/{self.username}/media/banner/{self.banner_version}/" if self.banner_version else ""
+
+    @property
+    def profile_audio_url(self):
+        return f"/api/v1/players/{self.username}/audio/{self.audio_version}/" if self.audio_version else ""
+
+
+class AudioTrack(models.Model):
+    """Shared columns for a stored theme track (players and factions)."""
+    version = models.CharField(max_length=64)
+    content_type = models.CharField(max_length=32)
+    data = models.BinaryField()
+    byte_size = models.PositiveIntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+
+class PlayerAudio(AudioTrack):
+    player = models.OneToOneField(Player, on_delete=models.CASCADE, related_name="audio")
 
 
 class ProfileMedia(models.Model):

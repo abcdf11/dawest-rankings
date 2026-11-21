@@ -128,11 +128,11 @@ Registered players can request membership with an optional message, withdraw pen
 
 Faction logos and banners support the same PNG/JPG/WebP/GIF validation and automatic fitting as player images: **256 × 256 logos**, **1280 × 240 banners**, **8 MB per file**, and up to **120 GIF frames**. Animation and reduced-motion posters are preserved. Images live in a separate `FactionMedia` database table; requests live in `FactionJoinRequest`. Player images remain independent. The Render startup script applies the new migration automatically without a Shell session or additional storage configuration.
 
-### Faction theme audio
+### Player and faction theme audio
 
-On `/factions/<team-slug>/manage`, the faction owner can upload a **Theme audio** track (MP3, M4A/AAC, OGG, WAV, FLAC, or WebM, up to **8 MB**) with an optional title, replace it, retitle it, or remove it. Files are identified by their contents, not their names. The track plays on loop when someone opens the public faction profile. Browsers block sound until a visitor interacts with the page, so if autoplay is blocked the track starts on the visitor's first click or key press. Visitors can pause it or turn autoplay off; that choice is remembered in their browser.
+Players choose **Theme audio** on their own profile (`/profile`) to upload a track for `/players/<username>`; the account comes from the signed-in session. On `/factions/<team-slug>/manage`, the faction owner can likewise upload a **Theme audio** track (MP3, M4A/AAC, OGG, WAV, FLAC, or WebM, up to **8 MB**) with an optional title, replace it, retitle it, or remove it. Files are identified by their contents, not their names. The track plays on loop when someone opens the public player or faction profile. Browsers block sound until a visitor interacts with the page, so if autoplay is blocked the track starts on the visitor's first click or key press. Visitors can pause it or turn autoplay off; that choice is remembered in their browser.
 
-Audio is stored in the `FactionAudio` database table (one track per faction), served at versioned `/api/v1/factions/<slug>/audio/<version>/` URLs with byte-range support for seeking, and uploads/removals are audited. The Render startup script applies the migration automatically.
+Audio is stored in the `PlayerAudio` and `FactionAudio` database tables (one track per profile), served at versioned `/api/v1/players/<username>/audio/<version>/` and `/api/v1/factions/<slug>/audio/<version>/` URLs with byte-range support for seeking, and uploads/removals are audited. The Render startup script applies the migration automatically.
 
 ## Deploy on Render with your existing Python service
 
@@ -235,6 +235,8 @@ The earlier private Sites deployment is a static build and does not host Django 
 | POST | `/api/v1/auth/dev-login/` | Developer login with staff permission check |
 | POST | `/api/v1/auth/logout/` | End the current session |
 | GET | `/api/v1/auth/roster-players/` | Find registered available roster members |
+| POST | `/api/v1/auth/profile/audio/` | Upload (`audio`, `title`), retitle, or remove (`remove`) the signed-in player's theme track |
+| GET / HEAD | `/api/v1/players/<username>/audio/<version>/` | Public player theme audio with Range support |
 | POST | `/api/v1/auth/profile/appearance/` | Upload/remove the signed-in player's picture and banner using multipart form data |
 | GET / HEAD | `/api/v1/players/<username>/media/<kind>/<version>/` | Public fitted image; `?still=1` selects an animation poster |
 | GET | `/api/v1/factions/` | Public faction directory; optional `search` query |

@@ -26,7 +26,7 @@ import { MainNavigation } from "./MainNavigation";
 import { Brand, Sigil, TierBadge } from "./Shared";
 import { ProfileMediaImage } from "./ProfileMediaImage";
 import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
-import { FactionAudioEditor, FactionThemePlayer } from "./FactionAudio";
+import { ThemeAudioEditor, ThemePlayer } from "./ThemeAudio";
 import "../profile.css";
 import "../factions.css";
 
@@ -475,10 +475,10 @@ export default function FactionPage({
           </div>
         </div>
         {!managing && faction.audio_url && (
-          <FactionThemePlayer
+          <ThemePlayer
             src={faction.audio_url}
             title={faction.audio_title}
-            factionName={faction.display_name}
+            ownerName={faction.display_name}
           />
         )}
         <div className="faction-stats">
@@ -590,11 +590,24 @@ export default function FactionPage({
         </p>
       )}
       {managing && (
-        <FactionAudioEditor
-          username={faction.username}
-          audioUrl={faction.audio_url}
-          audioTitle={faction.audio_title}
-        />
+        <section
+          className="faction-section"
+          aria-labelledby="faction-audio-title"
+        >
+          <div className="faction-section-heading">
+            <div>
+              <span className="eyebrow">LEADER DASHBOARD</span>
+              <h2 id="faction-audio-title">Theme audio</h2>
+            </div>
+          </div>
+          <ThemeAudioEditor
+            endpoint={`/factions/${encodeURIComponent(faction.username)}/audio/`}
+            audioUrl={faction.audio_url}
+            audioTitle={faction.audio_title}
+            refresh={[["faction", faction.username]]}
+            profileLabel="your faction profile"
+          />
+        </section>
       )}
       {managing && (
         <section className="faction-section faction-inbox">

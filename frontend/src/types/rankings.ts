@@ -63,6 +63,8 @@ export interface History {
 export interface PlayerDetail extends Player {
   is_restricted?: boolean;
   banner_url?: string;
+  audio_url?: string;
+  audio_title?: string;
   registered_at?: string | null;
   rounds_won?: number;
   rounds_lost?: number;

@@ -14,6 +14,7 @@ import {
   Link2,
   LoaderCircle,
   Medal,
+  Music,
   Pencil,
   ShieldCheck,
   Swords,
@@ -32,6 +33,8 @@ import { MainNavigation } from "./MainNavigation";
 import { Brand, Delta, TierBadge } from "./Shared";
 import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
 import { ProfileMediaImage } from "./ProfileMediaImage";
+import { Modal } from "./Modal";
+import { ThemeAudioEditor, ThemePlayer } from "./ThemeAudio";
 import "../profile.css";
 
 const regions: Record<Region, string> = {
@@ -129,6 +132,8 @@ export default function ProfilePage({ username }: { username: string }) {
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [bannerFailed, setBannerFailed] = useState(false);
   const [editingAppearance, setEditingAppearance] = useState(false);
+  const [editingAudio, setEditingAudio] = useState(false);
+  const closeAudio = useCallback(() => setEditingAudio(false), []);
   const closeAppearance = useCallback(() => setEditingAppearance(false), []);
   const savedAppearance = useCallback(() => {
     setAvatarFailed(false);
@@ -309,6 +314,15 @@ export default function ProfilePage({ username }: { username: string }) {
                 Customize profile
               </button>
             )}
+            {ownProfile && (
+              <button
+                className="profile-copy profile-customize"
+                onClick={() => setEditingAudio(true)}
+              >
+                <Music size={15} />
+                Theme audio
+              </button>
+            )}
             <button
               className="profile-copy"
               onClick={() => void copyProfile()}
@@ -344,6 +358,13 @@ export default function ProfilePage({ username }: { username: string }) {
               )}
             </div>
           </div>
+        )}
+        {player.audio_url && (
+          <ThemePlayer
+            src={player.audio_url}
+            title={player.audio_title ?? ""}
+            ownerName={player.display_name}
+          />
         )}
         <div
           className="profile-tabs"
@@ -600,6 +621,17 @@ export default function ProfilePage({ username }: { username: string }) {
           </div>
         </div>
       </article>
+      {editingAudio && ownProfile && (
+        <Modal title="THEME AUDIO" onClose={closeAudio}>
+          <ThemeAudioEditor
+            endpoint="/auth/profile/audio/"
+            audioUrl={player.audio_url ?? ""}
+            audioTitle={player.audio_title ?? ""}
+            refresh={[["player-profile", username]]}
+            profileLabel="your profile"
+          />
+        </Modal>
+      )}
       {editingAppearance && ownProfile && (
         <ProfileAppearanceEditor
           player={player}

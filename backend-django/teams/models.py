@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models import F, Q
 from django.db.models.functions import Lower
 from django.utils import timezone
-from rankings.models import Match, Player
+from rankings.models import AudioTrack, Match, Player
 
 
 class Team(models.Model):
@@ -79,14 +79,9 @@ class FactionMedia(models.Model):
         constraints = [models.UniqueConstraint(fields=["team", "kind"], name="one_faction_image_per_kind")]
 
 
-class FactionAudio(models.Model):
+class FactionAudio(AudioTrack):
     """The faction's theme track, stored in the database like faction images."""
     team = models.OneToOneField(Team, on_delete=models.CASCADE, related_name="audio")
-    version = models.CharField(max_length=64)
-    content_type = models.CharField(max_length=32)
-    data = models.BinaryField()
-    byte_size = models.PositiveIntegerField()
-    updated_at = models.DateTimeField(auto_now=True)
 
 
 class FactionJoinRequest(models.Model):

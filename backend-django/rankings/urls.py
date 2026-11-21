@@ -9,3 +9,5 @@ from . import pickems
 urlpatterns += [path("events/<uuid:event_id>/pickems/", pickems.board), path("events/<uuid:event_id>/pickems/<int:matchup_id>/pick/", pickems.pick)]
 from . import entries
 urlpatterns += [path("events/<uuid:event_id>/entries/", entries.public_entries), path("events/<uuid:event_id>/entries/<slug:team_slug>/", entries.withdraw)]
+from . import audio
+urlpatterns += [path("players/<slug:username>/audio/<slug:version>/", audio.serve_player_audio)]

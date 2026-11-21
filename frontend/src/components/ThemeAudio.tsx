@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Music, Pause, Play, Trash2, Upload, Volume2, VolumeX } from "lucide-react";
 import { request } from "../lib/api";
+import "../theme-audio.css";
 
 const AUTOPLAY_KEY = "dawest.factionThemeAutoplay";
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -14,16 +15,16 @@ function autoplayAllowed() {
   }
 }
 
-/** Plays the faction's theme when a visitor opens the profile. Browsers block
+/** Plays a player's or faction's theme when a visitor opens the profile. Browsers block
  *  sound until the visitor interacts, so it falls back to their first click/key. */
-export function FactionThemePlayer({
+export function ThemePlayer({
   src,
   title,
-  factionName,
+  ownerName,
 }: {
   src: string;
   title: string;
-  factionName: string;
+  ownerName: string;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
   const player = useRef<HTMLDivElement>(null);
@@ -99,15 +100,15 @@ export function FactionThemePlayer({
         type="button"
         className="faction-theme-play"
         onClick={toggle}
-        aria-label={playing ? "Pause faction theme" : "Play faction theme"}
+        aria-label={playing ? `Pause ${ownerName}'s theme` : `Play ${ownerName}'s theme`}
       >
         {playing ? <Pause size={16} /> : <Play size={16} />}
       </button>
       <div className="faction-theme-text">
         <span>
-          <Music size={12} /> {factionName} theme
+          <Music size={12} /> {ownerName} theme
         </span>
-        <strong>{title || "Faction theme"}</strong>
+        <strong>{title || "Theme"}</strong>
         {waiting && <small>Click anywhere to start the music</small>}
       </div>
       <button
@@ -115,7 +116,7 @@ export function FactionThemePlayer({
         className="faction-text-button faction-theme-auto"
         onClick={toggleAutoplay}
         aria-pressed={!autoplay}
-        title={autoplay ? "Stop faction themes from playing automatically" : "Let faction themes play automatically"}
+        title={autoplay ? "Stop profile themes from playing automatically" : "Let profile themes play automatically"}
       >
         {autoplay ? <Volume2 size={14} /> : <VolumeX size={14} />}
         {autoplay ? "Autoplay on" : "Autoplay off"}
@@ -124,14 +125,18 @@ export function FactionThemePlayer({
   );
 }
 
-export function FactionAudioEditor({
-  username,
+export function ThemeAudioEditor({
+  endpoint,
   audioUrl,
   audioTitle,
+  refresh,
+  profileLabel,
 }: {
-  username: string;
+  endpoint: string;
   audioUrl: string;
   audioTitle: string;
+  refresh: string[][];
+  profileLabel: string;
 }) {
   const client = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
@@ -148,7 +153,7 @@ export function FactionAudioEditor({
         body.append("title", title);
       }
       return request<{ audio_url: string; audio_title: string }>(
-        `/factions/${encodeURIComponent(username)}/audio/`,
+        endpoint,
         { method: "POST", body },
         120_000,
       );
@@ -156,7 +161,7 @@ export function FactionAudioEditor({
     onSuccess: () => {
       setFile(null);
       if (input.current) input.current.value = "";
-      void client.invalidateQueries({ queryKey: ["faction", username] });
+      for (const queryKey of refresh) void client.invalidateQueries({ queryKey });
     },
   });
   const choose = (picked: File | null) => {
@@ -172,15 +177,9 @@ export function FactionAudioEditor({
   };
   const changed = Boolean(file) || (audioUrl && title.trim() !== audioTitle);
   return (
-    <section className="faction-section faction-audio-editor" aria-labelledby="faction-audio-title">
-      <div className="faction-section-heading">
-        <div>
-          <span className="eyebrow">LEADER DASHBOARD</span>
-          <h2 id="faction-audio-title">Theme audio</h2>
-        </div>
-      </div>
+    <div className="faction-audio-editor">
       <p className="faction-audio-help">
-        Plays when someone opens your faction profile. MP3, M4A, OGG, WAV, FLAC,
+        Plays when someone opens {profileLabel}. MP3, M4A, OGG, WAV, FLAC,
         or WebM, up to 8 MB. Visitors can pause it or turn autoplay off.
       </p>
       {audioUrl ? (
@@ -235,7 +234,7 @@ export function FactionAudioEditor({
               className="button secondary"
               disabled={save.isPending}
               onClick={() => {
-                if (window.confirm("Remove your faction's theme audio?")) save.mutate(true);
+                if (window.confirm("Remove this theme audio?")) save.mutate(true);
               }}
             >
               <Trash2 size={15} /> Remove
@@ -247,6 +246,6 @@ export function FactionAudioEditor({
           </button>
         </div>
       </form>
-    </section>
+    </div>
   );
 }
