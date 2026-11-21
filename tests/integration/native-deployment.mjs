@@ -30,10 +30,18 @@ try {
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Create player account", exact: true }).click();
-  await page.waitForURL(origin.href);
+  await page.waitForURL(new URL(`/players/${username}`, origin).href);
   await expect(page.locator(".account-username")).toContainText(username);
   await page.reload();
   await expect(page.locator(".account-username")).toContainText(username);
+  await expect(page.getByRole("heading", { name: "Native Render Player", exact: true })).toBeVisible();
+  await expect(page.getByText("Your record starts here.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("slider", { name: "Inspect performance history" })).toBeDisabled();
+  expect((await context.request.get(new URL(`/players/${username}`, origin).href)).status()).toBe(200);
+  await page.goto(new URL("/profile", origin).href);
+  await page.waitForURL(new URL(`/players/${username}`, origin).href);
+  await expect(page.getByRole("heading", { name: "Native Render Player", exact: true })).toBeVisible();
+  await page.goto(origin.href);
   await expect(page.locator("tbody")).toContainText("Native Render Player");
 
   await page.goto(new URL("/register", origin).href);

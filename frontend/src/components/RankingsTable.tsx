@@ -2,7 +2,14 @@ import { ChevronDown, SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 import type { RankingEntry, RankingKind } from "../types/rankings";
 import { formatRating } from "../lib/rating";
-import { Delta, FormPills, Sigil, Streak, TierBadge } from "./Shared";
+import {
+  CompetitorLink,
+  Delta,
+  FormPills,
+  Sigil,
+  Streak,
+  TierBadge,
+} from "./Shared";
 export function RankingsTable({
   players,
   onSelect,
@@ -93,12 +100,10 @@ export function RankingsTable({
                 </div>
               </td>
               <td>
-                <button
+                <CompetitorLink
+                  player={player}
                   className="table-player"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onSelect(player);
-                  }}
+                  onSelect={onSelect}
                 >
                   <Sigil player={player} />
                   <span>
@@ -116,7 +121,7 @@ export function RankingsTable({
                     </span>
                   </span>
                   <TierBadge tier={player.tier} />
-                </button>
+                </CompetitorLink>
               </td>
               <td>
                 <div className="rating-cell">

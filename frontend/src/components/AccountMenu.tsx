@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LogOut, Shield, UserRound } from "lucide-react";
 import { request } from "../lib/api";
 import { useSession } from "../hooks/useSession";
+import { accountDestination } from "../lib/profile";
 export function AccountMenu() {
   const session = useSession();
   const client = useQueryClient();
@@ -25,10 +26,18 @@ export function AccountMenu() {
     );
   return (
     <div className="account-menu">
-      <span className="account-username">
+      <a
+        className="account-username"
+        href={accountDestination(session.data?.user)}
+        aria-label={
+          session.data?.user?.player
+            ? "View your profile"
+            : "Developer console home"
+        }
+      >
         <UserRound size={14} />
         {session.data.user?.username}
-      </span>
+      </a>
       {session.data.user?.is_developer && (
         <a href="/dev" aria-label="Developer console">
           <Shield size={15} />

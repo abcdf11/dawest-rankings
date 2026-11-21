@@ -2,7 +2,14 @@ import { Crosshair, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import type { RankingEntry } from "../types/rankings";
 import { formatRating } from "../lib/rating";
-import { Delta, FormPills, Sigil, Streak, TierBadge } from "./Shared";
+import {
+  CompetitorLink,
+  Delta,
+  FormPills,
+  Sigil,
+  Streak,
+  TierBadge,
+} from "./Shared";
 export function PodiumHero({
   players,
   onSelect,
@@ -27,10 +34,11 @@ export function PodiumHero({
             </span>
             <span className="place-number">0{index + 1}</span>
           </div>
-          <button
+          <CompetitorLink
+            player={player}
             className="podium-player"
-            onClick={() => onSelect(player)}
-            aria-label={`View ${player.display_name}'s profile`}
+            onSelect={onSelect}
+            label={`View ${player.display_name}'s profile`}
           >
             <Sigil player={player} large />
             <span className="podium-identity">
@@ -43,7 +51,7 @@ export function PodiumHero({
                   : `@${player.username}`}
               </span>
             </span>
-          </button>
+          </CompetitorLink>
           <div className="podium-bottom">
             <div>
               <span className="rating-label">POWER RATING</span>

@@ -20,14 +20,14 @@ test("ladder filters, sort, profile, and empty state work", async ({
   await expect(page.locator("tbody tr")).toHaveCount(20);
   await page.getByRole("textbox", { name: "Search players" }).fill("deadeye");
   await expect(page.locator("tbody tr")).toHaveCount(1);
-  await page.getByRole("button", { name: "Deadeye @deadeye NA" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.getByRole("link", { name: "Deadeye @deadeye NA" }).click();
+  await expect(page).toHaveURL(/\/players\/deadeye$/);
   await expect(
-    page.getByRole("heading", { name: "RATING TRAJECTORY" }),
+    page.getByRole("heading", { name: "Performance history" }),
   ).toBeVisible();
-  await expect(page.locator(".match-history-row")).toHaveCount(12);
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("tab", { name: "Matches", exact: true }).click();
+  await expect(page.locator(".profile-match-row")).toHaveCount(12);
+  await page.goto("/");
   await page
     .getByRole("textbox", { name: "Search players" })
     .fill("no-such-player");

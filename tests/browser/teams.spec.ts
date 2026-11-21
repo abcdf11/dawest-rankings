@@ -33,16 +33,11 @@ test("team and player ladders stay separate and team profiles open roster player
   await expect(page.locator(".roster-member")).toHaveCount(2);
   await expect(page.locator(".match-history-row")).toHaveCount(12);
   await page.locator(".roster-member").filter({ hasText: "Deadeye" }).click();
-  await expect(
-    page.getByRole("dialog", { name: "PLAYER PROFILE" }),
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/players\/deadeye$/);
   await expect(
     page.getByRole("heading", { name: "Deadeye", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Player rankings", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
-  await page.keyboard.press("Escape");
+  await page.goto("/");
   await page
     .getByRole("button", { name: "Team rankings", exact: true })
     .click();

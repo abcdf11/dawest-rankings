@@ -1,6 +1,47 @@
 import { Crosshair, Flame, Minus, Shield, Star, Triangle } from "lucide-react";
 import type { Form, Player, RankingEntry } from "../types/rankings";
 import { tierLabel } from "../lib/rating";
+import { profileUrl } from "../lib/profile";
+import type { ReactNode } from "react";
+
+export function CompetitorLink({
+  player,
+  onSelect,
+  children,
+  className,
+  label,
+}: {
+  player: RankingEntry;
+  onSelect: (player: RankingEntry) => void;
+  children: ReactNode;
+  className: string;
+  label?: string;
+}) {
+  if ("tag" in player)
+    return (
+      <button
+        type="button"
+        className={className}
+        aria-label={label}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect(player);
+        }}
+      >
+        {children}
+      </button>
+    );
+  return (
+    <a
+      href={profileUrl(player.username)}
+      className={`${className} competitor-link`}
+      aria-label={label}
+      onClick={(event) => event.stopPropagation()}
+    >
+      {children}
+    </a>
+  );
+}
 
 export function Brand({ small = false }: { small?: boolean }) {
   return (

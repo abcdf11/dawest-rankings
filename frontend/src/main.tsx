@@ -6,25 +6,30 @@ import App from "./App";
 import TeamRegistrationPage from "./components/TeamRegistrationPage";
 import AuthPage from "./components/AuthPage";
 import DeveloperPage from "./components/DeveloperPage";
+import ProfilePage, { ProfileRedirect } from "./components/ProfilePage";
 import "./styles.css";
 import "./monochrome.css";
 import "./registration.css";
 import "./auth.css";
 const client = new QueryClient();
 const path = window.location.pathname.replace(/\/+$/, "");
-const Screen =
-  path === "/register"
-    ? TeamRegistrationPage
-    : path === "/dev"
-      ? DeveloperPage
-      : path === "/login" || path === "/signup" || path === "/dev/login"
-        ? () => (
-            <AuthPage
-              signup={path === "/signup"}
-              developer={path === "/dev/login"}
-            />
-          )
-        : App;
+const playerName = path.match(/^\/players\/([a-zA-Z0-9_-]+)$/)?.[1];
+const Screen = playerName
+  ? () => <ProfilePage username={playerName} />
+  : path === "/profile"
+    ? ProfileRedirect
+    : path === "/register"
+      ? TeamRegistrationPage
+      : path === "/dev"
+        ? DeveloperPage
+        : path === "/login" || path === "/signup" || path === "/dev/login"
+          ? () => (
+              <AuthPage
+                signup={path === "/signup"}
+                developer={path === "/dev/login"}
+              />
+            )
+          : App;
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={client}>

@@ -59,6 +59,10 @@ The local database is **backend-django/db.sqlite3**, preserved across restarts. 
 
 ## Authentication and permissions
 
+Player signup and login open the player's own profile at `/players/<username>`, unless an explicit return destination such as team registration was requested. `/profile` opens the current player's page or sends an anonymous visitor to login. Developer accounts keep their `/dev` destination. Leaderboard names, podium cards, team roster members, and the account menu link to profiles.
+
+The osu!-inspired profile layout keeps the monochrome DaWest theme, with a cover, avatar, region and team details, global/regional ranks, an interactive rating/rank graph, career statistics, filtered recent matches, rating activity, and milestones derived from recorded results. Empty accounts show their registration point and an empty match record. Public profile URLs work directly and after refresh on the native Render deployment; no new database migration is needed.
+
 Authentication uses Django sessions with an HttpOnly session cookie. Login, signup, and logout require CSRF protection, including anonymous login requests. The frontend first initializes the session/CSRF cookie, then submits credentials with the CSRF header. Session IDs rotate at login. Passwords and session credentials are not stored in localStorage or included in audit details.
 
 Public signup cannot assign staff roles. The developer login checks staff permissions, and every developer API action verifies them again on the server. Account/login attempts and registrations are throttled. Deactivating a player revokes tracked sessions and removes them from public rankings. Private registration receipts enforce ownership.

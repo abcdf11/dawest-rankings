@@ -83,6 +83,11 @@ class RankingTests(TestCase):
         self.assertEqual(detail["matches"][0]["result"], "W")
         self.assertEqual(detail["matches"][0]["opponent"], "Vex")
         self.assertEqual(len(detail["history"]), 1)
+        self.assertIsNotNone(detail["registered_at"])
+        self.assertEqual(detail["rounds_won"], 5)
+        self.assertEqual(detail["rounds_lost"], 2)
+        self.assertNotIn("user", detail)
+        self.assertNotIn("password", detail)
         self.assertEqual(self.client.get("/api/v1/rankings/?region=INVALID").status_code, 400)
     def test_moderator_permission_and_conflict(self):
         url = f"/api/v1/matches/{self.match.pk}/complete/"

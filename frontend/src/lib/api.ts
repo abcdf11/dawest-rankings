@@ -9,6 +9,15 @@ import type {
   RankingEntry,
 } from "../types/rankings";
 export const officialMode = true;
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
 const base = (import.meta.env.VITE_API_URL ?? "/api/v1").replace(/\/$/, "");
 function csrfCookie() {
   return typeof document === "undefined"
@@ -53,8 +62,9 @@ export async function request<T>(
         return Object.values(value).map(firstError).find(Boolean);
       return undefined;
     };
-    throw new Error(
+    throw new ApiError(
       firstError(body) ?? "The service is unavailable. Please try again.",
+      response.status,
     );
   }
   return response.json() as Promise<T>;
@@ -74,6 +84,9 @@ export async function getPlayer(
   kind: RankingKind = "players",
 ): Promise<PlayerDetail | TeamDetail> {
   return request(`/${kind}/${encodeURIComponent(player.username)}/`);
+}
+export function getPlayerProfile(username: string) {
+  return request<PlayerDetail>(`/players/${encodeURIComponent(username)}/`);
 }
 export async function simulate(
   _players: RankingEntry[],

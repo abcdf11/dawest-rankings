@@ -41,10 +41,14 @@ export async function fixtureApi(page: Page) {
     const playerName = path.match(/\/players\/([^/]+)\/$/)?.[1];
     if (playerName) {
       const player = players.find((p) => p.username === playerName);
+      if (!player)
+        return route.fulfill({ status: 404, json: { detail: "Not found." } });
       const details = (snapshot.details as Record<string, unknown>)[
         playerName
       ] as object;
-      return route.fulfill({ json: { ...player, ...details } });
+      return route.fulfill({
+        json: { ...player, ...details, registered_at: snapshot.updated_at },
+      });
     }
     const teamName = path.match(/\/teams\/([^/]+)\/$/)?.[1];
     if (teamName) {

@@ -6,6 +6,7 @@ import { Brand } from "./Shared";
 import { request } from "../lib/api";
 import { useSession } from "../hooks/useSession";
 import type { Session } from "../hooks/useSession";
+import { accountDestination } from "../lib/profile";
 
 export default function AuthPage({
   signup = false,
@@ -30,7 +31,7 @@ export default function AuthPage({
         !next.startsWith("//") &&
         !next.includes("\\")
       ? next
-      : "/";
+      : null;
   const mutation = useMutation({
     mutationFn: () =>
       request<Session>(
@@ -48,7 +49,8 @@ export default function AuthPage({
           ),
         },
       ),
-    onSuccess: () => window.location.assign(destination),
+    onSuccess: (result) =>
+      window.location.assign(destination ?? accountDestination(result.user)),
   });
   function submit(e: FormEvent) {
     e.preventDefault();
@@ -131,7 +133,7 @@ export default function AuthPage({
             {session.data?.authenticated && (
               <div className="auth-session-note">
                 Signed in as {session.data.user?.username}.{" "}
-                <a href={session.data.user?.is_developer ? "/dev" : "/"}>
+                <a href={destination ?? accountDestination(session.data.user)}>
                   Continue
                 </a>
               </div>
@@ -238,7 +240,7 @@ export default function AuthPage({
             <div className="auth-links">
               {!developer && (
                 <a
-                  href={`${signup ? "/login" : "/signup"}${next ? `?next=${encodeURIComponent(destination)}` : ""}`}
+                  href={`${signup ? "/login" : "/signup"}${destination ? `?next=${encodeURIComponent(destination)}` : ""}`}
                 >
                   {signup
                     ? "Already registered? Log in"

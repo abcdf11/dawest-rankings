@@ -61,6 +61,9 @@ export interface History {
   event_label: string;
 }
 export interface PlayerDetail extends Player {
+  registered_at?: string | null;
+  rounds_won?: number;
+  rounds_lost?: number;
   history: History[];
   matches: Form[];
 }

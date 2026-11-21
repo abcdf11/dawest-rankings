@@ -42,6 +42,7 @@ import {
   INTRO_STORAGE_KEY,
   shouldShowIntro,
 } from "./components/LoadingScreen";
+import { profileUrl } from "./lib/profile";
 
 type Mode = "rankings" | "simulator" | "builder";
 export default function App() {
@@ -131,9 +132,11 @@ export default function App() {
     reset();
   }
   function openRosterPlayer(player: Player) {
-    changeKind("players");
-    setMode("rankings");
-    setSelected(player);
+    window.location.assign(profileUrl(player.username));
+  }
+  function openCompetitor(player: RankingEntry) {
+    if ("tag" in player) setSelected(player);
+    else window.location.assign(profileUrl(player.username));
   }
   const latestEntry = players
     .flatMap((player) => player.last_five.map((match) => ({ player, match })))
@@ -345,7 +348,7 @@ export default function App() {
                         </span>
                         <span>THE TOP THREE</span>
                       </div>
-                      <PodiumHero players={players} onSelect={setSelected} />
+                      <PodiumHero players={players} onSelect={openCompetitor} />
                       <div className="ladder-controls">
                         <div
                           className="tier-filters"
@@ -447,7 +450,7 @@ export default function App() {
                         emptyLadder={data.total === 0}
                         kind={kind}
                         players={filtered.slice(0, limit)}
-                        onSelect={setSelected}
+                        onSelect={openCompetitor}
                         onReset={reset}
                       />
                       <div className="table-footer">
