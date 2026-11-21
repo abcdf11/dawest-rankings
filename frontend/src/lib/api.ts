@@ -1,14 +1,11 @@
 import type {
   Ladder,
-  MatchType,
   PlayerDetail,
-  Simulation,
   TeamDetail,
   TeamLadder,
   RankingKind,
   RankingEntry,
 } from "../types/rankings";
-export const officialMode = true;
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -90,25 +87,4 @@ export async function getPlayer(
 }
 export function getPlayerProfile(username: string) {
   return request<PlayerDetail>(`/players/${encodeURIComponent(username)}/`);
-}
-export async function simulate(
-  _players: RankingEntry[],
-  a: number,
-  b: number,
-  scoreA: number,
-  scoreB: number,
-  type: MatchType,
-  _source: Ladder["source"],
-  kind: RankingKind = "players",
-): Promise<Simulation> {
-  return request(kind === "teams" ? "/teams/simulate/" : "/simulate/", {
-    method: "POST",
-    body: JSON.stringify({
-      [kind === "teams" ? "team_a_id" : "player_a_id"]: a,
-      [kind === "teams" ? "team_b_id" : "player_b_id"]: b,
-      score_a: scoreA,
-      score_b: scoreB,
-      match_type: type,
-    }),
-  });
 }

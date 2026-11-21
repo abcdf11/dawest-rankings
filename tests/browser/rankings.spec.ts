@@ -32,7 +32,7 @@ test("ladder filters, sort, profile, and empty state work", async ({
     .getByRole("textbox", { name: "Search players" })
     .fill("no-such-player");
   await expect(
-    page.getByRole("heading", { name: "No gunslingers found" }),
+    page.getByRole("heading", { name: "No players found" }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Clear filters", exact: true })
@@ -54,46 +54,6 @@ test("ladder filters, sort, profile, and empty state work", async ({
   await expect(page.locator("tbody tr").first()).toContainText("Deadeye");
   expect(errors).toEqual([]);
 });
-test("simulator computes outcomes and rejects tied scores", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await page.getByRole("tab", { name: "What-if simulator" }).click();
-  await page.getByLabel("Rounds won", { exact: true }).first().fill("5");
-  await page.getByLabel("Rounds won", { exact: true }).nth(1).fill("2");
-  await page.getByRole("button", { name: "Simulate duel" }).click();
-  await expect(
-    page.getByRole("heading", { name: "PROJECTED OUTCOME" }),
-  ).toBeVisible();
-  await expect(page.locator(".result-grid>div")).toHaveCount(2);
-  await page.getByLabel("Rounds won", { exact: true }).nth(1).fill("5");
-  await expect(
-    page.getByRole("button", { name: "Simulate duel" }),
-  ).toBeDisabled();
-  await expect(page.locator(".simulation-result")).toHaveCount(0);
-});
-test("community list reorders and shares reproducible URL state", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await page.getByRole("tab", { name: "Community tier list" }).click();
-  const second = await page
-    .locator(".builder-list>li")
-    .nth(1)
-    .locator("strong")
-    .textContent();
-  await page.getByRole("button", { name: `Move ${second} up` }).click();
-  await expect(page.locator(".builder-list>li").first()).toContainText(second!);
-  await page.getByRole("button", { name: "Share my ranking" }).click();
-  await expect(page).toHaveURL(/#list=/);
-  await page.reload();
-  await expect(
-    page.getByRole("heading", { name: "BUILD YOUR POWER LIST" }),
-  ).toBeVisible();
-  await expect(page.locator(".builder-list>li").first()).toContainText(second!);
-  await page.getByRole("combobox", { name: "List size" }).selectOption("20");
-  await expect(page.locator(".builder-list>li")).toHaveCount(20);
-});
 test("methodology dialog and responsive canvas", async ({ page }, testInfo) => {
   await page.goto("/");
   await page
@@ -111,4 +71,30 @@ test("methodology dialog and responsive canvas", async ({ page }, testInfo) => {
     path: `artifacts/${testInfo.project.name}.png`,
     fullPage: true,
   });
+});
+
+test("old community links open the rankings without removed modes", async ({
+  page,
+}) => {
+  await page.goto("/?ranking=teams#list=1.2.3");
+  await expect(
+    page.getByRole("heading", { name: "TEAM POWER RANKINGS", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("tbody tr")).toHaveCount(10);
+  await expect(
+    page.getByRole("tab", { name: "What-if simulator" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("tab", { name: "Community tier list" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "My tier list" })).toHaveCount(
+    0,
+  );
+  await expect(page.locator(".builder,.simulator,.build-promo")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Player rankings", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "POWER RANKINGS", exact: true }),
+  ).toBeVisible();
 });

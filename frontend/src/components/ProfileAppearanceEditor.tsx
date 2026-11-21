@@ -139,11 +139,11 @@ export function ProfileAppearanceEditor({
             <Camera size={21} />
           </span>
           <div>
-            <h2>Make it yours.</h2>
+            <h2>{faction ? "Faction images" : "Profile images"}</h2>
             <p>
               {faction
-                ? "Your faction's identity, on and off the ladder."
-                : "Your picture. Your banner. Your place on the frontier."}
+                ? "Upload a faction logo and banner."
+                : "Upload a profile picture and banner."}
             </p>
           </div>
         </div>

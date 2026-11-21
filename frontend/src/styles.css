@@ -307,15 +307,6 @@ small {
   position: relative;
   z-index: 1;
 }
-.hero-kicker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.6875rem;
-  letter-spacing: 2px;
-  font-weight: 650;
-  color: #c7be9e;
-}
 .gold-rule {
   width: 20px;
   height: 2px;
@@ -479,46 +470,6 @@ small {
 .last-updated {
   color: #737781;
   font-size: 0.75rem;
-}
-.mode-tabs {
-  display: flex;
-  align-items: center;
-  gap: 30px;
-  border-bottom: 1px solid var(--line);
-  height: 46px;
-}
-.mode-tabs > button {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #8e929c;
-  position: relative;
-  font-size: 0.8125rem;
-  font-weight: 550;
-  padding: 0 0 15px;
-}
-.mode-tabs > button.active {
-  color: var(--gold);
-}
-.mode-tabs > button.active:after {
-  content: "";
-  height: 2px;
-  background: var(--gold);
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-}
-.mode-tabs > .methodology-link {
-  margin-left: auto;
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: #8f939c;
-  gap: 6px;
-}
-.mode-tabs > button:hover {
-  color: #e9e9e0;
 }
 .spotlight-heading {
   display: flex;
@@ -1182,12 +1133,11 @@ small {
 }
 .bottom-panels {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   margin-top: 23px;
 }
-.latest-result,
-.build-promo {
+.latest-result {
   padding: 19px 20px;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -1232,28 +1182,6 @@ small {
   border-left: 1px solid #ffffff12;
   padding-left: 11px;
 }
-.build-promo {
-  background: linear-gradient(110deg, #1b1b16, #15171a);
-  border-color: #a68b3025;
-  gap: 14px;
-}
-.build-promo > svg {
-  color: #b29b58;
-}
-.build-promo > span:nth-child(2) {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.build-promo strong {
-  font-size: 0.8125rem;
-  font-weight: 550;
-  color: #d1d0c2;
-}
-.build-promo small {
-  font-size: 0.6875rem;
-  color: #85867f;
-}
 .promo-label {
   margin-left: auto;
   font-size: 0.5625rem;
@@ -1262,9 +1190,6 @@ small {
   border-bottom: 1px solid #9d873a55;
   padding-bottom: 4px;
   white-space: nowrap;
-}
-.build-promo:hover {
-  border-color: #c7aa4a55;
 }
 .data-note {
   display: flex;
@@ -1597,13 +1522,6 @@ small {
   color: #5d6a78;
   margin: 28px 0 10px;
 }
-.mode-panel {
-  padding: 32px;
-  margin-top: 28px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: #12161c;
-}
 .mode-header {
   display: flex;
   align-items: center;
@@ -1652,8 +1570,7 @@ small {
     radial-gradient(ellipse at 50% 35%, #eab30807, transparent 65%), #161a20;
 }
 .duelist > label,
-.duel-options > label,
-.builder-toolbar > label {
+.duel-options > label {
   font-size: 0.625rem;
   letter-spacing: 1.1px;
   text-transform: uppercase;
@@ -1683,17 +1600,6 @@ small {
   font-size: 0.625rem;
   color: #6b7887;
   margin-left: 6px;
-}
-.score-input {
-  background: #0e1217;
-  border: 1px solid #ffffff14;
-  border-radius: 4px;
-  text-align: center;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 2rem;
-  height: 64px;
-  padding-left: 10px;
-  color: #dfc36a;
 }
 .duel-options {
   max-width: 840px;
@@ -1728,31 +1634,6 @@ small {
   text-align: center;
   margin: 15px 0;
 }
-.simulation-result {
-  max-width: 840px;
-  margin: 30px auto 0;
-  border: 1px solid #c8ab3e33;
-  padding: 18px 22px;
-  border-radius: 5px;
-  background: #c8ab3e04;
-}
-.simulation-result > .section-label {
-  margin-top: 0;
-}
-.result-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-}
-.result-grid > div {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px 0;
-}
-.result-grid > div > strong {
-  font-size: 0.875rem;
-}
 .result-rating {
   font-family: "JetBrains Mono", monospace;
   font-size: 1.65rem;
@@ -1760,54 +1641,6 @@ small {
 .result-rating > small {
   font-size: 0.8125rem;
   margin-left: 12px;
-}
-.result-grid .muted {
-  font-size: 0.75rem;
-}
-.builder-toolbar {
-  display: flex;
-  align-items: flex-end;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-.builder-toolbar > label {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin: 0;
-}
-.builder-toolbar > .muted {
-  font-size: 0.6875rem;
-  align-self: center;
-  margin-right: auto;
-  max-width: 220px;
-  line-height: 1.6;
-}
-.builder-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.builder-list > li {
-  display: flex;
-  align-items: center;
-  gap: 17px;
-  background: #171c23;
-  border: 1px solid var(--line);
-  border-bottom: 0;
-  padding: 11px 16px;
-  transition: background 0.1s;
-}
-.builder-list > li:first-child {
-  border-radius: 4px 4px 0 0;
-}
-.builder-list > li:last-child {
-  border-bottom: 1px solid var(--line);
-  border-radius: 0 0 4px 4px;
-}
-.builder-list > li.drag-over {
-  background: #3a3420;
-  box-shadow: inset 0 2px #c6a447;
 }
 .drag-handle {
   cursor: grab;
@@ -1817,42 +1650,6 @@ small {
 }
 .drag-handle:active {
   cursor: grabbing;
-}
-.builder-rank {
-  font-size: 0.875rem;
-  color: #bbab73;
-}
-.builder-list strong {
-  font-size: 0.875rem;
-  font-weight: 500;
-  min-width: 120px;
-}
-.builder-list > .tier-badge {
-  margin-left: 0;
-}
-.builder-pr {
-  margin-left: auto;
-  color: #bfc6d0;
-  font-size: 0.875rem;
-}
-.builder-pr > small {
-  color: #667486;
-  font-size: 0.5625rem;
-}
-.builder-list .icon-button {
-  background: #ffffff04;
-  border: 1px solid var(--line);
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
-}
-.builder-message {
-  font-size: 0.75rem;
-  line-height: 1.7;
-  color: #8e977f;
-  margin-top: 20px;
-  overflow-wrap: anywhere;
 }
 .methodology > .icon-square {
   margin: 0 auto 20px;
@@ -1953,14 +1750,10 @@ small {
 .rating-cell small {
   font-size: 0.625rem;
 }
-.mode-tabs > button {
-  font-size: 0.875rem;
-}
 .table-footer,
 .show-more {
   font-size: 0.75rem;
 }
-.hero-kicker,
 .hero-badges > span {
   font-size: 0.6875rem;
 }
@@ -2088,12 +1881,6 @@ small {
   .site-footer {
     padding: 25px 28px;
   }
-  .builder-toolbar > .muted {
-    display: none;
-  }
-  .builder-toolbar > .secondary {
-    margin-left: auto;
-  }
 }
 @media (max-width: 900px) {
   .header-inner {
@@ -2129,10 +1916,6 @@ small {
   }
   .hero h1 {
     font-size: 4rem;
-  }
-  .hero-kicker {
-    letter-spacing: 1.3px;
-    font-size: 0.625rem;
   }
   .hero-content > p {
     font-size: 0.8125rem;
@@ -2244,7 +2027,6 @@ small {
   .bottom-panels {
     gap: 12px;
   }
-  .build-promo,
   .latest-result {
     padding: 17px 14px;
     gap: 11px;
@@ -2254,38 +2036,6 @@ small {
   }
   .site-footer > span {
     display: none;
-  }
-  .mode-tabs {
-    gap: 24px;
-  }
-  .mode-tabs > button {
-    font-size: 0.75rem;
-  }
-  .mode-tabs > .methodology-link {
-    font-size: 0.6875rem;
-  }
-  .mode-panel {
-    padding: 25px;
-  }
-  .builder-list > li {
-    gap: 12px;
-  }
-  .builder-list strong {
-    min-width: 95px;
-  }
-  .builder-list .tier-badge {
-    font-size: 0.5625rem;
-  }
-  .builder-toolbar {
-    gap: 10px;
-  }
-  .builder-toolbar .button {
-    font-size: 0.75rem;
-    padding: 10px 13px;
-  }
-  .simulation-result > .section-label > span {
-    max-width: 200px;
-    text-align: right;
   }
   .hero-side-foot {
     font-size: 0.5rem;
@@ -2357,11 +2107,6 @@ small {
     font-size: 0.55rem;
     gap: 5px;
   }
-  .hero-kicker {
-    font-size: 0.5625rem;
-    letter-spacing: 1.3px;
-    gap: 7px;
-  }
   .hero-year {
     padding-left: 7px;
   }
@@ -2407,22 +2152,6 @@ small {
   }
   .ranking-status {
     gap: 8px;
-  }
-  .mode-tabs {
-    gap: 21px;
-    height: 44px;
-    overflow: visible;
-  }
-  .mode-tabs > button {
-    font-size: 0.6875rem;
-    gap: 6px;
-    white-space: nowrap;
-  }
-  .mode-tabs > button > svg {
-    width: 13px;
-  }
-  .mode-tabs > .methodology-link {
-    display: none;
   }
   .spotlight-heading {
     margin-top: 24px;
@@ -2660,8 +2389,7 @@ small {
     gap: 12px;
     margin-top: 18px;
   }
-  .latest-result,
-  .build-promo {
+  .latest-result {
     padding: 18px;
     gap: 15px;
   }
@@ -2670,12 +2398,6 @@ small {
   }
   .latest-result .eyebrow {
     font-size: 0.5625rem;
-  }
-  .build-promo strong {
-    font-size: 0.875rem;
-  }
-  .build-promo small {
-    font-size: 0.75rem;
   }
   .promo-label {
     display: block;
@@ -2736,10 +2458,6 @@ small {
   .profile-stats small {
     font-size: 0.55rem;
   }
-  .mode-panel {
-    padding: 20px 15px;
-    margin-top: 22px;
-  }
   .mode-header {
     gap: 12px;
     margin-bottom: 23px;
@@ -2798,10 +2516,6 @@ small {
   .duelist-rating {
     font-size: 1.15rem;
   }
-  .score-input {
-    font-size: 1.7rem;
-    height: 56px;
-  }
   .duel-options {
     flex-wrap: wrap;
     gap: 12px;
@@ -2824,24 +2538,6 @@ small {
   .mode-footnote > svg {
     margin-top: 4px;
   }
-  .simulation-result {
-    padding: 15px 12px;
-  }
-  .simulation-result .section-label {
-    align-items: flex-start;
-  }
-  .simulation-result .section-label h3 {
-    font-size: 0.5625rem;
-    line-height: 1.7;
-  }
-  .simulation-result .section-label > span {
-    font-size: 0.5625rem;
-    max-width: 140px;
-    line-height: 1.7;
-  }
-  .result-grid {
-    gap: 15px;
-  }
   .result-rating {
     font-size: 1.15rem;
     display: flex;
@@ -2852,67 +2548,11 @@ small {
     margin: 0;
     font-size: 0.75rem;
   }
-  .builder-toolbar {
-    flex-wrap: wrap;
-    align-items: stretch;
-    gap: 10px;
-  }
-  .builder-toolbar > label {
-    width: 100%;
-    font-size: 0.5625rem;
-  }
-  .builder-toolbar > .secondary {
-    margin: 0;
-  }
-  .builder-toolbar > .primary {
-    flex: 1;
-  }
-  .builder-list > li {
-    padding: 10px 8px;
-    gap: 7px;
-  }
   .drag-handle {
     padding: 8px 0;
   }
   .drag-handle > svg {
     width: 14px;
-  }
-  .builder-rank {
-    font-size: 0.6875rem;
-  }
-  .builder-list .sigil {
-    width: 30px;
-    height: 34px;
-  }
-  .builder-list .sigil svg {
-    width: 28px;
-    height: 31px;
-  }
-  .builder-list strong {
-    font-size: 0.75rem;
-    min-width: 0;
-    flex: 1;
-  }
-  .builder-list .tier-badge {
-    display: none;
-  }
-  .builder-pr {
-    font-size: 0.6875rem;
-    margin-left: 0;
-    min-width: 48px;
-  }
-  .builder-pr small {
-    display: none;
-  }
-  .builder-list .icon-button {
-    width: 27px;
-    height: 29px;
-    min-width: 27px;
-    min-height: 29px;
-    padding: 4px;
-  }
-  .builder-message {
-    font-size: 0.6875rem;
   }
   .methodology h2 {
     font-size: 2.4rem;
@@ -2969,12 +2609,6 @@ small {
     width: 14px;
     height: 17px;
   }
-  .mode-tabs {
-    gap: 14px;
-  }
-  .mode-tabs > button {
-    font-size: 0.625rem;
-  }
 }
 /* Keep functional controls and data readable across the dense ranking layout. */
 .hero-content > p,
@@ -2982,7 +2616,6 @@ small {
   font-size: 1rem;
 }
 .tier-filters > button,
-.mode-tabs > button,
 .table-player strong {
   font-size: 0.875rem;
 }
@@ -3007,8 +2640,6 @@ small {
 .mode-header .eyebrow,
 .duelist > label,
 .duel-options > label,
-.builder-toolbar > label,
-.builder-message,
 .methodology > .muted,
 .tier-guide small,
 .tier-guide strong {
@@ -3044,13 +2675,11 @@ small {
 }
 .latest-result .eyebrow,
 .latest-result p > span,
-.build-promo small,
 .promo-label,
 .verified-note {
   font-size: 0.75rem;
 }
-.latest-result p,
-.build-promo strong {
+.latest-result p {
   font-size: 0.875rem;
 }
 @media (max-width: 1180px) {
@@ -3102,13 +2731,7 @@ small {
   .podium-rating {
     font-size: 1.5rem;
   }
-  .mode-tabs > button {
-    font-size: 0.8125rem;
-  }
   .tier-filters > button {
-    font-size: 0.75rem;
-  }
-  .build-promo small {
     font-size: 0.75rem;
   }
   .latest-result p > span {
@@ -3118,12 +2741,6 @@ small {
 @media (max-width: 680px) {
   .hero-content > p {
     font-size: 0.875rem;
-  }
-  .mode-tabs {
-    gap: 17px;
-  }
-  .mode-tabs > button {
-    font-size: 0.6875rem;
   }
   .tier-filters > button {
     font-size: 0.8125rem;
@@ -3197,30 +2814,21 @@ small {
   .promo-label {
     display: none;
   }
-  .latest-result p,
-  .build-promo strong {
+  .latest-result p {
     font-size: 0.875rem;
   }
-  .mode-footnote,
-  .builder-message {
+  .mode-footnote {
     font-size: 0.75rem;
   }
   .section-label h3 {
     font-size: 0.6875rem;
   }
   .duelist > label,
-  .duel-options > label,
-  .builder-toolbar > label {
+.duel-options > label {
     font-size: 0.6875rem;
   }
 }
 @media (max-width: 400px) {
-  .mode-tabs {
-    gap: 12px;
-  }
-  .mode-tabs > button {
-    font-size: 0.625rem;
-  }
   .place-1 .podium-form .form-pill {
     width: 16px;
   }

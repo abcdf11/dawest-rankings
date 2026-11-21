@@ -30,7 +30,7 @@ export function PodiumHero({
           <div className="podium-top">
             <span className="podium-placement">
               {index === 0 ? <Trophy size={14} /> : <Crosshair size={14} />}{" "}
-              {["THE ONE TO BEAT", "THE CHALLENGER", "THE CONTENDER"][index]}
+              RANK {index + 1}
             </span>
             <span className="place-number">0{index + 1}</span>
           </div>

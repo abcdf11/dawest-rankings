@@ -71,7 +71,7 @@ export function LoadingScreen({
         previousFocus.focus({ preventScroll: true });
       else
         document
-          .querySelector<HTMLButtonElement>(".brand-button")
+          .querySelector<HTMLElement>(".brand-button")
           ?.focus({ preventScroll: true });
     };
   }, [reducedMotion]);
@@ -96,8 +96,7 @@ export function LoadingScreen({
         <span className="intro-wordmark">
           DW<span>®</span>
         </span>
-        <span>THE COMPETITIVE FRONTIER</span>
-        <span>SEASON 04 / 2026</span>
+        <span>DAWEST RANKINGS</span>
       </div>
       <div className="intro-frame">
         <i />
@@ -111,7 +110,6 @@ export function LoadingScreen({
           </h1>
           <span className="intro-title-rule" />
         </div>
-        <p className="intro-credit">The frontier remembers your name.</p>
         <div
           className="intro-progress"
           role="progressbar"
@@ -125,14 +123,13 @@ export function LoadingScreen({
         <span className="intro-percentage">{Math.floor(progress)}%</span>
         <p className="intro-status" aria-live="polite">
           {!ready
-            ? "SYNCHRONIZING THE LADDER"
+            ? "LOADING RANKINGS"
             : progress < 70
-              ? "PREPARING THE FRONTIER"
-              : "WELCOME TO THE WEST"}
+              ? "LOADING"
+              : "READY"}
         </p>
       </div>
       <div className="intro-bottomline">
-        <span>EVERY MATCH LEAVES A MARK.</span>
         <div>
           <span>Press SPACE to enter</span>
           <button ref={skip} onClick={finish} aria-label="Skip intro">

@@ -19,8 +19,8 @@ try {
   expect((await context.request.get(new URL("/api/v1/health/", origin).href)).status()).toBe(200);
   const home = await page.goto(origin.href);
   expect(home.status()).toBe(200);
-  await expect(page.getByRole("link", { name: "Join the ladder", exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Join the ladder", exact: true }).click();
+  await expect(page.getByRole("link", { name: "Sign up", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Sign up", exact: true }).click();
   await expect(page.getByRole("button", { name: "Create player account", exact: true })).toBeVisible();
 
   const username = `native_${Date.now()}`;
@@ -35,7 +35,7 @@ try {
   await page.reload();
   await expect(page.locator(".account-username")).toContainText(username);
   await expect(page.getByRole("heading", { name: "Native Render Player", exact: true })).toBeVisible();
-  await expect(page.getByText("Your record starts here.", { exact: true })).toBeVisible();
+  await expect(page.getByText("No matches recorded yet.", { exact: true })).toBeVisible();
   await expect(page.getByRole("slider", { name: "Inspect performance history" })).toBeDisabled();
   expect((await context.request.get(new URL(`/players/${username}`, origin).href)).status()).toBe(200);
   await page.goto(new URL("/profile", origin).href);

@@ -1,12 +1,7 @@
 import type { Page } from "@playwright/test";
 import snapshot from "../../frontend/src/data/seed.json";
 import teamSnapshot from "../../frontend/src/data/teams.json";
-import type {
-  Player,
-  Team,
-  MatchType,
-} from "../../frontend/src/types/rankings";
-import { simulateLocal } from "../../frontend/src/lib/rating";
+import type { Player, Team } from "../../frontend/src/types/rankings";
 const players = snapshot.players as Player[];
 const teams = teamSnapshot.teams as unknown as Team[];
 export function factionFixture(username = "blackwater") {
@@ -22,7 +17,7 @@ export function factionFixture(username = "blackwater") {
     ...team,
     ...details,
     banner_url: "",
-    description: "Built on reputation. Ready for the next frontier.",
+    description: "North American ranked faction.",
     registered_at: teamSnapshot.updated_at,
     members,
     leader: members[0],
@@ -61,20 +56,6 @@ export async function fixtureApi(page: Page) {
       return route.fulfill({
         json: { ...snapshot, source: "official", realtime_enabled: false },
       });
-    if (path.endsWith("/simulate/")) {
-      const body = route.request().postDataJSON();
-      const team = path.includes("/teams/");
-      return route.fulfill({
-        json: simulateLocal(
-          team ? teams : players,
-          team ? body.team_a_id : body.player_a_id,
-          team ? body.team_b_id : body.player_b_id,
-          body.score_a,
-          body.score_b,
-          body.match_type as MatchType,
-        ),
-      });
-    }
     const playerName = path.match(/\/players\/([^/]+)\/$/)?.[1];
     if (playerName) {
       const player = players.find((p) => p.username === playerName);

@@ -75,6 +75,8 @@
 .profile-cover {
   height: 218px;
   position: relative;
+  isolation: isolate;
+  z-index: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -129,8 +131,7 @@
   right: -210px;
   top: -20px;
 }
-.profile-cover-top,
-.profile-cover-bottom {
+.profile-cover-top {
   position: relative;
   z-index: 1;
   display: flex;
@@ -144,8 +145,7 @@
     monospace;
   letter-spacing: 1.6px;
 }
-.profile-cover-top > span,
-.profile-cover-bottom > span {
+.profile-cover-top > span {
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -156,22 +156,13 @@
   border-radius: 20px;
   font-size: 0.75rem;
 }
-.profile-cover-bottom {
-  color: #7c7c7c;
-  padding-bottom: 23px;
-  padding-left: 196px;
-  letter-spacing: 1.1px;
-}
-.profile-cover-bottom > span:last-child {
-  color: #a5a5a5;
-  font-size: 0.75rem;
-}
 .profile-identity {
   display: flex;
   align-items: center;
   gap: 25px;
   padding: 25px 30px 26px;
   position: relative;
+  z-index: 1;
   min-height: 134px;
 }
 .profile-avatar {
@@ -275,12 +266,10 @@
   position: absolute;
   z-index: 1;
   inset: 0;
-  background: linear-gradient(#0005, transparent 45%, #0009);
+  background: linear-gradient(#0005, transparent 65%);
   pointer-events: none;
 }
-.profile-cover.has-custom-banner .profile-cover-top,
-.profile-cover.has-custom-banner .profile-cover-bottom,
-.profile-cover.has-custom-banner .profile-cover-bottom > span:last-child {
+.profile-cover.has-custom-banner .profile-cover-top {
   color: #eee;
   text-shadow: 0 1px 6px #000;
 }
@@ -527,20 +516,6 @@
   font-size: 1rem;
   font-weight: 600;
   color: #bfbfbf;
-}
-.profile-side-note {
-  display: flex;
-  gap: 12px;
-  color: #616161;
-  padding: 2px 13px;
-}
-.profile-side-note > svg {
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-.profile-side-note p {
-  font-size: 0.75rem;
-  line-height: 1.8;
 }
 .profile-main {
   min-width: 0;
@@ -1099,17 +1074,6 @@
   .profile-cover-top {
     padding: 20px;
   }
-  .profile-cover-bottom {
-    padding: 20px;
-    padding-left: 145px;
-  }
-  .profile-cover-bottom > span:first-child {
-    display: none;
-  }
-  .profile-cover-bottom > span:last-child {
-    margin-left: auto;
-    font-size: 0.75rem;
-  }
   .profile-avatar {
     width: 105px;
     height: 105px;
@@ -1163,9 +1127,6 @@
   .profile-sidebar {
     grid-template-columns: 1fr 1fr;
     gap: 15px;
-  }
-  .profile-side-note {
-    grid-column: 1 / -1;
   }
   .profile-tabs {
     padding: 0 22px;
@@ -1238,15 +1199,6 @@
   }
   .profile-cover-top > span:last-child {
     font-size: 0.75rem;
-  }
-  .profile-cover-bottom {
-    padding: 15px;
-  }
-  .profile-cover-bottom > span:last-child {
-    letter-spacing: 0.6px;
-  }
-  .profile-cover-bottom > span:last-child > svg {
-    width: 11px;
   }
   .profile-identity {
     padding: 19px 17px;

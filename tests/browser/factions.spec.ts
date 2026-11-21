@@ -39,7 +39,7 @@ test("directory searches factions, opens public profiles, and remains responsive
 }, info) => {
   await page.goto("/factions");
   await expect(
-    page.getByRole("heading", { name: "Find your faction." }),
+    page.getByRole("heading", { name: "Factions", exact: true }),
   ).toBeVisible();
   await page.getByLabel("Search factions").fill("BLW");
   await expect(page.locator(".faction-card")).toHaveCount(1);
@@ -132,7 +132,7 @@ test("leader dashboard accepts and declines requests and opens image customizati
   await expect(page.locator(".faction-member")).toHaveCount(3);
   await page.getByRole("button", { name: "Decline", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "You're all caught up." }),
+    page.getByRole("heading", { name: "No pending requests" }),
   ).toBeVisible();
   expect(decisions).toEqual(["ACCEPTED", "REJECTED"]);
   await page
@@ -297,7 +297,7 @@ test("empty directory and anonymous my faction have clear destinations", async (
   );
   await page.goto("/factions");
   await expect(
-    page.getByRole("heading", { name: "The frontier is open." }),
+    page.getByRole("heading", { name: "No factions yet" }),
   ).toBeVisible();
   await page.goto("/faction");
   await expect(page).toHaveURL(/\/login\?next=\/faction$/);

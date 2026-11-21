@@ -134,53 +134,42 @@ export default function TeamRegistrationPage() {
       </header>
       <main className="registration-layout">
         <aside className="registration-intro">
-          <span className="registration-eyebrow">
-            THE FACTION CIRCUIT / SEASON 04
-          </span>
+          <span className="registration-eyebrow">FACTIONS</span>
           <h1>
-            <TypewriterText text="MAKE YOUR NAME." speed={45} />
+            <TypewriterText text="FACTION REGISTRATION" speed={45} />
           </h1>
           <p>
-            A name. A crew. A place on the frontier.
-            <br />
-            Register your faction and enter the DaWest competitive circuit.
+            Submit your faction name, region, and starting roster for review.
           </p>
           <div className="registration-process">
             <div>
               <span>01</span>
               <section>
-                <h2>Build your identity</h2>
+                <h2>Faction details</h2>
                 <p>Choose a faction name, tag, and home region.</p>
               </section>
             </div>
             <div>
               <span>02</span>
               <section>
-                <h2>Bring your crew</h2>
+                <h2>Starting roster</h2>
                 <p>Add your captain and a roster of 2–10 players.</p>
               </section>
             </div>
             <div>
               <span>03</span>
               <section>
-                <h2>Enter the circuit</h2>
-                <p>
-                  After review, your faction starts at 1,500 PR. Match results
-                  decide what comes next.
-                </p>
+                <h2>Review</h2>
+                <p>Approved factions start at 1,500 PR.</p>
               </section>
             </div>
           </div>
           <div className="registration-note">
             <ShieldCheck size={19} />
             <p>
-              One faction per player. Independent faction and solo ratings.
-              Every result verified.
+              One faction per player. Faction and solo ratings are separate.
             </p>
           </div>
-          <span className="registration-aside-footer">
-            REPUTATION IS EVERYTHING.
-          </span>
         </aside>
         <section className="registration-card">
           {session.isPending ? (
@@ -224,12 +213,12 @@ export default function TeamRegistrationPage() {
               </span>
               <span className="registration-eyebrow">
                 {receipt.status === "PENDING"
-                  ? "YOUR CREW IS ON THE LIST"
+                  ? "PENDING REVIEW"
                   : "REGISTRATION UPDATE"}
               </span>
               <h2>
                 {receipt.status === "APPROVED"
-                  ? "WELCOME TO THE CIRCUIT."
+                  ? "FACTION APPROVED."
                   : receipt.status === "REJECTED"
                     ? "REGISTRATION REVIEWED."
                     : "REGISTRATION RECEIVED."}
@@ -336,7 +325,6 @@ export default function TeamRegistrationPage() {
                 </span>
                 <div>
                   <h2>REGISTER A FACTION</h2>
-                  <p>Your next chapter starts here.</p>
                 </div>
               </div>
               <fieldset disabled={mutation.isPending}>
@@ -389,7 +377,7 @@ export default function TeamRegistrationPage() {
                     maxLength={500}
                     value={draft.description}
                     onChange={(e) => field("description", e.target.value)}
-                    placeholder="Tell us a little about your crew."
+                    placeholder="Faction description"
                     rows={3}
                   />
                 </label>
@@ -547,7 +535,7 @@ export default function TeamRegistrationPage() {
         <span>DAWEST / FACTION REGISTRATION</span>
         <span>
           <Globe2 size={12} />
-          ONE FRONTIER. EVERY REGION.
+          ALL REGIONS
         </span>
       </footer>
     </div>

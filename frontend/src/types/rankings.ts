@@ -88,25 +88,6 @@ export interface Ladder<T extends RankedCompetitor = Player> {
   source: "demo" | "official";
   updated_at: string;
 }
-export interface Simulation {
-  delta_a: number;
-  delta_b: number;
-  rating_a: number;
-  rating_b: number;
-  expected_a: number;
-  margin_multiplier: number;
-  event_weight: number;
-  players: {
-    id: number;
-    username: string;
-    before: number;
-    after: number;
-    delta: number;
-    rank_before: number;
-    rank_after: number;
-    tier: Tier;
-  }[];
-}
 export interface LiveMatch {
   kind?: RankingKind;
   event_id: number;

@@ -135,7 +135,7 @@ test("registration conflicts preserve the form and a receipt can show approval",
   );
   await page.goto(`/register?receipt=${id}`);
   await expect(
-    page.getByRole("heading", { name: "WELCOME TO THE CIRCUIT." }),
+    page.getByRole("heading", { name: "FACTION APPROVED." }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "View faction profile" }),

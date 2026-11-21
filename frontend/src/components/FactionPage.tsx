@@ -47,7 +47,6 @@ function Frame({ children }: { children: ReactNode }) {
       <main className="profile-page faction-page">{children}</main>
       <footer className="profile-site-footer">
         <span>DAWEST / FACTIONS</span>
-        <span>Build a name. Stand together.</span>
       </footer>
     </div>
   );
@@ -224,11 +223,8 @@ export function FactionsDirectory() {
     <Frame>
       <div className="faction-directory-heading">
         <div>
-          <span className="eyebrow">THE FRONTIER / TOGETHER</span>
-          <h1>Find your faction.</h1>
-          <p>
-            Meet the teams making their mark. Join a roster and rise together.
-          </p>
+          <h1>Factions</h1>
+          <p>Browse approved factions and request membership.</p>
         </div>
         <a className="button primary" href="/register">
           <Shield size={16} /> Register a faction
@@ -238,7 +234,6 @@ export function FactionsDirectory() {
         <section className="faction-section">
           <div className="faction-section-heading">
             <h2>Your factions</h2>
-            <span>YOUR PLACE ON THE FRONTIER</span>
           </div>
           {mine.isPending ? (
             <p role="status">Loading your factions…</p>
@@ -259,8 +254,8 @@ export function FactionsDirectory() {
           ) : (
             <div className="faction-empty">
               <UsersRound size={25} />
-              <h3>Your story starts with a crew.</h3>
-              <p>Request to join a faction below, or register your own team.</p>
+              <h3>No faction membership</h3>
+              <p>Request to join a faction or register one.</p>
             </div>
           )}
           {pending.length > 0 && (
@@ -318,7 +313,7 @@ export function FactionsDirectory() {
         ) : (
           <div className="faction-empty">
             <Shield size={26} />
-            <h3>{search ? "No factions found" : "The frontier is open."}</h3>
+            <h3>{search ? "No factions found" : "No factions yet"}</h3>
             <p>
               {search
                 ? "Try another name, tag, or region."
@@ -514,7 +509,7 @@ export default function FactionPage({
         {!managing && !member && !owner && (
           <section className="faction-join">
             <div>
-              <h2>Stand with {faction.display_name}.</h2>
+              <h2>Join {faction.display_name}</h2>
               <p>
                 {pending
                   ? "Your request is awaiting the faction leader's review."
@@ -598,12 +593,11 @@ export default function FactionPage({
                 Member requests <small>{profile.data.requests.length}</small>
               </h2>
             </div>
-            <span>YOUR ROSTER, YOUR CALL</span>
           </div>
           {profile.data.requests.length === 0 ? (
             <div className="faction-empty">
               <Check size={25} />
-              <h3>You're all caught up.</h3>
+              <h3>No pending requests</h3>
               <p>New join requests will appear here.</p>
             </div>
           ) : (
@@ -803,7 +797,7 @@ export default function FactionPage({
           ) : (
             <div className="faction-empty">
               <Shield size={25} />
-              <h3>A new chapter.</h3>
+              <h3>No matches yet</h3>
               <p>No verified faction matches yet.</p>
             </div>
           )}

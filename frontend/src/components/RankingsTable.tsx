@@ -31,16 +31,16 @@ export function RankingsTable({
           {emptyLadder
             ? kind === "teams"
               ? "No registered teams yet"
-              : "Be the first on the frontier"
+              : "No registered players yet"
             : kind === "teams"
               ? "No teams found"
-              : "No gunslingers found"}
+              : "No players found"}
         </h3>
         <p>
           {emptyLadder
             ? kind === "teams"
-              ? "Register your crew. Approved teams appear here."
-              : "Create a player account to claim your place on the leaderboard."
+              ? "Approved factions appear here."
+              : "Registered players appear here."
             : "Try a different name, region, or competitive tier."}
         </p>
         {!emptyLadder && (

@@ -2,6 +2,8 @@
 
 A black-and-white competitive rankings platform with real player accounts, registered teams, an independent developer console, and persistent database storage. React 19 / TypeScript / Vite, Django 5.2 / DRF, Node / Socket.io, PostgreSQL, and Redis.
 
+The site shows official player/faction rankings, profiles, and recorded results. The community tier list and what-if simulator UI have been removed, including their navigation, share-link builder, and promotional cards. Older `#list=` links open the official rankings. Public page copy uses functional labels instead of slogans. The player avatar sits above the banner overlays, so custom banners cannot shade or cover the image.
+
 ## Run locally
 
 Requires Node 22+ and Python 3.11+ (Python 3.12 is used in Docker). From the project directory, in PowerShell:

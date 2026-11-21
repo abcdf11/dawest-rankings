@@ -75,7 +75,6 @@ function ProfileFrame({ children }: { children: ReactNode }) {
       <main className="profile-page">{children}</main>
       <footer className="profile-site-footer">
         <span>DAWEST / COMPETITIVE INDEX</span>
-        <span>Every result is part of your story.</span>
       </footer>
     </div>
   );
@@ -270,12 +269,6 @@ export default function ProfilePage({ username }: { username: string }) {
             </span>
             <span>SOLO / 1V1</span>
           </div>
-          <div className="profile-cover-bottom">
-            <span>REPUTATION IS EVERYTHING.</span>
-            <span>
-              <ShieldCheck size={14} /> REGISTERED PLAYER
-            </span>
-          </div>
         </div>
         <div className="profile-identity">
           <div
@@ -390,7 +383,7 @@ export default function ProfilePage({ username }: { username: string }) {
         >
           <aside className="profile-sidebar">
             <section className="profile-side-card profile-about">
-              <h2>On the frontier</h2>
+              <h2>Player details</h2>
               <dl>
                 <div>
                   <dt>
@@ -469,14 +462,6 @@ export default function ProfilePage({ username }: { username: string }) {
                 </span>
               </div>
             </section>
-            <div className="profile-side-note">
-              <ShieldCheck size={17} />
-              <p>
-                Every result counts.
-                <br />
-                Your record comes from verified competition.
-              </p>
-            </div>
           </aside>
           <div className="profile-main">
             <div className="profile-ranks">
@@ -550,7 +535,6 @@ export default function ProfilePage({ username }: { username: string }) {
                   <div className="profile-section-title">
                     <div>
                       <h2>Recent matches</h2>
-                      <p>The latest chapters in your record.</p>
                     </div>
                     <button
                       className="profile-text-button"
@@ -568,8 +552,7 @@ export default function ProfilePage({ username }: { username: string }) {
                   <section className="profile-panel">
                     <div className="profile-section-title">
                       <div>
-                        <h2>Standout wins</h2>
-                        <p>Highest rating gains from recent matches.</p>
+                        <h2>Highest rating gains</h2>
                       </div>
                       <Award size={19} />
                     </div>
@@ -631,12 +614,11 @@ export default function ProfilePage({ username }: { username: string }) {
   );
 }
 
-function EmptyRecord({ own }: { own: boolean }) {
+function EmptyRecord(_props: { own: boolean }) {
   return (
     <div className="profile-empty">
       <Crosshair size={27} />
-      <h3>{own ? "Your record starts here." : "No matches recorded yet."}</h3>
-      <p>Verified match results will appear here as you compete.</p>
+      <h3>No matches recorded yet.</h3>
     </div>
   );
 }
@@ -946,25 +928,25 @@ function PerformanceChart({
 function Milestones({ player }: { player: PlayerDetail }) {
   const milestones = [
     {
-      name: "On the frontier",
+      name: "Registered",
       detail: "Registered player",
       unlocked: true,
       Icon: BadgeCheck,
     },
     {
-      name: "First victory",
+      name: "First win",
       detail: "Win a verified match",
       unlocked: player.wins >= 1,
       Icon: Target,
     },
     {
-      name: "Battle tested",
+      name: "10 matches",
       detail: "Play 10 matches",
       unlocked: player.wins + player.losses >= 10,
       Icon: Swords,
     },
     {
-      name: "Ten victories",
+      name: "10 wins",
       detail: "Win 10 matches",
       unlocked: player.wins >= 10,
       Icon: Medal,
@@ -987,7 +969,7 @@ function Milestones({ player }: { player: PlayerDetail }) {
       <div className="profile-section-title">
         <div>
           <h2>Milestones</h2>
-          <p>Earned through your recorded career.</p>
+          <p>Based on recorded results.</p>
         </div>
         <span className="profile-count-label">
           {milestones.filter((item) => item.unlocked).length} /{" "}

@@ -20,7 +20,7 @@ export function AccountMenu() {
       <div className="account-menu">
         <a href="/login">Log in</a>
         <a className="account-signup" href="/signup">
-          Join the ladder
+          Sign up
         </a>
       </div>
     );

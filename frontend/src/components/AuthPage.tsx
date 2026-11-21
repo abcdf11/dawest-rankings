@@ -76,28 +76,28 @@ export default function AuthPage({
       <main className="auth-layout">
         <div className="auth-intro">
           <span className="registration-eyebrow">
-            {developer ? "COMPETITION CONTROL" : "YOUR REPUTATION STARTS HERE"}
+            {developer ? "STAFF ACCESS" : "DAWEST ACCOUNTS"}
           </span>
           <h1>
             {developer
-              ? "BEHIND THE FRONTIER."
+              ? "DEVELOPER ACCESS"
               : signup
-                ? "MAKE IT OFFICIAL."
-                : "WELCOME BACK."}
+                ? "CREATE AN ACCOUNT"
+                : "LOG IN"}
           </h1>
           <p>
             {developer
               ? "Sign in with your developer account to review applications and manage registered competitors."
               : signup
-                ? "Create a player account to appear on the leaderboard, build your record, and register your faction."
-                : "Sign in to your registered player account and get back to the frontier."}
+                ? "Register to appear in rankings and join a faction."
+                : "Sign in to your player account."}
           </p>
           <div className="auth-note">
             <ShieldCheck size={18} />
             <span>
               {developer
                 ? "Developer accounts are provisioned by the site owner."
-                : "Your account and competitive history are stored in the DaWest database."}
+                : "A player account is required to join a faction."}
             </span>
           </div>
         </div>
@@ -125,8 +125,8 @@ export default function AuthPage({
                   {developer
                     ? "Authorized staff only."
                     : signup
-                      ? "Register once. Every result counts."
-                      : "Your place on the frontier is waiting."}
+                      ? "Create a player account."
+                      : "Enter your username and password."}
                 </p>
               </div>
             </div>

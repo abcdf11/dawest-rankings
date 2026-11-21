@@ -9,7 +9,6 @@ import {
   Crosshair,
   Globe2,
   Info,
-  ListOrdered,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -19,21 +18,12 @@ import {
   UsersRound,
   UserRound,
 } from "lucide-react";
-import type {
-  Player,
-  RankingEntry,
-  RankingKind,
-  Region,
-  Tier,
-} from "./types/rankings";
-import { getLadder, officialMode } from "./lib/api";
+import type { RankingEntry, RankingKind, Region, Tier } from "./types/rankings";
+import { getLadder } from "./lib/api";
 import { useRankingsSocket } from "./hooks/useRankingsSocket";
 import { Brand } from "./components/Shared";
 import { PodiumHero } from "./components/PodiumHero";
 import { RankingsTable } from "./components/RankingsTable";
-import { PlayerDrawer } from "./components/PlayerDrawer";
-import { MatchSimulator } from "./components/MatchSimulator";
-import { CustomRankBuilder } from "./components/CustomRankBuilder";
 import { Modal } from "./components/Modal";
 import { FrontierHero } from "./components/FrontierHero";
 import { AccountMenu } from "./components/AccountMenu";
@@ -44,7 +34,6 @@ import {
 } from "./components/LoadingScreen";
 import { factionUrl, profileUrl } from "./lib/profile";
 
-type Mode = "rankings" | "simulator" | "builder";
 export default function App() {
   const [showIntro, setShowIntro] = useState(shouldShowIntro);
   const [introKey, setIntroKey] = useState(0);
@@ -66,22 +55,18 @@ export default function App() {
       : "players",
   );
   const isTeams = kind === "teams";
-  const noun = isTeams ? "teams" : "gunslingers";
-  const [mode, setMode] = useState<Mode>(() =>
-    window.location.hash.includes("list=") ? "builder" : "rankings",
-  );
+  const noun = isTeams ? "teams" : "players";
   const [tier, setTier] = useState<Tier | "ALL">("ALL"),
     [region, setRegion] = useState<Region | "ALL">("ALL");
   const [search, setSearch] = useState(""),
     [sort, setSort] = useState("rating"),
     [limit, setLimit] = useState(10);
-  const [selected, setSelected] = useState<RankingEntry | null>(null),
-    [help, setHelp] = useState(false);
+  const [help, setHelp] = useState(false);
   const { data, isPending, isError, refetch, isFetching } = useQuery({
     queryKey: ["rankings", kind],
     queryFn: () => getLadder(kind),
     staleTime: 30_000,
-    refetchInterval: officialMode ? 60_000 : false,
+    refetchInterval: 60_000,
     retry: 1,
   });
   const players = data?.players ?? [];
@@ -89,8 +74,7 @@ export default function App() {
     data?.source === "official" && data.realtime_enabled !== false,
     kind,
   );
-  const closeDrawer = useCallback(() => setSelected(null), []),
-    closeHelp = useCallback(() => setHelp(false), []);
+  const closeHelp = useCallback(() => setHelp(false), []);
   const filtered = useMemo(
     () =>
       players
@@ -128,11 +112,7 @@ export default function App() {
     url.hash = "";
     window.history.replaceState(null, "", url);
     setKind(next);
-    setSelected(null);
     reset();
-  }
-  function openRosterPlayer(player: Player) {
-    window.location.assign(profileUrl(player.username));
   }
   function openCompetitor(player: RankingEntry) {
     window.location.assign(
@@ -166,40 +146,22 @@ export default function App() {
       >
         <header className="site-header">
           <div className="header-inner">
-            <button
+            <a
               className="brand-button"
               aria-label="DaWest rankings home"
-              onClick={() => setMode("rankings")}
+              href="/"
             >
               <Brand />
-            </button>
+            </a>
             <span className="header-divider" />
             <nav aria-label="Main navigation">
+              <a href="/" className="active" aria-current="page">
+                Rankings
+              </a>
               <a href="/factions">Factions</a>
-              <button
-                className={mode === "rankings" ? "active" : ""}
-                onClick={() => setMode("rankings")}
-              >
-                Power rankings
-              </button>
-              <button
-                className={mode === "simulator" ? "active" : ""}
-                onClick={() => setMode("simulator")}
-              >
-                Match simulator
-              </button>
-              <button
-                className={mode === "builder" ? "active" : ""}
-                onClick={() => setMode("builder")}
-              >
-                My tier list<span className="new-tag">NEW</span>
-              </button>
             </nav>
             <div className="header-right">
               <AccountMenu />
-              <span className="season-badge">
-                SEASON <b>04</b>
-              </span>
               <button
                 className="icon-button help-button"
                 title="How rankings work"
@@ -248,7 +210,6 @@ export default function App() {
                   <small>Team circuit rankings</small>
                 </span>
               </button>
-              <p>Two ladders. One frontier.</p>
               <a href="/register" className="register-team-link">
                 <UsersRound size={15} />
                 Register a faction
@@ -276,53 +237,14 @@ export default function App() {
                 <span className="last-updated">
                   {data
                     ? `Updated ${new Date(data.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
-                    : "Connecting to the frontier"}
+                    : "Connecting"}
                 </span>
               </div>
-            </div>
-            <div
-              className="mode-tabs"
-              role="tablist"
-              aria-label="Ranking modes"
-            >
-              <button
-                role="tab"
-                aria-selected={mode === "rankings"}
-                className={mode === "rankings" ? "active" : ""}
-                onClick={() => setMode("rankings")}
-              >
-                <Trophy size={15} />
-                Official ladder
-              </button>
-              <button
-                role="tab"
-                aria-selected={mode === "simulator"}
-                className={mode === "simulator" ? "active" : ""}
-                onClick={() => setMode("simulator")}
-              >
-                <Swords size={16} />
-                What-if simulator
-              </button>
-              <button
-                role="tab"
-                aria-selected={mode === "builder"}
-                className={mode === "builder" ? "active" : ""}
-                onClick={() => setMode("builder")}
-              >
-                <ListOrdered size={16} />
-                Community tier list
-              </button>
-              <button
-                className="methodology-link"
-                onClick={() => setHelp(true)}
-              >
-                <Info size={14} /> How it works
-              </button>
             </div>
             {isPending ? (
               <div className="loading-state">
                 <Crosshair className="loading-spin" size={30} />
-                <h3>SCOUTING THE FRONTIER</h3>
+                <h3>Loading rankings</h3>
                 <p>Loading the competitive ladder…</p>
               </div>
             ) : isError ? (
@@ -343,210 +265,176 @@ export default function App() {
             ) : (
               data && (
                 <>
-                  {mode === "rankings" ? (
-                    <>
-                      <div className="spotlight-heading">
-                        <span>
-                          <span className="gold-dot" />
-                          FRONTIER’S FINEST
-                        </span>
-                        <span>THE TOP THREE</span>
-                      </div>
-                      <PodiumHero players={players} onSelect={openCompetitor} />
-                      <div className="ladder-controls">
-                        <div
-                          className="tier-filters"
-                          aria-label="Filter by competitive tier"
-                        >
-                          {(
-                            [
-                              "ALL",
-                              "LEGEND",
-                              "OUTLAW",
-                              "GUNSLINGER",
-                              "DEPUTY",
-                              "ROOKIE",
-                            ] as const
-                          ).map((t) => (
-                            <button
-                              key={t}
-                              aria-pressed={tier === t}
-                              onClick={() => {
-                                setTier(t);
-                                setLimit(10);
-                              }}
-                              className={tier === t ? "active" : ""}
-                            >
-                              {t === "ALL"
-                                ? isTeams
-                                  ? "ALL TEAMS"
-                                  : "ALL PLAYERS"
-                                : t}
-                              {t === "ALL" && <span>{players.length}</span>}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="filter-bottom">
-                          <label className="search-field">
-                            <Search size={16} />
-                            <input
-                              aria-label={
-                                isTeams ? "Search teams" : "Search players"
-                              }
-                              placeholder={
-                                isTeams
-                                  ? "Search a team or tag…"
-                                  : "Search a gunslinger…"
-                              }
-                              value={search}
-                              onChange={(e) => {
-                                setSearch(e.target.value);
-                                setLimit(10);
-                              }}
-                            />
-                            {search && (
-                              <button
-                                className="icon-button"
-                                aria-label="Clear search"
-                                onClick={() => setSearch("")}
-                              >
-                                <X size={14} />
-                              </button>
-                            )}
-                          </label>
-                          <div className="select-field">
-                            <Globe2 size={15} />
-                            <select
-                              aria-label="Filter by region"
-                              value={region}
-                              onChange={(e) => {
-                                setRegion(e.target.value as Region | "ALL");
-                                setLimit(10);
-                              }}
-                            >
-                              <option value="ALL">All regions</option>
-                              <option value="NA">North America</option>
-                              <option value="EU">Europe</option>
-                              <option value="ASIA">Asia</option>
-                              <option value="SA">South America</option>
-                              <option value="OCE">Oceania</option>
-                            </select>
-                          </div>
-                          <div className="sort-field">
-                            <SlidersHorizontal size={14} />
-                            <span>Sort by:</span>
-                            <select
-                              aria-label={
-                                isTeams ? "Sort teams" : "Sort players"
-                              }
-                              value={sort}
-                              onChange={(e) => setSort(e.target.value)}
-                            >
-                              <option value="rating">Power rating</option>
-                              <option value="win">Win percentage</option>
-                              <option value="streak">Hot streak</option>
-                              <option value="peak">Peak rating</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <RankingsTable
-                        emptyLadder={data.total === 0}
-                        kind={kind}
-                        players={filtered.slice(0, limit)}
-                        onSelect={openCompetitor}
-                        onReset={reset}
-                      />
-                      <div className="table-footer">
-                        <span>
-                          Showing <b>{Math.min(limit, filtered.length)}</b> of{" "}
-                          <b>{filtered.length}</b> {noun}
-                          {tier !== "ALL" || region !== "ALL" || search ? (
-                            <button onClick={reset}>Clear filters</button>
-                          ) : null}
-                        </span>
-                        {filtered.length > limit ? (
-                          <button
-                            className="show-more"
-                            onClick={() => setLimit((old) => old + 10)}
-                          >
-                            Show more {isTeams ? "teams" : "players"}{" "}
-                            <ChevronDown size={14} />
-                          </button>
-                        ) : (
-                          filtered.length > 10 && (
-                            <button
-                              className="show-more"
-                              onClick={() => setLimit(10)}
-                            >
-                              Show top 10
-                            </button>
-                          )
-                        )}
-                        <span className="verified-note">
-                          <Check size={13} />
-                          Registered competition data
-                        </span>
-                      </div>
-                      <div className="bottom-panels">
-                        <div className="latest-result">
-                          <span className="mini-icon">
-                            <Swords size={19} />
-                          </span>
-                          <div>
-                            <span className="eyebrow">
-                              {matches.length
-                                ? "LIVE DUEL"
-                                : "LATEST RECORDED DUEL"}
-                            </span>
-                            {matches[0] ? (
-                              <p>
-                                {matches[0].player_a}{" "}
-                                <b>
-                                  {matches[0].score_a} : {matches[0].score_b}
-                                </b>{" "}
-                                {matches[0].player_b}
-                              </p>
-                            ) : latest ? (
-                              <p>
-                                {latestEntry.player.display_name}{" "}
-                                <b>{latest.score}</b> {latest.opponent}
-                                <span>{latest.event}</span>
-                              </p>
-                            ) : (
-                              <p>No completed matches yet</p>
-                            )}
-                          </div>
-                        </div>
+                  <div className="spotlight-heading">
+                    <span>
+                      <span className="gold-dot" />
+                      TOP RANKED
+                    </span>
+                    <span>THE TOP THREE</span>
+                  </div>
+                  <PodiumHero players={players} onSelect={openCompetitor} />
+                  <div className="ladder-controls">
+                    <div
+                      className="tier-filters"
+                      aria-label="Filter by competitive tier"
+                    >
+                      {(
+                        [
+                          "ALL",
+                          "LEGEND",
+                          "OUTLAW",
+                          "GUNSLINGER",
+                          "DEPUTY",
+                          "ROOKIE",
+                        ] as const
+                      ).map((t) => (
                         <button
-                          className="build-promo"
-                          onClick={() => setMode("builder")}
+                          key={t}
+                          aria-pressed={tier === t}
+                          onClick={() => {
+                            setTier(t);
+                            setLimit(10);
+                          }}
+                          className={tier === t ? "active" : ""}
                         >
-                          <ListOrdered size={22} />
-                          <span>
-                            <strong>Your frontier. Your order.</strong>
-                            <small>
-                              Build and share your own power rankings.
-                            </small>
-                          </span>
-                          <span className="promo-label">MAKE YOUR LIST</span>
+                          {t === "ALL"
+                            ? isTeams
+                              ? "ALL TEAMS"
+                              : "ALL PLAYERS"
+                            : t}
+                          {t === "ALL" && <span>{players.length}</span>}
                         </button>
+                      ))}
+                    </div>
+                    <div className="filter-bottom">
+                      <label className="search-field">
+                        <Search size={16} />
+                        <input
+                          aria-label={
+                            isTeams ? "Search teams" : "Search players"
+                          }
+                          placeholder={
+                            isTeams
+                              ? "Search a team or tag…"
+                              : "Search players…"
+                          }
+                          value={search}
+                          onChange={(e) => {
+                            setSearch(e.target.value);
+                            setLimit(10);
+                          }}
+                        />
+                        {search && (
+                          <button
+                            className="icon-button"
+                            aria-label="Clear search"
+                            onClick={() => setSearch("")}
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </label>
+                      <div className="select-field">
+                        <Globe2 size={15} />
+                        <select
+                          aria-label="Filter by region"
+                          value={region}
+                          onChange={(e) => {
+                            setRegion(e.target.value as Region | "ALL");
+                            setLimit(10);
+                          }}
+                        >
+                          <option value="ALL">All regions</option>
+                          <option value="NA">North America</option>
+                          <option value="EU">Europe</option>
+                          <option value="ASIA">Asia</option>
+                          <option value="SA">South America</option>
+                          <option value="OCE">Oceania</option>
+                        </select>
                       </div>
-                    </>
-                  ) : mode === "simulator" ? (
-                    <MatchSimulator
-                      key={kind}
-                      players={players}
-                      source={data.source}
-                      kind={kind}
-                    />
-                  ) : (
-                    <CustomRankBuilder
-                      key={kind}
-                      players={players}
-                      kind={kind}
-                    />
-                  )}
+                      <div className="sort-field">
+                        <SlidersHorizontal size={14} />
+                        <span>Sort by:</span>
+                        <select
+                          aria-label={isTeams ? "Sort teams" : "Sort players"}
+                          value={sort}
+                          onChange={(e) => setSort(e.target.value)}
+                        >
+                          <option value="rating">Power rating</option>
+                          <option value="win">Win percentage</option>
+                          <option value="streak">Win streak</option>
+                          <option value="peak">Peak rating</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <RankingsTable
+                    emptyLadder={data.total === 0}
+                    kind={kind}
+                    players={filtered.slice(0, limit)}
+                    onSelect={openCompetitor}
+                    onReset={reset}
+                  />
+                  <div className="table-footer">
+                    <span>
+                      Showing <b>{Math.min(limit, filtered.length)}</b> of{" "}
+                      <b>{filtered.length}</b> {noun}
+                      {tier !== "ALL" || region !== "ALL" || search ? (
+                        <button onClick={reset}>Clear filters</button>
+                      ) : null}
+                    </span>
+                    {filtered.length > limit ? (
+                      <button
+                        className="show-more"
+                        onClick={() => setLimit((old) => old + 10)}
+                      >
+                        Show more {isTeams ? "teams" : "players"}{" "}
+                        <ChevronDown size={14} />
+                      </button>
+                    ) : (
+                      filtered.length > 10 && (
+                        <button
+                          className="show-more"
+                          onClick={() => setLimit(10)}
+                        >
+                          Show top 10
+                        </button>
+                      )
+                    )}
+                    <span className="verified-note">
+                      <Check size={13} />
+                      Registered competition data
+                    </span>
+                  </div>
+                  <div className="bottom-panels">
+                    <div className="latest-result">
+                      <span className="mini-icon">
+                        <Swords size={19} />
+                      </span>
+                      <div>
+                        <span className="eyebrow">
+                          {matches.length ? "LIVE MATCH" : "LATEST MATCH"}
+                        </span>
+                        {matches[0] ? (
+                          <p>
+                            {matches[0].player_a}{" "}
+                            <b>
+                              {matches[0].score_a} : {matches[0].score_b}
+                            </b>{" "}
+                            {matches[0].player_b}
+                          </p>
+                        ) : latest ? (
+                          <p>
+                            {latestEntry.player.display_name}{" "}
+                            <b>{latest.score}</b> {latest.opponent}
+                            <span>{latest.event}</span>
+                          </p>
+                        ) : (
+                          <p>No completed matches yet</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div className="data-note">
                     <Info size={13} />
                     Only registered player accounts and approved teams appear.
@@ -559,33 +447,23 @@ export default function App() {
         </main>
         <footer className="site-footer">
           <Brand small />
-          <span>EVERY DUEL COUNTS.</span>
           <div>
             <button onClick={() => setHelp(true)}>Ranking methodology</button>
             <span>© 2026 DAWEST RANKINGS</span>
           </div>
         </footer>
         <AnimatePresence>
-          {selected && (
-            <PlayerDrawer
-              kind={kind}
-              player={players.find((p) => p.id === selected.id) ?? selected}
-              source={data?.source ?? "official"}
-              onClose={closeDrawer}
-              onSelectPlayer={openRosterPlayer}
-            />
-          )}
           {help && (
             <Modal title="RANKING METHODOLOGY" onClose={closeHelp}>
               <div className="methodology">
                 <span className="icon-square">
                   <Crosshair size={25} />
                 </span>
-                <h2>EVERY DUEL COUNTS.</h2>
+                <h2>How ratings work</h2>
                 <p>
                   {isTeams
-                    ? "Team power ratings measure verified team match results. Roster members keep their independent solo ratings. Beat stronger teams, win decisively, and rise together."
-                    : "Your power rating measures individual performance. Beat stronger opponents, win decisively, and rise through the frontier."}
+                    ? "Faction ratings use verified team match results. Solo ratings are separate."
+                    : "Player ratings use verified solo match results."}
                 </p>
                 <div className="method-row">
                   <strong>
@@ -607,7 +485,7 @@ export default function App() {
                 </div>
                 <div className="method-row">
                   <strong>
-                    03 <span>The stakes matter</span>
+                    03 <span>Event weights</span>
                   </strong>
                   <p>
                     Base K is 32. Ranked duels count 1.0×, showmatches 1.2×,

@@ -157,7 +157,7 @@ export default function DeveloperPage() {
               <span className="registration-eyebrow">
                 AUTHORIZED STAFF / COMPETITION CONTROL
               </span>
-              <h1>CONTROL THE FRONTIER.</h1>
+              <h1>DEVELOPER CONSOLE</h1>
               <p>Review applications. Manage registered players and teams.</p>
             </div>
             <button

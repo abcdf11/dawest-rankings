@@ -117,7 +117,7 @@ try {
     .getByRole("link", { name: "Leader dashboard", exact: true })
     .click();
   await expect(
-    leaderPage.getByRole("heading", { name: "You're all caught up." }),
+    leaderPage.getByRole("heading", { name: "No pending requests" }),
   ).toBeVisible();
 
   const applicantPage = await applicant.context.newPage();

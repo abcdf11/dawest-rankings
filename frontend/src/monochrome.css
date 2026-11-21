@@ -154,23 +154,6 @@ h3 {
   max-width: 720px;
   margin: auto;
 }
-.hero-kicker {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  font:
-    500 0.6875rem "JetBrains Mono",
-    monospace;
-  color: #858585;
-  letter-spacing: 2.5px;
-}
-.hero-kicker > span {
-  display: block;
-  width: 18px;
-  height: 1px;
-  background: #a2a2a2;
-}
 .hero h1 {
   color: #f0f0f0;
   font-family: Inter, Arial, sans-serif;
@@ -243,11 +226,6 @@ h3 {
   color: #ccc;
   font-weight: 500;
   font-size: 0.875rem;
-}
-.hero-counters .hero-season-label {
-  color: #535353;
-  font-size: 0.5625rem;
-  letter-spacing: 1px;
 }
 .replay-intro {
   color: #9a9a9a;
@@ -388,25 +366,6 @@ h3 {
 }
 .last-updated {
   color: #666;
-}
-.mode-tabs {
-  border-color: #fff1;
-  gap: 28px;
-}
-.mode-tabs > button {
-  font-size: 0.8125rem;
-  color: #818181;
-  font-weight: 450;
-}
-.mode-tabs > button.active {
-  color: #e8e8e8;
-}
-.mode-tabs > button.active::after {
-  background: #ddd;
-  height: 1px;
-}
-.mode-tabs > .methodology-link {
-  color: #777;
 }
 .spotlight-heading {
   color: #666;
@@ -708,37 +667,27 @@ select {
   color: #aaa;
   font-size: 0.75rem;
 }
-.latest-result,
-.build-promo {
+.latest-result {
   background: #0d0d0d;
   border-color: #ffffff16;
   border-radius: 3px;
 }
-.build-promo {
-  background: linear-gradient(110deg, #141414, #0d0d0d);
-}
-.build-promo > svg,
 .mini-icon {
   color: #999;
 }
-.latest-result p,
-.build-promo strong {
+.latest-result p {
   color: #bcbcbc;
 }
 .latest-result p > b {
   color: #dedede;
 }
 .latest-result p > span,
-.latest-result .eyebrow,
-.build-promo small {
+.latest-result .eyebrow {
   color: #707070;
 }
 .promo-label {
   color: #aaa;
   border-color: #555;
-}
-.build-promo:hover {
-  border-color: #777;
 }
 .data-note {
   color: #5f5f5f;
@@ -769,8 +718,7 @@ select {
 .button.primary:hover:not(:disabled) {
   background: #fff;
 }
-.button.secondary,
-.builder-list .icon-button {
+.button.secondary {
   background: #191919;
   border-color: #fff2;
   color: #bbb;
@@ -786,8 +734,7 @@ select {
   background: #ffffff08;
 }
 .empty-state,
-.loading-state,
-.mode-panel {
+.loading-state {
   background: #0d0d0d;
   border-color: #fff1;
 }
@@ -800,9 +747,6 @@ select {
 .loading-state h3 {
   color: #ddd;
   font-size: 1.6rem;
-}
-.mode-panel {
-  border-radius: 3px;
 }
 .mode-header h2 {
   font-size: 1.9rem;
@@ -826,50 +770,22 @@ select {
   font-size: 2rem;
   letter-spacing: -0.8px;
 }
-.duelist-rating,
-.score-input {
+.duelist-rating {
   color: #ddd;
-}
-.score-input {
-  background: #090909;
-  border-color: #fff2;
 }
 .duelist > label,
 .duel-options > label,
-.builder-toolbar > label,
 .mode-footnote {
   color: #777;
 }
 .validation {
   color: #aaa;
 }
-.simulation-result {
-  border-color: #ffffff2b;
-  background: #ffffff03;
-}
 .result-rating {
   color: #ddd;
 }
-.builder-list > li {
-  background: #111;
-  border-color: #fff1;
-}
-.builder-list > li.drag-over {
-  background: #242424;
-  box-shadow: inset 0 2px #aaa;
-}
-.builder-rank {
-  color: #aaa;
-}
-.builder-pr {
-  color: #bbb;
-}
-.builder-pr > small,
 .drag-handle {
   color: #666;
-}
-.builder-message {
-  color: #8c8c8c;
 }
 .modal-backdrop {
   background: #000b;
@@ -1174,12 +1090,6 @@ select {
 .intro-title-rule:last-child {
   transform: rotate(180deg);
 }
-.intro-credit {
-  font-size: 0.875rem;
-  letter-spacing: 0.3px;
-  color: #777;
-  margin: 20px 0 42px;
-}
 .intro-progress {
   width: 210px;
   height: 2px;
@@ -1305,9 +1215,6 @@ select {
   .hero-counters {
     gap: 20px;
   }
-  .hero-counters .hero-season-label {
-    display: none;
-  }
   .podium-card,
   .podium-card.place-1,
   .podium-card.place-3 {
@@ -1368,12 +1275,6 @@ select {
   .tier-filters > button {
     font-size: 0.625rem;
   }
-  .mode-tabs {
-    gap: 24px;
-  }
-  .mode-tabs > button {
-    font-size: 0.75rem;
-  }
 }
 @media (max-width: 680px) {
   .header-inner {
@@ -1410,14 +1311,6 @@ select {
   }
   .hero-body {
     padding: 34px 0 30px;
-  }
-  .hero-kicker {
-    font-size: 0.5625rem;
-    letter-spacing: 1.7px;
-    gap: 7px;
-  }
-  .hero-kicker > span {
-    width: 11px;
   }
   .hero h1 {
     font-size: clamp(3.4rem, 15vw, 5.7rem);
@@ -1512,13 +1405,6 @@ select {
   }
   .sync-label {
     font-size: 0.5rem;
-  }
-  .mode-tabs {
-    gap: 17px;
-  }
-  .mode-tabs > button {
-    font-size: 0.625rem;
-    gap: 5px;
   }
   .spotlight-heading {
     font-size: 0.5625rem;
@@ -1687,10 +1573,6 @@ select {
   }
   .intro-title-rule {
     max-width: 40px;
-  }
-  .intro-credit {
-    font-size: 0.75rem;
-    margin: 17px 0 35px;
   }
   .intro-progress {
     width: 165px;
