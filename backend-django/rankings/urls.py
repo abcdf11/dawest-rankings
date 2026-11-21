@@ -11,3 +11,4 @@ from . import entries
 urlpatterns += [path("events/<uuid:event_id>/entries/", entries.public_entries), path("events/<uuid:event_id>/entries/<slug:team_slug>/", entries.withdraw)]
 from . import audio
 urlpatterns += [path("players/<slug:username>/audio/<slug:version>/", audio.serve_player_audio)]
+urlpatterns += [path("roblox/", views.roblox_players), path("roblox/<int:user_id>/", views.roblox_player)]

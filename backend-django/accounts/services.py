@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -18,9 +19,15 @@ def is_developer(user):
     return bool(user and user.is_authenticated and user.is_active and user.is_staff and user.has_perm("accounts.access_dev_console"))
 
 
+def roblox_payload(player):
+    if not player.roblox_user_id:
+        return None
+    return {"user_id": player.roblox_user_id, "username": player.roblox_username, "display_name": player.roblox_display_name, "linked_at": player.roblox_linked_at.isoformat() if player.roblox_linked_at else None}
+
+
 def user_payload(user):
     player = getattr(user, "player_profile", None)
-    return {"id": user.pk, "username": user.username, "is_developer": is_developer(user), "player": {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active, "is_restricted": player.is_restricted, "restriction_reason": player.restriction_reason} if player else None}
+    return {"id": user.pk, "username": user.username, "is_developer": is_developer(user), "player": {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active, "is_restricted": player.is_restricted, "restriction_reason": player.restriction_reason, "roblox": roblox_payload(player)} if player else None, "roblox_login_available": bool(settings.ROBLOX_OAUTH_CLIENT_ID and settings.ROBLOX_OAUTH_CLIENT_SECRET)}
 
 
 def lock_ladders():

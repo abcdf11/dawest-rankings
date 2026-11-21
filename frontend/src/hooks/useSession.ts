@@ -14,7 +14,14 @@ export interface SessionUser {
     is_active: boolean;
     is_restricted?: boolean;
     restriction_reason?: string;
+    roblox?: {
+      user_id: number;
+      username: string;
+      display_name: string;
+      linked_at: string | null;
+    } | null;
   } | null;
+  roblox_login_available?: boolean;
 }
 export interface Session {
   authenticated: boolean;

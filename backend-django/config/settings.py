@@ -52,3 +52,8 @@ if os.getenv("TRUST_PROXY_HEADERS", "0") == "1":
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+
+# Log in with Roblox (accounts/roblox.py): OAuth app from the Roblox Creator Dashboard
+ROBLOX_OAUTH_CLIENT_ID = os.getenv("ROBLOX_OAUTH_CLIENT_ID", "")
+ROBLOX_OAUTH_CLIENT_SECRET = os.getenv("ROBLOX_OAUTH_CLIENT_SECRET", "")
+ROBLOX_OAUTH_REDIRECT_URI = os.getenv("ROBLOX_OAUTH_REDIRECT_URI", "")

@@ -68,6 +68,7 @@ export interface PlayerDetail extends Player {
   registered_at?: string | null;
   rounds_won?: number;
   rounds_lost?: number;
+  roblox_username?: string | null;
   history: History[];
   matches: Form[];
 }

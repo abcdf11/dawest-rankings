@@ -9,6 +9,7 @@ import {
   Check,
   Crosshair,
   Flame,
+  Gamepad2,
   Globe2,
   History as HistoryIcon,
   Link2,
@@ -35,6 +36,7 @@ import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
 import { ProfileMediaImage } from "./ProfileMediaImage";
 import { Modal } from "./Modal";
 import { ThemeAudioEditor, ThemePlayer } from "./ThemeAudio";
+import { RobloxLinkCard } from "./RobloxLinkCard";
 import "../profile.css";
 
 const regions: Record<Region, string> = {
@@ -440,6 +442,14 @@ export default function ProfilePage({ username }: { username: string }) {
                   </dt>
                   <dd>{tierLabel(player.tier)}</dd>
                 </div>
+                {player.roblox_username && (
+                  <div>
+                    <dt>
+                      <Gamepad2 size={16} /> Roblox
+                    </dt>
+                    <dd>@{player.roblox_username}</dd>
+                  </div>
+                )}
               </dl>
               {ownProfile && !player.team && (
                 <a href="/register" className="profile-side-link">
@@ -447,6 +457,9 @@ export default function ProfilePage({ username }: { username: string }) {
                 </a>
               )}
             </section>
+            {ownProfile && session.data?.user && (
+              <RobloxLinkCard user={session.data.user} />
+            )}
             <section className="profile-side-card profile-career">
               <div className="profile-section-title">
                 <h2>Career record</h2>

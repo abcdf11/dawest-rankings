@@ -1448,3 +1448,50 @@
     animation: none;
   }
 }
+
+/* Roblox account card (RobloxLinkCard) */
+.profile-roblox-help {
+  margin: 0.4rem 0 0.8rem;
+  font-size: 0.85rem;
+  opacity: 0.75;
+  line-height: 1.4;
+}
+.profile-roblox-linked {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0;
+}
+.profile-roblox-linked small {
+  opacity: 0.6;
+}
+.profile-roblox-notice {
+  margin: 0.4rem 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+.profile-roblox-notice.is-ok {
+  background: rgba(120, 200, 140, 0.12);
+}
+.profile-roblox-notice.is-error {
+  background: rgba(230, 90, 90, 0.12);
+}
+.profile-roblox-login,
+.profile-roblox-unlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+.profile-roblox-unlink {
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+}
+.profile-roblox-unlink:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
