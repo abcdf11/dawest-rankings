@@ -26,6 +26,7 @@ import { MainNavigation } from "./MainNavigation";
 import { Brand, Sigil, TierBadge } from "./Shared";
 import { ProfileMediaImage } from "./ProfileMediaImage";
 import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
+import { FactionAudioEditor, FactionThemePlayer } from "./FactionAudio";
 import "../profile.css";
 import "../factions.css";
 
@@ -473,6 +474,13 @@ export default function FactionPage({
             )}
           </div>
         </div>
+        {!managing && faction.audio_url && (
+          <FactionThemePlayer
+            src={faction.audio_url}
+            title={faction.audio_title}
+            factionName={faction.display_name}
+          />
+        )}
         <div className="faction-stats">
           <div>
             <span>GLOBAL RANK</span>
@@ -580,6 +588,13 @@ export default function FactionPage({
         <p className="registration-error faction-feedback" role="alert">
           {action.error.message}
         </p>
+      )}
+      {managing && (
+        <FactionAudioEditor
+          username={faction.username}
+          audioUrl={faction.audio_url}
+          audioTitle={faction.audio_title}
+        />
       )}
       {managing && (
         <section className="faction-section faction-inbox">

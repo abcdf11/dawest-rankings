@@ -1,5 +1,5 @@
 from django.urls import path
-from . import factions
+from . import faction_audio, factions
 
 urlpatterns = [
     path("", factions.directory),
@@ -12,4 +12,6 @@ urlpatterns = [
     path("<slug:username>/members/<int:player_id>/remove/", factions.remove_member),
     path("<slug:username>/appearance/", factions.appearance),
     path("<slug:username>/media/<slug:kind>/<slug:version>/", factions.image),
+    path("<slug:username>/audio/", faction_audio.upload),
+    path("<slug:username>/audio/<slug:version>/", faction_audio.serve),
 ]

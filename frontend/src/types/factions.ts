@@ -21,6 +21,8 @@ export interface FactionMember extends Player {
 }
 export interface FactionDetail extends TeamDetail {
   banner_url: string;
+  audio_url: string;
+  audio_title: string;
   description: string;
   registered_at: string;
   leader: FactionMember | null;

@@ -128,6 +128,12 @@ Registered players can request membership with an optional message, withdraw pen
 
 Faction logos and banners support the same PNG/JPG/WebP/GIF validation and automatic fitting as player images: **256 × 256 logos**, **1280 × 240 banners**, **8 MB per file**, and up to **120 GIF frames**. Animation and reduced-motion posters are preserved. Images live in a separate `FactionMedia` database table; requests live in `FactionJoinRequest`. Player images remain independent. The Render startup script applies the new migration automatically without a Shell session or additional storage configuration.
 
+### Faction theme audio
+
+On `/factions/<team-slug>/manage`, the faction owner can upload a **Theme audio** track (MP3, M4A/AAC, OGG, WAV, FLAC, or WebM, up to **8 MB**) with an optional title, replace it, retitle it, or remove it. Files are identified by their contents, not their names. The track plays on loop when someone opens the public faction profile. Browsers block sound until a visitor interacts with the page, so if autoplay is blocked the track starts on the visitor's first click or key press. Visitors can pause it or turn autoplay off; that choice is remembered in their browser.
+
+Audio is stored in the `FactionAudio` database table (one track per faction), served at versioned `/api/v1/factions/<slug>/audio/<version>/` URLs with byte-range support for seeking, and uploads/removals are audited. The Render startup script applies the migration automatically.
+
 ## Deploy on Render with your existing Python service
 
 The native Python deployment can serve both React and Django at one public URL. This fixes a deployment where `/api/v1/auth/session/` works but `/`, `/signup`, or `/dev/login` return Django's "Not Found" page.
@@ -253,6 +259,8 @@ The earlier private Sites deployment is a static build and does not host Django 
 | POST | `/api/v1/factions/<slug>/members/<player-id>/remove/` | Owner removes a member, or a non-leader leaves |
 | POST | `/api/v1/factions/<slug>/appearance/` | Owner uploads/removes logo (`avatar`) and banner using multipart form data |
 | GET / HEAD | `/api/v1/factions/<slug>/media/<kind>/<version>/` | Public fitted logo/banner; `?still=1` selects a still poster |
+| POST | `/api/v1/factions/<slug>/audio/` | Owner uploads (`audio`, `title`), retitles, or removes (`remove`) the theme track using multipart form data |
+| GET / HEAD | `/api/v1/factions/<slug>/audio/<version>/` | Public theme audio with Range support |
 | GET | `/api/v1/rankings/` | Registered player ladder |
 | GET | `/api/v1/players/<username>/` | Registered player profile and history |
 | GET | `/api/v1/teams/rankings/` | Registered team ladder |

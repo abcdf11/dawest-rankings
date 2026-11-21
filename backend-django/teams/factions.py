@@ -71,6 +71,7 @@ def faction_payload(team):
     members = member_rows(team)
     leader = next((member for member in members if member["is_leader"]), None)
     return {**TeamSerializer(team).data, "banner_url": team.profile_banner_url,
+            "audio_url": team.profile_audio_url, "audio_title": team.audio_title,
             "description": registration.description if registration else "",
             "registered_at": team.registered_at, "leader": leader,
             "members": members, "member_count": len(members),

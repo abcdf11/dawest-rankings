@@ -21,6 +21,8 @@ class Team(models.Model):
     avatar_url = models.URLField("logo URL", blank=True)
     logo_version = models.CharField(max_length=64, blank=True)
     banner_version = models.CharField(max_length=64, blank=True)
+    audio_version = models.CharField(max_length=64, blank=True)
+    audio_title = models.CharField(max_length=80, blank=True)
     accent_color = models.CharField(max_length=7, default="#EAB308")
     rating = models.FloatField(default=1500, validators=[MinValueValidator(0)])
     previous_rating = models.FloatField(default=1500)
@@ -53,6 +55,10 @@ class Team(models.Model):
     def profile_banner_url(self):
         return f"/api/v1/factions/{self.username}/media/banner/{self.banner_version}/" if self.banner_version else ""
 
+    @property
+    def profile_audio_url(self):
+        return f"/api/v1/factions/{self.username}/audio/{self.audio_version}/" if self.audio_version else ""
+
 
 class FactionMedia(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -71,6 +77,16 @@ class FactionMedia(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["team", "kind"], name="one_faction_image_per_kind")]
+
+
+class FactionAudio(models.Model):
+    """The faction's theme track, stored in the database like faction images."""
+    team = models.OneToOneField(Team, on_delete=models.CASCADE, related_name="audio")
+    version = models.CharField(max_length=64)
+    content_type = models.CharField(max_length=32)
+    data = models.BinaryField()
+    byte_size = models.PositiveIntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class FactionJoinRequest(models.Model):
