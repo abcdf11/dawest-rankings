@@ -8,7 +8,8 @@ export function ProfileMediaImage({
   const reducedMotion = useReducedMotion();
   const source =
     reducedMotion &&
-    src.startsWith("/api/v1/players/") &&
+    (src.startsWith("/api/v1/players/") ||
+      src.startsWith("/api/v1/factions/")) &&
     src.includes("/media/")
       ? `${src}${src.includes("?") ? "&" : "?"}still=1`
       : src;

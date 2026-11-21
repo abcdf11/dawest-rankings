@@ -73,6 +73,20 @@ Authentication uses Django sessions with an HttpOnly session cookie. Login, sign
 
 Public signup cannot assign staff roles. The developer login checks staff permissions, and every developer API action verifies them again on the server. Account/login attempts and registrations are throttled. Deactivating a player revokes tracked sessions and removes them from public rankings. Private registration receipts enforce ownership.
 
+## Factions and leader dashboard
+
+Approved teams are factions: they keep their existing team ratings, registration, owner, and roster. Register a faction through `/register`; developer approval creates its public faction profile. The approved registration receipt and team leaderboard names open the faction page.
+
+- `/factions` lists public factions, supports search, and shows the signed-in player's own factions and pending join requests.
+- `/faction` redirects to the player's current faction, their sole owned faction, or the directory. Anonymous visitors go to login with a return destination.
+- `/factions/<team-slug>` displays the banner, logo, leader, roster, power rating, rank, and recent verified matches. Player names open their individual profiles.
+- `/factions/<team-slug>/manage` is the leader dashboard. Only the existing team owner can access requests, accept or decline applicants, remove non-leader members, and customize faction images. The request inbox refreshes every 30 seconds and after actions.
+- `/teams/<team-slug>` redirects to the public faction profile.
+
+Registered players can request membership with an optional message, withdraw pending requests, and leave a faction as a non-leader. Each player can belong to one faction; each roster contains at most 10 members. Acceptance rechecks eligibility, membership, pending team-registration reservations, and capacity under the existing ladder transaction locks. It adds the membership, cancels other pending faction requests, records the decision, and invalidates both leaderboard revisions. Repeated decisions do not create duplicate memberships. Private request messages are available only to the applicant and faction owner.
+
+Faction logos and banners support the same PNG/JPG/WebP/GIF validation and automatic fitting as player images: **256 × 256 logos**, **1280 × 240 banners**, **8 MB per file**, and up to **120 GIF frames**. Animation and reduced-motion posters are preserved. Images live in a separate `FactionMedia` database table; requests live in `FactionJoinRequest`. Player images remain independent. The Render startup script applies the new migration automatically without a Shell session or additional storage configuration.
+
 ## Deploy on Render with your existing Python service
 
 The native Python deployment can serve both React and Django at one public URL. This fixes a deployment where `/api/v1/auth/session/` works but `/`, `/signup`, or `/dev/login` return Django's "Not Found" page.
@@ -176,6 +190,16 @@ The earlier private Sites deployment is a static build and does not host Django 
 | GET | `/api/v1/auth/roster-players/` | Find registered available roster members |
 | POST | `/api/v1/auth/profile/appearance/` | Upload/remove the signed-in player's picture and banner using multipart form data |
 | GET / HEAD | `/api/v1/players/<username>/media/<kind>/<version>/` | Public fitted image; `?still=1` selects an animation poster |
+| GET | `/api/v1/factions/` | Public faction directory; optional `search` query |
+| GET | `/api/v1/factions/mine/` | Signed-in player's owned factions, membership, and requests |
+| GET | `/api/v1/factions/<slug>/` | Public faction profile, roster, leader, and matches |
+| GET | `/api/v1/factions/<slug>/manage/` | Owner-only dashboard and private member requests |
+| POST | `/api/v1/factions/<slug>/join/` | Request to join as the signed-in registered player |
+| POST | `/api/v1/factions/<slug>/requests/<uuid>/review/` | Owner-only acceptance or rejection |
+| POST | `/api/v1/factions/requests/<uuid>/withdraw/` | Withdraw the applicant's own pending request |
+| POST | `/api/v1/factions/<slug>/members/<player-id>/remove/` | Owner removes a member, or a non-leader leaves |
+| POST | `/api/v1/factions/<slug>/appearance/` | Owner uploads/removes logo (`avatar`) and banner using multipart form data |
+| GET / HEAD | `/api/v1/factions/<slug>/media/<kind>/<version>/` | Public fitted logo/banner; `?still=1` selects a still poster |
 | GET | `/api/v1/rankings/` | Registered player ladder |
 | GET | `/api/v1/players/<username>/` | Registered player profile and history |
 | GET | `/api/v1/teams/rankings/` | Registered team ladder |
@@ -208,5 +232,7 @@ Browser presentation tests use isolated API fixtures. Backend tests enforce real
 `tests/integration/native-deployment.mjs` checks the production React build served directly by Django, without Vite or API mocks. Build React, migrate an isolated SQLite database, collect static files, and run Django with `DEBUG=0` on localhost port 8002; then run `node tests/integration/native-deployment.mjs`. It verifies same-origin signup/session persistence, leaderboard visibility, registration and developer pages, assets, and genuine API 404s. It creates test accounts only on localhost.
 
 Against the same isolated service, `node tests/integration/profile-images.mjs` checks real authenticated picture and GIF banner uploads, fitted dimensions, browser animation, persistence after reload, and public viewing without edit access. It writes public image URLs to ignored `artifacts/profile-media-smoke.json` for checking them again after a service restart.
+
+`node tests/integration/factions.mjs` runs the real faction workflow on that isolated service: player signup, team registration, developer approval, faction redirects, private leader dashboard, join request and acceptance, leaderboard roster update, and fitted faction logo/GIF banner uploads. It creates a developer fixture only in an SQLite database under `artifacts/` (default `native-render-smoke.sqlite3`). `SQLITE_PATH` must match the test server's database. Only public profile/image URLs are written to ignored `artifacts/faction-smoke.json` for restart verification.
 
 Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.

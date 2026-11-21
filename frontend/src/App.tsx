@@ -42,7 +42,7 @@ import {
   INTRO_STORAGE_KEY,
   shouldShowIntro,
 } from "./components/LoadingScreen";
-import { profileUrl } from "./lib/profile";
+import { factionUrl, profileUrl } from "./lib/profile";
 
 type Mode = "rankings" | "simulator" | "builder";
 export default function App() {
@@ -135,8 +135,11 @@ export default function App() {
     window.location.assign(profileUrl(player.username));
   }
   function openCompetitor(player: RankingEntry) {
-    if ("tag" in player) setSelected(player);
-    else window.location.assign(profileUrl(player.username));
+    window.location.assign(
+      "tag" in player
+        ? factionUrl(player.username)
+        : profileUrl(player.username),
+    );
   }
   const latestEntry = players
     .flatMap((player) => player.last_five.map((match) => ({ player, match })))
@@ -172,6 +175,9 @@ export default function App() {
             </button>
             <span className="header-divider" />
             <nav aria-label="Main navigation">
+              <a href="/factions" className="faction-nav-link">
+                Factions
+              </a>
               <button
                 className={mode === "rankings" ? "active" : ""}
                 onClick={() => setMode("rankings")}

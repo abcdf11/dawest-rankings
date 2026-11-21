@@ -24,15 +24,18 @@ test("team and player ladders stay separate and team profiles open roster player
   await page.getByRole("textbox", { name: "Search teams" }).fill("BLW");
   await expect(page.locator("tbody tr")).toHaveCount(1);
   await page.locator("tbody .table-player").first().click();
+  await expect(page).toHaveURL(/\/factions\/blackwater$/);
   await expect(
-    page.getByRole("dialog", { name: "TEAM PROFILE" }),
+    page.getByRole("heading", { name: "Blackwater", exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "TEAM ROSTER" }),
-  ).toBeVisible();
-  await expect(page.locator(".roster-member")).toHaveCount(2);
-  await expect(page.locator(".match-history-row")).toHaveCount(12);
-  await page.locator(".roster-member").filter({ hasText: "Deadeye" }).click();
+  await expect(page.locator(".faction-member-profile")).toHaveCount(2);
+  await page.getByRole("tab", { name: "Recent matches" }).click();
+  await expect(page.locator(".faction-matches > a")).toHaveCount(12);
+  await page.getByRole("tab", { name: "Members" }).click();
+  await page
+    .locator(".faction-member-profile")
+    .filter({ hasText: "Deadeye" })
+    .click();
   await expect(page).toHaveURL(/\/players\/deadeye$/);
   await expect(
     page.getByRole("heading", { name: "Deadeye", exact: true }),

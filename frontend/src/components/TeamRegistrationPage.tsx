@@ -282,9 +282,15 @@ export default function TeamRegistrationPage() {
               )}
               <a
                 className="registration-return"
-                href="/?ranking=teams&source=official"
+                href={
+                  receipt.team_username
+                    ? `/factions/${encodeURIComponent(receipt.team_username)}`
+                    : "/?ranking=teams&source=official"
+                }
               >
-                Return to team rankings
+                {receipt.team_username
+                  ? "View faction profile"
+                  : "Return to team rankings"}
               </a>
             </div>
           ) : receiptId ? (

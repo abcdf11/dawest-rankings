@@ -1,14 +1,13 @@
 import { Crosshair, Flame, Minus, Shield, Star, Triangle } from "lucide-react";
 import type { Form, Player, RankingEntry } from "../types/rankings";
 import { tierLabel } from "../lib/rating";
-import { profileUrl } from "../lib/profile";
+import { factionUrl, profileUrl } from "../lib/profile";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { ProfileMediaImage } from "./ProfileMediaImage";
 
 export function CompetitorLink({
   player,
-  onSelect,
   children,
   className,
   label,
@@ -19,23 +18,13 @@ export function CompetitorLink({
   className: string;
   label?: string;
 }) {
-  if ("tag" in player)
-    return (
-      <button
-        type="button"
-        className={className}
-        aria-label={label}
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelect(player);
-        }}
-      >
-        {children}
-      </button>
-    );
   return (
     <a
-      href={profileUrl(player.username)}
+      href={
+        "tag" in player
+          ? factionUrl(player.username)
+          : profileUrl(player.username)
+      }
       className={`${className} competitor-link`}
       aria-label={label}
       onClick={(event) => event.stopPropagation()}

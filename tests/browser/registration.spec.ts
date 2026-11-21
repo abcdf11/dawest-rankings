@@ -138,6 +138,6 @@ test("registration conflicts preserve the form and a receipt can show approval",
     page.getByRole("heading", { name: "WELCOME TO THE CIRCUIT." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Return to team rankings" }),
-  ).toHaveAttribute("href", "/?ranking=teams&source=official");
+    page.getByRole("link", { name: "View faction profile" }),
+  ).toHaveAttribute("href", "/factions/new-frontier-c4b26b63");
 });

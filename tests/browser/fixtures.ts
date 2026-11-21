@@ -9,6 +9,28 @@ import type {
 import { simulateLocal } from "../../frontend/src/lib/rating";
 const players = snapshot.players as Player[];
 const teams = teamSnapshot.teams as unknown as Team[];
+export function factionFixture(username = "blackwater") {
+  const team = teams.find((team) => team.username === username)!;
+  const details = (teamSnapshot.details as Record<string, object>)[username];
+  const members = team.roster.map((member, index) => ({
+    ...member,
+    is_leader: index === 0,
+    is_captain: index === 0,
+    joined_at: teamSnapshot.updated_at,
+  }));
+  return {
+    ...team,
+    ...details,
+    banner_url: "",
+    description: "Built on reputation. Ready for the next frontier.",
+    registered_at: teamSnapshot.updated_at,
+    members,
+    leader: members[0],
+    member_count: members.length,
+    capacity: 10,
+    profile_url: `/factions/${username}`,
+  };
+}
 export async function fixtureApi(page: Page) {
   await page.route("**/api/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -16,6 +38,21 @@ export async function fixtureApi(page: Page) {
       return route.fulfill({
         json: { authenticated: false, user: null, csrf_token: "test-csrf" },
       });
+    if (path === "/api/v1/factions/")
+      return route.fulfill({
+        json: {
+          factions: teams.map((team) => ({
+            ...team,
+            banner_url: "",
+            member_count: team.roster.length,
+            capacity: 10,
+            profile_url: `/factions/${team.username}`,
+          })),
+        },
+      });
+    const factionName = path.match(/^\/api\/v1\/factions\/([^/]+)\/$/)?.[1];
+    if (factionName && teams.some((team) => team.username === factionName))
+      return route.fulfill({ json: factionFixture(factionName) });
     if (path.endsWith("/teams/rankings/"))
       return route.fulfill({
         json: { ...teamSnapshot, source: "official", realtime_enabled: false },

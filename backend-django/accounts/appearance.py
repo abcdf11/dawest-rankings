@@ -83,6 +83,10 @@ def update_appearance(request):
 @require_safe
 def serve_image(request, username, kind, version):
     media = get_object_or_404(ProfileMedia.objects.defer("data", "poster"), player__in=registered_players().filter(username__iexact=username), kind=kind, version=version)
+    return media_response(request, media)
+
+
+def media_response(request, media):
     still = request.GET.get("still") == "1" and media.frames > 1
     etag = f'"{media.version}{"-still" if still else ""}"'
     headers = {"ETag": etag, "Cache-Control": "public, max-age=86400, immutable", "X-Content-Type-Options": "nosniff"}

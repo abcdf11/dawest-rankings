@@ -43,10 +43,15 @@ export function ProfileAppearanceEditor({
   player,
   onClose,
   onSaved,
+  faction = false,
 }: {
-  player: PlayerDetail;
+  player: Pick<
+    PlayerDetail,
+    "username" | "display_name" | "avatar_url" | "banner_url"
+  >;
   onClose: () => void;
   onSaved: (result: AppearanceResult) => void;
+  faction?: boolean;
 }) {
   const client = useQueryClient();
   const [avatar, setAvatar] = useState<File | null>(null);
@@ -69,22 +74,30 @@ export function ProfileAppearanceEditor({
       if (removeAvatar) body.append("remove_avatar", "true");
       if (removeBanner) body.append("remove_banner", "true");
       return request<AppearanceResult>(
-        "/auth/profile/appearance/",
+        faction
+          ? `/factions/${encodeURIComponent(player.username)}/appearance/`
+          : "/auth/profile/appearance/",
         { method: "POST", body },
         60_000,
       );
     },
     onSuccess: (result) => {
-      client.setQueriesData<PlayerDetail>(
-        { queryKey: ["player-profile"] },
-        (current) =>
-          current?.username === player.username
-            ? { ...current, ...result }
-            : current,
-      );
+      if (!faction)
+        client.setQueriesData<PlayerDetail>(
+          { queryKey: ["player-profile"] },
+          (current) =>
+            current?.username === player.username
+              ? { ...current, ...result }
+              : current,
+        );
       void client.invalidateQueries({ queryKey: ["rankings"] });
       void client.invalidateQueries({ queryKey: ["team"] });
       void client.invalidateQueries({ queryKey: ["player"] });
+      if (faction) {
+        void client.invalidateQueries({ queryKey: ["faction"] });
+        void client.invalidateQueries({ queryKey: ["factions"] });
+        void client.invalidateQueries({ queryKey: ["my-factions"] });
+      }
       onSaved(result);
     },
   });
@@ -110,7 +123,7 @@ export function ProfileAppearanceEditor({
   }
   return (
     <Modal
-      title="CUSTOMIZE PROFILE"
+      title={faction ? "CUSTOMIZE FACTION" : "CUSTOMIZE PROFILE"}
       onClose={onClose}
       dismissible={!mutation.isPending}
     >
@@ -127,12 +140,20 @@ export function ProfileAppearanceEditor({
           </span>
           <div>
             <h2>Make it yours.</h2>
-            <p>Your picture. Your banner. Your place on the frontier.</p>
+            <p>
+              {faction
+                ? "Your faction's identity, on and off the ladder."
+                : "Your picture. Your banner. Your place on the frontier."}
+            </p>
           </div>
         </div>
         <div
           className="appearance-preview"
-          aria-label="Profile appearance preview"
+          aria-label={
+            faction
+              ? "Faction appearance preview"
+              : "Profile appearance preview"
+          }
         >
           <div className="appearance-preview-cover">
             {cover ? (
@@ -146,7 +167,9 @@ export function ProfileAppearanceEditor({
               {picture ? (
                 <ProfileMediaImage
                   src={picture}
-                  alt="Profile picture preview"
+                  alt={
+                    faction ? "Faction logo preview" : "Profile picture preview"
+                  }
                 />
               ) : (
                 player.display_name.slice(0, 2).toUpperCase()
@@ -163,7 +186,7 @@ export function ProfileAppearanceEditor({
             <div>
               <Camera size={19} />
               <span>
-                <strong>Profile picture</strong>
+                <strong>{faction ? "Faction logo" : "Profile picture"}</strong>
                 <small>Automatically fitted to 256 × 256</small>
               </span>
             </div>
@@ -172,7 +195,9 @@ export function ProfileAppearanceEditor({
               tabIndex={-1}
               type="file"
               className="sr-only"
-              aria-label="Profile picture file"
+              aria-label={
+                faction ? "Faction logo file" : "Profile picture file"
+              }
               accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={(event) => {
                 choose("avatar", event.target.files?.[0]);
@@ -186,7 +211,7 @@ export function ProfileAppearanceEditor({
                 onClick={() => avatarInput.current?.click()}
               >
                 <Upload size={14} />
-                Choose picture
+                {faction ? "Choose logo" : "Choose picture"}
               </button>
               {(picture || removeAvatar) && (
                 <button
@@ -213,7 +238,9 @@ export function ProfileAppearanceEditor({
             {avatar && <p className="appearance-filename">{avatar.name}</p>}
             {removeAvatar && (
               <p className="appearance-filename">
-                The default avatar will be restored.
+                {faction
+                  ? "The default faction logo will be restored."
+                  : "The default avatar will be restored."}
               </p>
             )}
           </div>
@@ -221,7 +248,7 @@ export function ProfileAppearanceEditor({
             <div>
               <ImagePlus size={19} />
               <span>
-                <strong>Profile banner</strong>
+                <strong>{faction ? "Faction banner" : "Profile banner"}</strong>
                 <small>Automatically fitted to 1280 × 240</small>
               </span>
             </div>
@@ -230,7 +257,9 @@ export function ProfileAppearanceEditor({
               tabIndex={-1}
               type="file"
               className="sr-only"
-              aria-label="Profile banner file"
+              aria-label={
+                faction ? "Faction banner file" : "Profile banner file"
+              }
               accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={(event) => {
                 choose("banner", event.target.files?.[0]);

@@ -18,6 +18,8 @@ class Team(models.Model):
     region = models.CharField(max_length=4, choices=Player.Region.choices)
     tier = models.CharField(max_length=12, choices=Player.Tier.choices, default="GUNSLINGER")
     avatar_url = models.URLField("logo URL", blank=True)
+    logo_version = models.CharField(max_length=64, blank=True)
+    banner_version = models.CharField(max_length=64, blank=True)
     accent_color = models.CharField(max_length=7, default="#EAB308")
     rating = models.FloatField(default=1500, validators=[MinValueValidator(0)])
     previous_rating = models.FloatField(default=1500)
@@ -41,6 +43,55 @@ class Team(models.Model):
 
     def __str__(self):
         return self.display_name
+
+    @property
+    def profile_avatar_url(self):
+        return f"/api/v1/factions/{self.username}/media/logo/{self.logo_version}/" if self.logo_version else self.avatar_url
+
+    @property
+    def profile_banner_url(self):
+        return f"/api/v1/factions/{self.username}/media/banner/{self.banner_version}/" if self.banner_version else ""
+
+
+class FactionMedia(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="faction_media")
+    kind = models.CharField(max_length=8, choices=[("logo", "Logo"), ("banner", "Banner")])
+    version = models.CharField(max_length=64)
+    content_type = models.CharField(max_length=32)
+    data = models.BinaryField()
+    poster = models.BinaryField(default=b"")
+    byte_size = models.PositiveIntegerField()
+    poster_size = models.PositiveIntegerField(default=0)
+    width = models.PositiveSmallIntegerField()
+    height = models.PositiveSmallIntegerField()
+    frames = models.PositiveSmallIntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["team", "kind"], name="one_faction_image_per_kind")]
+
+
+class FactionJoinRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        REJECTED = "REJECTED", "Rejected"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="join_requests")
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="faction_requests")
+    message = models.CharField(max_length=500, blank=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        ordering = ["-updated_at", "-id"]
+        constraints = [models.UniqueConstraint(fields=["team", "player"], name="one_join_request_per_faction_player")]
 
 
 class TeamMembership(models.Model):

@@ -23,7 +23,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { ApiError, getPlayerProfile } from "../lib/api";
-import { accountDestination, profileUrl } from "../lib/profile";
+import { accountDestination, factionUrl, profileUrl } from "../lib/profile";
 import { formatRating, tierLabel } from "../lib/rating";
 import { useSession } from "../hooks/useSession";
 import type { Form, History, PlayerDetail, Region } from "../types/rankings";
@@ -398,7 +398,13 @@ export default function ProfilePage({ username }: { username: string }) {
                     <UsersRound size={16} /> Team
                   </dt>
                   <dd>
-                    {player.team?.display_name ?? "Independent"}
+                    {player.team ? (
+                      <a href={factionUrl(player.team.username)}>
+                        {player.team.display_name}
+                      </a>
+                    ) : (
+                      "Independent"
+                    )}
                     {player.team && <small>[{player.team.tag}]</small>}
                   </dd>
                 </div>

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Shield, UserRound } from "lucide-react";
+import { LogOut, Shield, UserRound, UsersRound } from "lucide-react";
 import { request } from "../lib/api";
 import { useSession } from "../hooks/useSession";
 import { accountDestination } from "../lib/profile";
@@ -43,6 +43,9 @@ export function AccountMenu() {
           <Shield size={15} />
         </a>
       )}
+      <a href="/faction" aria-label="My faction" title="My faction">
+        <UsersRound size={16} />
+      </a>
       <button
         className="icon-button"
         aria-label="Log out"
