@@ -132,6 +132,9 @@ test("my profile redirect and account link open the signed-in player's page", as
   await expect(
     page.getByRole("link", { name: "View your profile", exact: true }),
   ).toHaveAttribute("href", "/players/deadeye");
+  await expect(page.getByRole("link", { name: "View your profile", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Account settings", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole("button", { name: "Copy profile link" }).click();
   await expect(
     page.getByRole("button", { name: "Copy profile link" }),

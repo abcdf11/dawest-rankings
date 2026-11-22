@@ -60,6 +60,8 @@ All public rankings read the Django database. Only active players linked to regi
 
 Player signup creates a Django user, a linked solo profile, an initial 1,500 rating, rating history, and audit records. Passwords use Django's password hashers and validators. Username uniqueness is case insensitive. User accounts, Django sessions, tracked account sessions, players, teams, memberships, registrations, reviews, rating histories, and audit entries are stored persistently.
 
+Players can use **Change username** on their own profile, or open **Account settings** from the header. Usernames use 3–30 letters, numbers, or underscores and are saved in lowercase. Changes update the login name and player profile together while preserving sessions, ratings, team/event memberships, and Roblox links. Old profile, image, and audio links keep working, and old names are reserved for their owner. Pending team application rosters follow the change; reviewed applications retain their submitted names. Developer accounts can change their own sign-in name through Account settings as well.
+
 Team registration requires a signed-in registered captain and 2 to 10 registered roster members. It never creates accounts for unregistered names. The captain comes from the authenticated session. Registration has no email field or email database column; Discord is optional. Status receipts are available to the submitting account and developers.
 
 Developer approval atomically creates the team and memberships, assigns initial team rating and ranks, records the review, updates cache revisions, and emits refresh events. Team match results and solo match results use independent Elo ladders. Each player belongs to one current team, and a team has at most one captain.
@@ -241,6 +243,7 @@ The earlier private Sites deployment is a static build and does not host Django 
 | POST | `/api/v1/auth/login/` | Player login |
 | POST | `/api/v1/auth/dev-login/` | Developer login with staff permission check |
 | POST | `/api/v1/auth/logout/` | End the current session |
+| POST | `/api/v1/auth/username/` | Change the signed-in account's own username; up to 10 requests/hour |
 | GET | `/api/v1/auth/roster-players/` | Find registered available roster members |
 | POST | `/api/v1/auth/profile/audio/` | Upload (`audio`, `title`), retitle, or remove (`remove`) the signed-in player's theme track |
 | GET / HEAD | `/api/v1/players/<username>/audio/<version>/` | Public player theme audio with Range support |
@@ -316,5 +319,7 @@ Against the same isolated service, `node tests/integration/profile-images.mjs` c
 `node tests/integration/events.mjs` checks real event creation, editing, publishing/unpublishing, draft privacy, anonymous write denial, timezone serialization, direct public detail reloads, and mobile navigation. It uses the same isolated localhost service/database and keeps credentials in memory. Ignored `artifacts/events-smoke.json` contains public event metadata for a server restart check.
 
 `node tests/integration/event-signups.mjs` checks event logo upload/removal, real team sign-ups and ownership, interest persistence, private notifications for schedule changes and starts, unread controls, unsubscribe, and desktop/mobile layouts. Run against localhost port 8002 with `SQLITE_PATH` matching the migrated isolated database (default `artifacts/event-signups.sqlite3`). Screenshots are saved under ignored `artifacts/`.
+
+`node tests/integration/usernames.mjs` checks real username editing on desktop and mobile, duplicate-name errors, login with the new name, session persistence, canonical redirects from old profile links, retained images, and private account controls. Use an isolated, migrated localhost service on port 8002; screenshots are saved under ignored `artifacts/`.
 
 Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.

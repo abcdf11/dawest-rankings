@@ -11,7 +11,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from .engine import process_completed_match, simulate_match_outcome
 from .models import Match, Player, RankingState
-from .eligibility import competitive_players, registered_players
+from .eligibility import competitive_players, registered_players, players_for_username
 from .serializers import CompleteInput, PlayerSerializer, RatingHistorySerializer, SimulationInput, form_for_player
 
 class CanRecordMatch(BasePermission):
@@ -47,7 +47,7 @@ def rankings(request):
 
 @api_view(["GET"])
 def player_detail(request, username):
-    player = get_object_or_404(registered_players().select_related("team_membership__team"), username__iexact=username)
+    player = get_object_or_404(players_for_username(username).select_related("team_membership__team"))
     matches = list(Match.objects.filter(Q(player_a=player) | Q(player_b=player), status="COMPLETED", processed_at__isnull=False).select_related("player_a", "player_b")[:20])
     history = list(player.rating_history.order_by("-recorded_at", "-pk")[:120])
     return Response({**PlayerSerializer(player, context={"forms": {player.pk: matches}}).data, "is_restricted": player.is_restricted, "banner_url": player.profile_banner_url, "audio_url": player.profile_audio_url, "audio_title": player.audio_title, "registered_at": player.registered_at, "roblox_username": player.roblox_username or None, "rounds_won": player.rounds_won, "rounds_lost": player.rounds_lost, "history": RatingHistorySerializer(list(reversed(history)), many=True).data, "matches": form_for_player(player, matches)})

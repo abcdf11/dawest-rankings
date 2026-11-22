@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from accounts.models import AuditEntry
-from .eligibility import registered_players
+from .eligibility import registered_players, players_for_username
 from .models import PlayerAudio
 
 MAX_AUDIO_BYTES = 8 * 1024 * 1024
@@ -150,4 +150,4 @@ def upload_player_audio(request):
 
 @require_safe
 def serve_player_audio(request, username, version):
-    return audio_response(request, PlayerAudio.objects.filter(player__in=registered_players().filter(username__iexact=username), version=version))
+    return audio_response(request, PlayerAudio.objects.filter(player__in=players_for_username(username), version=version))

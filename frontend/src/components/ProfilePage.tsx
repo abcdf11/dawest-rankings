@@ -37,6 +37,7 @@ import { ProfileMediaImage } from "./ProfileMediaImage";
 import { Modal } from "./Modal";
 import { ThemeAudioEditor, ThemePlayer } from "./ThemeAudio";
 import { RobloxLinkCard } from "./RobloxLinkCard";
+import { UsernameSettings } from "./UsernameSettings";
 import "../profile.css";
 
 const regions: Record<Region, string> = {
@@ -148,12 +149,20 @@ export default function ProfilePage({ username }: { username: string }) {
   );
   useEffect(() => {
     if (!player) return;
+    if (player.username.toLowerCase() !== username.toLowerCase()) {
+      window.location.replace(
+        profileUrl(player.username) +
+          window.location.search +
+          window.location.hash,
+      );
+      return;
+    }
     const previous = document.title;
     document.title = `${player.display_name} · DAWEST`;
     return () => {
       document.title = previous;
     };
-  }, [player]);
+  }, [player, username]);
   useEffect(() => {
     const change = () =>
       setTab(
@@ -307,6 +316,7 @@ export default function ProfilePage({ username }: { username: string }) {
             </p>
           </div>
           <div className="profile-identity-actions">
+            {ownProfile && <UsernameSettings />}
             {ownProfile && (
               <button
                 className="profile-copy profile-customize"

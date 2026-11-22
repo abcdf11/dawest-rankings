@@ -10,7 +10,7 @@ from rankings.eligibility import competitive_players, registered_players, regist
 from rankings.engine import _after_commit
 from rankings.models import Player, RankingEvent, RankingState, RatingHistory
 from teams.models import TeamRatingHistory
-from .models import AuditEntry
+from .models import AuditEntry, UsernameAlias
 
 User = get_user_model()
 
@@ -79,7 +79,7 @@ class SignupInput(serializers.Serializer):
 @transaction.atomic
 def create_player_account(data, actor=None):
     lock_ladders()
-    if User.objects.filter(username__iexact=data["username"]).exists() or Player.objects.filter(username__iexact=data["username"]).exists():
+    if User.objects.filter(username__iexact=data["username"]).exists() or Player.objects.filter(username__iexact=data["username"]).exists() or UsernameAlias.objects.filter(username__iexact=data["username"]).exists():
         raise ValidationError({"username": "This username is already registered or reserved."})
     user = User.objects.create_user(username=data["username"], password=data["password"], is_staff=False, is_superuser=False)
     player = Player.objects.create(user=user, username=user.username, display_name=data["display_name"], region=data["region"], registered_at=timezone.now(), accent_color="#dddddd")

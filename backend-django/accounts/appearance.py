@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
-from rankings.eligibility import registered_players
+from rankings.eligibility import registered_players, players_for_username
 from rankings.engine import publish_pending_events
 from rankings.models import ProfileMedia, RankingEvent
 from rankings.profile_images import normalize_image
@@ -82,7 +82,7 @@ def update_appearance(request):
 
 @require_safe
 def serve_image(request, username, kind, version):
-    media = get_object_or_404(ProfileMedia.objects.defer("data", "poster"), player__in=registered_players().filter(username__iexact=username), kind=kind, version=version)
+    media = get_object_or_404(ProfileMedia.objects.defer("data", "poster"), player__in=players_for_username(username), kind=kind, version=version)
     return media_response(request, media)
 
 

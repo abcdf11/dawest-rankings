@@ -155,6 +155,86 @@
   color: #666;
   letter-spacing: 1px;
 }
+.account-username > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.account-username-form {
+  padding-top: 6px;
+}
+.account-username-form h2 {
+  font-size: 1.5rem;
+  margin-bottom: 14px;
+}
+.account-username-form > p {
+  font-size: 1rem;
+  color: #aaa;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.account-username-form fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.account-current-username {
+  color: #aaa;
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.account-current-username strong {
+  margin-left: 8px;
+  color: #eee;
+}
+.account-username-form .registration-help {
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.account-profile-preview {
+  font-size: 0.875rem;
+  color: #aaa;
+  line-height: 1.7;
+  margin: 18px 0;
+  overflow-wrap: anywhere;
+}
+.account-profile-preview span {
+  color: #ddd;
+}
+.account-username-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #fff2;
+  padding-top: 20px;
+  margin-top: 24px;
+}
+.account-username-actions .button {
+  font-size: 0.875rem;
+}
+@media (max-width: 760px) {
+  .account-menu {
+    gap: 10px;
+  }
+  .account-username > span {
+    max-width: 70px;
+  }
+}
+@media (max-width: 460px) {
+  .account-menu .account-username {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 24px;
+  }
+  .account-menu .account-username > svg {
+    display: block;
+  }
+  .account-username > span {
+    display: none;
+  }
+}
 .auth-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;

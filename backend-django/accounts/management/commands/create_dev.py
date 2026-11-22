@@ -7,6 +7,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from accounts.models import UsernameAlias
+from rankings.models import Player
 
 
 class Command(BaseCommand):
@@ -41,6 +43,12 @@ class Command(BaseCommand):
                 self.stdout.write("Developer account already exists; startup setup skipped. Credentials and account status were preserved.")
                 return
             raise CommandError("That username is already registered. Choose an unused developer username.")
+        alias = UsernameAlias.objects.select_related("user").filter(username__iexact=username).first()
+        if alias and from_env and alias.user.is_staff and (not alias.user.is_active or alias.user.has_perm("accounts.access_dev_console")):
+            self.stdout.write("Developer account was renamed; startup setup skipped. Credentials and account status were preserved.")
+            return
+        if alias or Player.objects.filter(username__iexact=username).exists():
+            raise CommandError("That username is reserved. Choose an unused developer username.")
         if not from_env:
             password = sys.stdin.readline().rstrip("\r\n") if options["password_stdin"] else getpass.getpass("Password: ")
             if not options["password_stdin"] and password != getpass.getpass("Repeat password: "):
