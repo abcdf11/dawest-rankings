@@ -13,6 +13,8 @@ export interface CompetitionEvent {
   logo_url?: string;
   interested_count?: number;
   is_interested?: boolean;
+  teams?: EventTeam[];
+  team_count?: number;
   url: string;
   updated_at: string;
   is_published?: boolean;

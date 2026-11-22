@@ -84,6 +84,8 @@ export function EventManager() {
                   {eventDate(event.starts_at)} ·{" "}
                   {event.format === "SOLO" ? "Solo 1v1" : "Factions"} ·{" "}
                   {event.region}
+                  {event.format === "FACTION" &&
+                    ` · ${event.team_count ?? 0} teams registered`}
                 </p>
               </div>
               <div className="dev-event-actions">

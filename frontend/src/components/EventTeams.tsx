@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { UsersRound } from "lucide-react";
 import { request } from "../lib/api";
 import { useSession } from "../hooks/useSession";
 import type { EventEntries } from "../types/events";
+import { EventTeamList } from "./EventTeamList";
 
 export function EventTeams({ eventId }: { eventId: string }) {
   const client = useQueryClient();
@@ -16,13 +16,18 @@ export function EventTeams({ eventId }: { eventId: string }) {
   });
   const change = useMutation({
     mutationFn: ({ slug, withdraw }: { slug: string; withdraw: boolean }) =>
-      request(withdraw ? `${base}${encodeURIComponent(slug)}/` : base, {
-        method: withdraw ? "DELETE" : "POST",
-        body: withdraw ? undefined : JSON.stringify({ team: slug }),
-      }),
+      request<EventEntries>(
+        withdraw ? `${base}${encodeURIComponent(slug)}/` : base,
+        {
+          method: withdraw ? "DELETE" : "POST",
+          body: withdraw ? undefined : JSON.stringify({ team: slug }),
+        },
+      ),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["event-entries", eventId] });
       void client.invalidateQueries({ queryKey: ["pickems", eventId] });
+      void client.invalidateQueries({ queryKey: ["events"] });
+      void client.invalidateQueries({ queryKey: ["event", eventId] });
     },
   });
   const data = entries.data;
@@ -32,7 +37,7 @@ export function EventTeams({ eventId }: { eventId: string }) {
         className="event-results event-teams"
         aria-labelledby="event-teams-title"
       >
-        <h2 id="event-teams-title">Teams</h2>
+        <h2 id="event-teams-title">Registered teams</h2>
         {entries.error ? (
           <p className="registration-error" role="alert">
             {entries.error.message}{" "}
@@ -54,7 +59,7 @@ export function EventTeams({ eventId }: { eventId: string }) {
       aria-labelledby="event-teams-title"
     >
       <div className="pickem-panel-heading">
-        <h2 id="event-teams-title">Teams</h2>
+        <h2 id="event-teams-title">Registered teams</h2>
         <span>
           {data.entries.length} registered ·{" "}
           {data.registration_open ? "Registration open" : "Registration closed"}
@@ -109,31 +114,7 @@ export function EventTeams({ eventId }: { eventId: string }) {
         </p>
       )}
       {data.entries.length ? (
-        <ul className="event-team-grid">
-          {data.entries.map((team) => (
-            <li key={team.slug}>
-              <a href={team.url}>
-                {team.logo_url ? (
-                  <img
-                    src={team.logo_url}
-                    alt=""
-                    width={36}
-                    height={36}
-                    loading="lazy"
-                  />
-                ) : (
-                  <span className="event-team-logo" aria-hidden="true">
-                    <UsersRound size={16} />
-                  </span>
-                )}
-                <span>
-                  <b>{team.name}</b>
-                  <small>[{team.tag}]</small>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        <EventTeamList teams={data.entries} />
       ) : (
         <div className="event-empty">
           <p>No teams registered yet.</p>

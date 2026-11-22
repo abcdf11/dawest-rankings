@@ -21,6 +21,7 @@ import { AccountMenu } from "./AccountMenu";
 import { MainNavigation } from "./MainNavigation";
 import { PickemPanel } from "./PickemPanel";
 import { EventTeams } from "./EventTeams";
+import { EventTeamList } from "./EventTeamList";
 import { EventInterest } from "./EventInterest";
 import { ProfileMediaImage } from "./ProfileMediaImage";
 
@@ -109,6 +110,8 @@ function EventState({
 
 function EventCard({ event }: { event: CompetitionEvent }) {
   const date = new Date(event.starts_at);
+  const teams = event.teams ?? [];
+  const teamCount = event.team_count ?? teams.length;
   return (
     <article className="event-card">
       <a className="event-card-link" href={event.url}>
@@ -156,6 +159,21 @@ function EventCard({ event }: { event: CompetitionEvent }) {
           </div>
         </div>
       </a>
+      {event.format === "FACTION" && (
+        <div className="event-card-teams">
+          <div className="event-card-teams-heading">
+            <h3>Registered teams ({teamCount})</h3>
+            <a href={`${event.url}#event-teams-title`}>
+              {teamCount > 4 ? `View all ${teamCount} teams` : "View teams"}
+            </a>
+          </div>
+          {teams.length ? (
+            <EventTeamList teams={teams.slice(0, 4)} compact />
+          ) : (
+            <p>No teams registered yet.</p>
+          )}
+        </div>
+      )}
       <div className="event-card-actions">
         <EventInterest event={event} />
         {event.format === "FACTION" && event.status === "UPCOMING" && (
@@ -259,6 +277,7 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
               <div className="event-detail-interest">
                 <EventInterest event={event} explain />
               </div>
+              {event.format === "FACTION" && <EventTeams eventId={event.id} />}
               <div className="event-detail-grid">
                 <div className="event-description">
                   {event.description ? (
@@ -324,7 +343,6 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
                 </aside>
               </div>
             </article>
-            {event.format === "FACTION" && <EventTeams eventId={event.id} />}
             <PickemPanel eventId={event.id} />
             <section className="event-results">
               <h2>Results</h2>

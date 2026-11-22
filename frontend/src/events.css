@@ -1011,3 +1011,59 @@
     400 0.6875rem "JetBrains Mono",
     monospace;
 }
+.event-card-teams {
+  border-top: 1px solid #ffffff14;
+  padding-top: 18px;
+}
+.event-card-teams-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.event-card-teams h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.event-card-teams-heading a,
+.event-card-teams > p {
+  color: #aaa;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.event-team-grid.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.event-team-grid.compact a {
+  padding: 10px;
+  gap: 10px;
+  height: 100%;
+}
+.event-team-grid.compact b {
+  font-size: 0.875rem;
+}
+.event-team-grid.compact small {
+  font-size: 0.75rem;
+}
+.event-detail > .event-teams {
+  margin: 0;
+  padding: 24px 32px;
+  border-bottom: 1px solid #ffffff12;
+  scroll-margin-top: 110px;
+}
+#event-teams-title {
+  scroll-margin-top: 110px;
+}
+.event-detail .event-teams .event-empty {
+  min-height: 100px;
+}
+@media (max-width: 760px) {
+  .event-detail > .event-teams {
+    padding: 20px;
+  }
+  .event-team-grid.compact {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

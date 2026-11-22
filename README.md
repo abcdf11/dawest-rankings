@@ -48,6 +48,8 @@ The console supports:
 
 Faction leaders can sign up their teams from an upcoming faction event and withdraw before it starts. Players can mark an event as **Interested** from the event list or detail page. The account bell shows private notifications for event changes, cancellations, and starts, with unread counts and read controls. It refreshes every 30 seconds while the site is active and catches up on scheduled starts when the player returns. Interest preferences, notifications, and uploaded logos are stored in the database.
 
+Faction event cards show the registered team count and a preview of up to four teams with logos, tags, and profile links. **View teams** opens the full public team list near the top of the event page. Sign-ups and withdrawals update the list; inactive teams are excluded.
+
 In **Developer console > Events > Create event / Edit**, use **Event logo** to upload a PNG, JPG, WebP, or GIF up to 8 MB. Logos are fitted to a square and can be replaced or removed. Draft logos are visible only to developers.
 
 Removing a player deactivates their account and revokes their tracked login sessions. Restoring it requires the player to sign in again. Removing a team hides it from the ladder; match history and roster data are retained. Staff account roles are managed through Django Admin.

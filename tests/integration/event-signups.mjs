@@ -213,6 +213,37 @@ try {
       .getByRole("button", { name: "Interested", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await fits(mobile);
+  const card = mobile.locator(".event-card").filter({ hasText: title });
+  await expect(
+    card.getByRole("list", { name: "Registered teams", exact: true }),
+  ).toContainText(teamName);
+  await expect(
+    card.getByRole("heading", { name: "Registered teams (1)", exact: true }),
+  ).toBeVisible();
+  await mobile.screenshot({
+    path: "artifacts/event-team-cards-native-mobile.png",
+    fullPage: true,
+  });
+  await captain
+    .getByRole("button", { name: `Withdraw ${teamName}`, exact: true })
+    .click();
+  await expect(
+    captain.getByRole("region", { name: "Registered teams", exact: true }),
+  ).toContainText("No teams registered yet.");
+  expect(
+    (await (await api(anonymous, `/events/${event.id}/`)).json()).team_count,
+  ).toBe(0);
+  await captain
+    .getByRole("button", { name: `Register ${teamName}`, exact: true })
+    .click();
+  await expect(
+    captain.getByRole("list", { name: "Registered teams", exact: true }),
+  ).toContainText(teamName);
+  const publicEvent = (
+    await (await api(anonymous, "/events/")).json()
+  ).events.find((row) => row.id === event.id);
+  expect(publicEvent.team_count).toBe(1);
+  expect(publicEvent.teams.map((row) => row.slug)).toEqual([team.username]);
   expect(
     (
       await api(dev, `/dev/events/${event.id}/`, "PATCH", {

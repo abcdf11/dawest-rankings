@@ -14,6 +14,7 @@ from accounts.appearance import media_response
 from .models import CompetitionEvent, EventLogo
 from .profile_images import normalize_image
 from .event_interest import with_interest, notify_change
+from .entries import entry_teams, team_payload, with_entries
 
 
 class EventInput(serializers.ModelSerializer):
@@ -65,12 +66,14 @@ class EventInput(serializers.ModelSerializer):
 
 
 def payload(event, now=None, developer=False):
+    teams = [team_payload(team) for team in entry_teams(event)] if event.format == "FACTION" else []
     result = {"id": str(event.pk), "title": event.title, "description": event.description,
               "format": event.format, "region": event.region, "location": event.location,
               "starts_at": event.starts_at, "ends_at": event.ends_at, "status": event.current_status(now),
               "registration_url": event.registration_url, "updated_at": event.updated_at,
               "logo_url": event.logo_url, "interested_count": getattr(event, "interested_count", 0),
               "is_interested": getattr(event, "is_interested", False),
+              "teams": teams, "team_count": len(teams),
               "url": f"/events/{event.pk}"}
     if developer:
         result.update({"is_published": event.is_published, "configured_status": event.status})
@@ -81,7 +84,7 @@ def payload(event, now=None, developer=False):
 def listing(request):
     now = timezone.now()
     search = request.query_params.get("search", "").strip()[:120]
-    queryset = with_interest(CompetitionEvent.objects.filter(is_published=True), request.user)
+    queryset = with_entries(with_interest(CompetitionEvent.objects.filter(is_published=True), request.user))
     if search:
         queryset = queryset.filter(title__icontains=search)
     events = [payload(event, now) for event in queryset.order_by("-starts_at")[:500]]
@@ -101,7 +104,7 @@ def match_payload(match, faction=False):
 
 @api_view(["GET"])
 def detail(request, event_id):
-    event = get_object_or_404(with_interest(CompetitionEvent.objects.filter(is_published=True), request.user), pk=event_id)
+    event = get_object_or_404(with_entries(with_interest(CompetitionEvent.objects.filter(is_published=True), request.user)), pk=event_id)
     if event.format == "FACTION":
         matches = event.faction_matches.filter(status="COMPLETED", processed_at__isnull=False).select_related("team_a", "team_b")[:100]
     else:
@@ -113,7 +116,7 @@ def detail(request, event_id):
 @permission_classes([DeveloperOnly])
 def manage_list(request):
     if request.method == "GET":
-        return Response({"events": [payload(event, developer=True) for event in CompetitionEvent.objects.order_by("-starts_at")[:500]]})
+        return Response({"events": [payload(event, developer=True) for event in with_entries(CompetitionEvent.objects.order_by("-starts_at"))[:500]]})
     form = EventInput(data=request.data)
     form.is_valid(raise_exception=True)
     with transaction.atomic():

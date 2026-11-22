@@ -43,7 +43,9 @@ export function PickemManager({
   const board = useQuery({
     queryKey: key,
     queryFn: () =>
-      request<{ matchups: PickemMatchup[]; leaderboard: PickemStanding[] }>(base),
+      request<{ matchups: PickemMatchup[]; leaderboard: PickemStanding[] }>(
+        base,
+      ),
   });
   const faction = event.format === "FACTION";
   const entriesKey = ["developer-event-entries", event.id];
@@ -66,6 +68,9 @@ export function PickemManager({
       setAdding("");
       void client.invalidateQueries({ queryKey: entriesKey });
       void client.invalidateQueries({ queryKey: ["event-entries", event.id] });
+      void client.invalidateQueries({ queryKey: ["events"] });
+      void client.invalidateQueries({ queryKey: ["event", event.id] });
+      void client.invalidateQueries({ queryKey: ["developer-events"] });
     },
   });
   const teams = entries.data?.entries ?? [];
@@ -127,10 +132,14 @@ export function PickemManager({
       <div className="pickem-manager">
         <p className="registration-help">
           {event.title} · {eventDate(event.starts_at)}
-          {!event.is_published && " · Draft: players see pick'ems once the event is published."}
+          {!event.is_published &&
+            " · Draft: players see pick'ems once the event is published."}
         </p>
         {faction && (
-          <section className="pickem-entries" aria-labelledby="pickem-entries-title">
+          <section
+            className="pickem-entries"
+            aria-labelledby="pickem-entries-title"
+          >
             <h3 className="pickem-heading" id="pickem-entries-title">
               <UsersRound size={16} /> Registered teams ({teams.length})
             </h3>
@@ -150,7 +159,9 @@ export function PickemManager({
                       className="button secondary"
                       aria-label={`Remove ${team.name} from this event`}
                       disabled={busy}
-                      onClick={() => entry.mutate({ slug: team.slug, remove: true })}
+                      onClick={() =>
+                        entry.mutate({ slug: team.slug, remove: true })
+                      }
                     >
                       <Trash2 size={14} />
                     </button>
@@ -222,7 +233,9 @@ export function PickemManager({
                         <option
                           key={team.slug}
                           value={team.slug}
-                          disabled={draft[index ? "team_a" : "team_b"] === team.slug}
+                          disabled={
+                            draft[index ? "team_a" : "team_b"] === team.slug
+                          }
                         >
                           [{team.tag}] {team.name}
                         </option>
@@ -304,7 +317,9 @@ export function PickemManager({
                 <div>
                   <div className="dev-event-labels">
                     {m.label && <span className="event-status">{m.label}</span>}
-                    <span>{m.points} pt{m.points === 1 ? "" : "s"}</span>
+                    <span>
+                      {m.points} pt{m.points === 1 ? "" : "s"}
+                    </span>
                     <span>
                       {m.locked ? "Locked" : "Locks"} {eventDate(m.locks_at)}
                     </span>
@@ -405,7 +420,10 @@ export function PickemStandings({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.username} className={row.username === me ? "pickem-me" : ""}>
+            <tr
+              key={row.username}
+              className={row.username === me ? "pickem-me" : ""}
+            >
               <td>{row.rank}</td>
               <td>
                 <a href={row.url}>{row.display_name}</a>

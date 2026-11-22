@@ -1,5 +1,6 @@
 """Faction registrations for faction-format events."""
 from django.db import IntegrityError, transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -19,7 +20,16 @@ def team_payload(team):
 
 def entry_teams(event):
     """Registered entrants that are still eligible public factions."""
-    return [entry.team for entry in event.entries.select_related("team").filter(team__in=registered_teams())]
+    entries = getattr(event, "registered_entries", None)
+    if entries is None:
+        entries = event.entries.select_related("team").filter(team__in=registered_teams())
+    return [entry.team for entry in entries]
+
+
+def with_entries(events):
+    return events.prefetch_related(Prefetch("entries",
+        queryset=EventEntry.objects.filter(team__in=registered_teams()).select_related("team"),
+        to_attr="registered_entries"))
 
 
 def registration_open(event):

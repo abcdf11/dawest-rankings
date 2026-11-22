@@ -153,3 +153,26 @@ class EventTeamPickemTests(TestCase):
         solo = CompetitionEvent.objects.create(title="Solo", starts_at=self.now + timedelta(days=1), is_published=True)
         self.assertEqual(self.dev.post(f"/api/v1/dev/events/{solo.pk}/entries/", {"team": "wolves"}, format="json").status_code, 400)
         self.assertEqual(self.dev.post(f"/api/v1/dev/events/{solo.pk}/pickems/", {"team_a": "wolves", "team_b": "hawks"}, format="json").status_code, 400)
+
+    def test_public_events_list_only_their_registered_eligible_teams_and_track_withdrawals(self):
+        wolves, hawks, _ = self.leaders
+        wolves.post(self.url("entries/"), {"team": "wolves"}, format="json")
+        hawks.post(self.url("entries/"), {"team": "hawks"}, format="json")
+        anonymous = APIClient()
+        listing = anonymous.get("/api/v1/events/").json()["events"][0]
+        self.assertEqual(listing["team_count"], 2)
+        self.assertEqual([team["slug"] for team in listing["teams"]], ["wolves", "hawks"])
+        self.assertEqual(listing["teams"][0]["url"], "/factions/wolves")
+        self.assertIn("logo_url", listing["teams"][0])
+        self.assertEqual(anonymous.get(self.url()).json()["teams"], listing["teams"])
+        self.assertEqual(self.dev.get("/api/v1/dev/events/").json()["events"][0]["team_count"], 2)
+        self.assertEqual(wolves.delete(self.url("entries/wolves/")).status_code, 200)
+        self.assertEqual(anonymous.get(self.url()).json()["team_count"], 1)
+        self.teams[1].is_active = False
+        self.teams[1].save(update_fields=["is_active"])
+        empty = anonymous.get("/api/v1/events/").json()["events"][0]
+        self.assertEqual(empty["teams"], [])
+        self.assertEqual(empty["team_count"], 0)
+        self.assertEqual(anonymous.get(self.url("entries/")).json()["entries"], [])
+        other = CompetitionEvent.objects.create(title="Other Cup", format="FACTION", starts_at=self.now + timedelta(days=1), is_published=True)
+        self.assertEqual(anonymous.get(f"/api/v1/events/{other.pk}/").json()["teams"], [])

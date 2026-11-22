@@ -164,6 +164,113 @@ test("empty events and missing event details have clear states", async ({
   ).toBeVisible();
 });
 
+test("event cards preview registered teams and link to the full public team list", async ({
+  page,
+}, info) => {
+  const teams = [
+    "Blackwater Crew",
+    "Outlaw Union",
+    "Midnight Riders",
+    "Frontier Guard",
+    "Red Canyon",
+  ].map((name, index) => ({
+    slug: `team-${index}`,
+    name,
+    tag: `TM${index}`,
+    url: `/factions/team-${index}`,
+    logo_url: "/favicon.svg",
+  }));
+  const event = { ...events[1], teams, team_count: teams.length };
+  await page.route("**/api/v1/events/", (route) =>
+    route.fulfill({ json: { events: [event] } }),
+  );
+  await page.route(`**/api/v1/events/${event.id}/`, (route) =>
+    route.fulfill({ json: { ...event, matches: [] } }),
+  );
+  await page.route(`**/api/v1/events/${event.id}/entries/`, (route) =>
+    route.fulfill({
+      json: { entries: teams, my_teams: [], registration_open: false },
+    }),
+  );
+  await page.route(`**/api/v1/events/${event.id}/pickems/`, (route) =>
+    route.fulfill({
+      json: {
+        matchups: [],
+        leaderboard: [],
+        me: null,
+        can_pick: false,
+        participants: 0,
+      },
+    }),
+  );
+  await page.goto("/events");
+  const card = page.locator(".event-card");
+  await expect(
+    card.getByRole("heading", { name: "Registered teams (5)", exact: true }),
+  ).toBeVisible();
+  await expect(
+    card
+      .getByRole("list", { name: "Registered teams", exact: true })
+      .getByRole("listitem"),
+  ).toHaveCount(4);
+  await expect(
+    card.getByRole("link", { name: /Blackwater Crew/ }),
+  ).toHaveAttribute("href", "/factions/team-0");
+  await expect(card.locator(".event-team-grid img").first()).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `artifacts/event-team-cards-${info.project.name}.png`,
+    fullPage: true,
+  });
+  await card
+    .getByRole("link", { name: "View all 5 teams", exact: true })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`${event.id}#event-teams-title$`));
+  const list = page.getByRole("region", {
+    name: "Registered teams",
+    exact: true,
+  });
+  await expect(list.getByRole("listitem")).toHaveCount(5);
+  await expect(list).toContainText("5 registered");
+  await expect(list.getByRole("link", { name: /Red Canyon/ })).toHaveAttribute(
+    "href",
+    "/factions/team-4",
+  );
+  expect((await list.boundingBox())!.y).toBeLessThan(
+    (await page.locator(".event-description").boundingBox())!.y,
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `artifacts/event-team-list-${info.project.name}.png`,
+    fullPage: true,
+  });
+});
+
+test("a faction event with no signups shows an empty registered team list", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/events/", (route) =>
+    route.fulfill({
+      json: { events: [{ ...events[1], teams: [], team_count: 0 }] },
+    }),
+  );
+  await page.goto("/events");
+  await expect(
+    page.getByRole("heading", { name: "Registered teams (0)", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("No teams registered yet.", { exact: true }),
+  ).toBeVisible();
+});
+
 test("developer creates, publishes, edits, and unpublishes events", async ({
   page,
 }, info) => {
