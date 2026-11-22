@@ -132,6 +132,7 @@ class CompetitionEvent(models.Model):
     ends_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.UPCOMING)
     registration_url = models.URLField(blank=True, max_length=500)
+    logo_version = models.CharField(max_length=64, blank=True)
     is_published = models.BooleanField(default=False, db_index=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -143,6 +144,10 @@ class CompetitionEvent(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def logo_url(self):
+        return f"/api/v1/events/{self.pk}/logo/{self.logo_version}/" if self.logo_version else ""
 
     def current_status(self, now=None):
         now = now or timezone.now()
@@ -158,6 +163,40 @@ class CompetitionEvent(models.Model):
         super().clean()
         if self.format == "SOLO" and self.faction_matches.exists() or self.format == "FACTION" and self.solo_matches.exists():
             raise ValidationError({"format": "The event format must match its linked matches."})
+
+
+class EventLogo(models.Model):
+    event = models.OneToOneField(CompetitionEvent, on_delete=models.CASCADE, related_name="logo")
+    version = models.CharField(max_length=64)
+    content_type = models.CharField(max_length=32)
+    data = models.BinaryField(editable=False)
+    poster = models.BinaryField(default=b"", editable=False)
+    byte_size = models.PositiveIntegerField()
+    poster_size = models.PositiveIntegerField(default=0)
+    frames = models.PositiveSmallIntegerField(default=1)
+
+
+class EventInterest(models.Model):
+    event = models.ForeignKey(CompetitionEvent, on_delete=models.CASCADE, related_name="interests")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_interests")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["event", "user"], name="one_interest_per_event")]
+
+
+class EventNotification(models.Model):
+    event = models.ForeignKey(CompetitionEvent, on_delete=models.CASCADE, related_name="notifications")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="event_notifications")
+    key = models.CharField(max_length=100)
+    message = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        constraints = [models.UniqueConstraint(fields=["event", "user", "key"], name="one_event_notification_per_key")]
+        indexes = [models.Index(fields=["user", "read_at", "-created_at"], name="event_notice_inbox")]
 
 
 class EventEntry(models.Model):

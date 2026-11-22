@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Plus, Trophy } from "lucide-react";
 import { request } from "../lib/api";
@@ -6,6 +6,7 @@ import type { CompetitionEvent, EventStatus } from "../types/events";
 import { eventDate, eventStatusLabel } from "./EventsPage";
 import { Modal } from "./Modal";
 import { PickemManager } from "./PickemManager";
+import { ProfileMediaImage } from "./ProfileMediaImage";
 
 function localDate(value?: string | null) {
   if (!value) return "";
@@ -43,8 +44,8 @@ export function EventManager() {
         <div>
           <h2>Event maker</h2>
           <p>
-            Create events and their pick'ems. Published events appear on the
-            public Events page, where players make their picks.
+            Create events, add logos, and manage pick'ems. Players can follow
+            published events, and faction leaders can sign up their teams.
           </p>
         </div>
         <button className="button primary" onClick={() => setEditing("new")}>
@@ -63,6 +64,15 @@ export function EventManager() {
           {events.data.events.map((event) => (
             <article key={event.id}>
               <div>
+                {event.logo_url && (
+                  <ProfileMediaImage
+                    className="event-logo dev-event-logo"
+                    src={event.logo_url}
+                    alt={`${event.title} logo`}
+                    width={48}
+                    height={48}
+                  />
+                )}
                 <div className="dev-event-labels">
                   <span className="event-status">
                     {eventStatusLabel[event.status]}
@@ -147,16 +157,45 @@ function EventEditor({
     registration_url: event?.registration_url ?? "",
     is_published: event?.is_published ?? false,
   });
+  const [logo, setLogo] = useState<File | null>(null);
+  const logoInput = useRef<HTMLInputElement>(null);
+  const [removeLogo, setRemoveLogo] = useState(false);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [logoError, setLogoError] = useState("");
+  useEffect(() => {
+    if (!logo) {
+      setLogoPreview("");
+      return;
+    }
+    const url = URL.createObjectURL(logo);
+    setLogoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [logo]);
   const save = useMutation({
-    mutationFn: () =>
-      request(`/dev/events/${event ? `${event.id}/` : ""}`, {
-        method: event ? "PATCH" : "POST",
-        body: JSON.stringify({
-          ...draft,
-          starts_at: new Date(draft.starts_at).toISOString(),
-          ends_at: draft.ends_at ? new Date(draft.ends_at).toISOString() : null,
-        }),
-      }),
+    mutationFn: () => {
+      const values = {
+        ...draft,
+        starts_at: new Date(draft.starts_at).toISOString(),
+        ends_at: draft.ends_at ? new Date(draft.ends_at).toISOString() : null,
+        ...(removeLogo ? { remove_logo: true } : {}),
+      };
+      let body: string | FormData = JSON.stringify(values);
+      if (logo) {
+        const form = new FormData();
+        for (const [key, value] of Object.entries(values))
+          form.set(key, value === null ? "" : String(value));
+        form.set("logo", logo);
+        body = form;
+      }
+      return request(
+        `/dev/events/${event ? `${event.id}/` : ""}`,
+        {
+          method: event ? "PATCH" : "POST",
+          body,
+        },
+        30_000,
+      );
+    },
     onSuccess: onSaved,
   });
   const set = (key: keyof typeof draft, value: string | boolean) => {
@@ -186,6 +225,86 @@ function EventEditor({
               onChange={(e) => set("title", e.target.value)}
             />
           </label>
+          <div className="event-logo-editor">
+            {(logoPreview || (!removeLogo && event?.logo_url)) && (
+              <ProfileMediaImage
+                className="event-logo"
+                src={logoPreview || event!.logo_url!}
+                alt="Event logo preview"
+                width={80}
+                height={80}
+              />
+            )}
+            <div>
+              <label className="registration-field">
+                Event logo
+                <input
+                  ref={logoInput}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    save.reset();
+                    if (
+                      file.size > 8 * 1024 * 1024 ||
+                      ![
+                        "image/png",
+                        "image/jpeg",
+                        "image/webp",
+                        "image/gif",
+                      ].includes(file.type)
+                    ) {
+                      setLogoError(
+                        "Choose a PNG, JPG, WebP, or GIF up to 8 MB.",
+                      );
+                      e.target.value = "";
+                      return;
+                    }
+                    setLogoError("");
+                    setLogo(file);
+                    setRemoveLogo(false);
+                  }}
+                />
+              </label>
+              <p className="event-logo-help">
+                PNG, JPG, WebP, or GIF, up to 8 MB. Logos are cropped to a
+                square.
+              </p>
+              {(logo || (!removeLogo && event?.logo_url)) && (
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => {
+                    setLogo(null);
+                    if (logoInput.current) logoInput.current.value = "";
+                    setRemoveLogo(true);
+                    setLogoError("");
+                    save.reset();
+                  }}
+                >
+                  Remove logo
+                </button>
+              )}
+              {removeLogo && event?.logo_url && (
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={() => {
+                    setRemoveLogo(false);
+                    save.reset();
+                  }}
+                >
+                  Keep existing logo
+                </button>
+              )}
+              {logoError && (
+                <p className="registration-error" role="alert">
+                  {logoError}
+                </p>
+              )}
+            </div>
+          </div>
           <label className="registration-field">
             Description
             <textarea
@@ -309,7 +428,10 @@ function EventEditor({
           >
             Cancel
           </button>
-          <button className="button primary" disabled={save.isPending}>
+          <button
+            className="button primary"
+            disabled={save.isPending || Boolean(logoError)}
+          >
             {save.isPending ? "Saving…" : event ? "Save event" : "Create event"}
           </button>
         </div>

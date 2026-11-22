@@ -3,19 +3,46 @@ from urllib.parse import urlsplit
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.http import require_safe
 from rest_framework import serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from accounts.developer import DeveloperOnly
 from accounts.models import AuditEntry
-from .models import CompetitionEvent
+from accounts.appearance import media_response
+from .models import CompetitionEvent, EventLogo
+from .profile_images import normalize_image
+from .event_interest import with_interest, notify_change
 
 
 class EventInput(serializers.ModelSerializer):
+    logo = serializers.FileField(required=False, write_only=True)
+    remove_logo = serializers.BooleanField(required=False, default=False, write_only=True)
+
     class Meta:
         model = CompetitionEvent
-        fields = ["title", "description", "format", "region", "location", "starts_at", "ends_at", "status", "registration_url", "is_published"]
+        fields = ["title", "description", "format", "region", "location", "starts_at", "ends_at", "status", "registration_url", "is_published", "logo", "remove_logo"]
+
+    def validate_logo(self, value):
+        return normalize_image(value, "avatar")
+
+    def save(self, **kwargs):
+        logo = self.validated_data.pop("logo", None)
+        remove = self.validated_data.pop("remove_logo", False)
+        event = super().save(**kwargs)
+        if logo:
+            EventLogo.objects.update_or_create(event=event, defaults={
+                "version": logo.version, "content_type": logo.content_type, "data": logo.data,
+                "poster": logo.poster, "byte_size": len(logo.data), "poster_size": len(logo.poster),
+                "frames": logo.frames})
+            event.logo_version = logo.version
+        elif remove:
+            EventLogo.objects.filter(event=event).delete()
+            event.logo_version = ""
+        if logo or remove:
+            event.save(update_fields=["logo_version", "updated_at"])
+        return event
 
     def validate_registration_url(self, value):
         if value and urlsplit(value).scheme not in {"http", "https"}:
@@ -23,6 +50,8 @@ class EventInput(serializers.ModelSerializer):
         return value
 
     def validate(self, values):
+        if "logo" in values and values.get("remove_logo"):
+            raise serializers.ValidationError({"logo": "Choose an upload or removal, then save."})
         if self.instance and values.get("format", self.instance.format) != self.instance.format:
             if self.instance.solo_matches.exists() or self.instance.faction_matches.exists():
                 raise serializers.ValidationError({"format": "An event with linked matches cannot change format."})
@@ -40,6 +69,8 @@ def payload(event, now=None, developer=False):
               "format": event.format, "region": event.region, "location": event.location,
               "starts_at": event.starts_at, "ends_at": event.ends_at, "status": event.current_status(now),
               "registration_url": event.registration_url, "updated_at": event.updated_at,
+              "logo_url": event.logo_url, "interested_count": getattr(event, "interested_count", 0),
+              "is_interested": getattr(event, "is_interested", False),
               "url": f"/events/{event.pk}"}
     if developer:
         result.update({"is_published": event.is_published, "configured_status": event.status})
@@ -50,7 +81,7 @@ def payload(event, now=None, developer=False):
 def listing(request):
     now = timezone.now()
     search = request.query_params.get("search", "").strip()[:120]
-    queryset = CompetitionEvent.objects.filter(is_published=True)
+    queryset = with_interest(CompetitionEvent.objects.filter(is_published=True), request.user)
     if search:
         queryset = queryset.filter(title__icontains=search)
     events = [payload(event, now) for event in queryset.order_by("-starts_at")[:500]]
@@ -70,7 +101,7 @@ def match_payload(match, faction=False):
 
 @api_view(["GET"])
 def detail(request, event_id):
-    event = get_object_or_404(CompetitionEvent, pk=event_id, is_published=True)
+    event = get_object_or_404(with_interest(CompetitionEvent.objects.filter(is_published=True), request.user), pk=event_id)
     if event.format == "FACTION":
         matches = event.faction_matches.filter(status="COMPLETED", processed_at__isnull=False).select_related("team_a", "team_b")[:100]
     else:
@@ -96,8 +127,23 @@ def manage_list(request):
 @transaction.atomic
 def manage_detail(request, event_id):
     event = get_object_or_404(CompetitionEvent.objects.select_for_update(), pk=event_id)
+    before = {field: getattr(event, field) for field in EventInput.Meta.fields if field not in {"logo", "remove_logo"}}
     form = EventInput(event, data={"is_published": False} if request.method == "DELETE" else request.data, partial=True)
     form.is_valid(raise_exception=True)
+    changed_fields = list(form.validated_data)
     event = form.save()
-    AuditEntry.objects.create(actor=request.user, action="event.updated" if request.method == "PATCH" else "event.unpublished", target_type="event", target_id=str(event.pk), details={"title": event.title, "published": event.is_published, "fields": list(form.validated_data)})
+    notify_change(event, before)
+    AuditEntry.objects.create(actor=request.user, action="event.updated" if request.method == "PATCH" else "event.unpublished", target_type="event", target_id=str(event.pk), details={"title": event.title, "published": event.is_published, "fields": changed_fields})
     return Response(payload(event, developer=True))
+
+
+@require_safe
+def logo(request, event_id, version):
+    event = get_object_or_404(CompetitionEvent, pk=event_id)
+    if not event.is_published:
+        from accounts.services import is_developer
+        if not is_developer(request.user):
+            from django.http import Http404
+            raise Http404
+    media = get_object_or_404(EventLogo.objects.defer("data", "poster"), event=event, version=version)
+    return media_response(request, media)

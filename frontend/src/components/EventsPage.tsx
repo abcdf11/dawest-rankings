@@ -21,6 +21,8 @@ import { AccountMenu } from "./AccountMenu";
 import { MainNavigation } from "./MainNavigation";
 import { PickemPanel } from "./PickemPanel";
 import { EventTeams } from "./EventTeams";
+import { EventInterest } from "./EventInterest";
+import { ProfileMediaImage } from "./ProfileMediaImage";
 
 export const eventStatusLabel: Record<EventStatus, string> = {
   UPCOMING: "Upcoming",
@@ -108,38 +110,64 @@ function EventState({
 function EventCard({ event }: { event: CompetitionEvent }) {
   const date = new Date(event.starts_at);
   return (
-    <a className="event-card" href={event.url}>
-      <div className="event-calendar">
-        <span>{date.toLocaleString(undefined, { month: "short" })}</span>
-        <strong>{date.getDate()}</strong>
-        <small>{date.getFullYear()}</small>
-      </div>
-      <div className="event-card-content">
-        <div className="event-card-top">
-          <span
-            className={`event-status event-status-${event.status.toLowerCase()}`}
+    <article className="event-card">
+      <a className="event-card-link" href={event.url}>
+        {event.logo_url ? (
+          <ProfileMediaImage
+            className="event-logo"
+            src={event.logo_url}
+            alt={`${event.title} logo`}
+            width={80}
+            height={80}
+            loading="lazy"
+          />
+        ) : (
+          <div className="event-calendar">
+            <span>{date.toLocaleString(undefined, { month: "short" })}</span>
+            <strong>{date.getDate()}</strong>
+            <small>{date.getFullYear()}</small>
+          </div>
+        )}
+        <div className="event-card-content">
+          <div className="event-card-top">
+            <span
+              className={`event-status event-status-${event.status.toLowerCase()}`}
+            >
+              {eventStatusLabel[event.status]}
+            </span>
+            <span>
+              {event.format === "SOLO" ? "Solo 1v1" : "Factions"} ·{" "}
+              {event.region === "GLOBAL" ? "Global" : event.region}
+            </span>
+          </div>
+          <h2>{event.title}</h2>
+          {event.description && <p>{event.description}</p>}
+          <div className="event-card-meta">
+            <span>
+              <Clock3 size={14} />
+              <time dateTime={event.starts_at}>
+                {eventDate(event.starts_at)}
+              </time>
+            </span>
+            <span>
+              <MapPin size={14} />
+              {event.location}
+            </span>
+          </div>
+        </div>
+      </a>
+      <div className="event-card-actions">
+        <EventInterest event={event} />
+        {event.format === "FACTION" && event.status === "UPCOMING" && (
+          <a
+            href={`${event.url}#event-teams-title`}
+            className="event-signup-link"
           >
-            {eventStatusLabel[event.status]}
-          </span>
-          <span>
-            {event.format === "SOLO" ? "Solo 1v1" : "Factions"} ·{" "}
-            {event.region === "GLOBAL" ? "Global" : event.region}
-          </span>
-        </div>
-        <h2>{event.title}</h2>
-        {event.description && <p>{event.description}</p>}
-        <div className="event-card-meta">
-          <span>
-            <Clock3 size={14} />
-            <time dateTime={event.starts_at}>{eventDate(event.starts_at)}</time>
-          </span>
-          <span>
-            <MapPin size={14} />
-            {event.location}
-          </span>
-        </div>
+            Team sign-up
+          </a>
+        )}
       </div>
-    </a>
+    </article>
   );
 }
 
@@ -149,7 +177,7 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
   const [search, setSearch] = useState("");
   const [format, setFormat] = useState("ALL");
   const list = useQuery({
-    queryKey: ["events"],
+    queryKey: ["events", session.data?.user?.id ?? null],
     queryFn: () => request<{ events: CompetitionEvent[] }>("/events/"),
     enabled: !eventId,
     staleTime: 30_000,
@@ -157,7 +185,7 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
     retry: 1,
   });
   const detail = useQuery({
-    queryKey: ["event", eventId],
+    queryKey: ["event", eventId, session.data?.user?.id ?? null],
     queryFn: () =>
       request<EventDetail>(`/events/${encodeURIComponent(eventId!)}/`),
     enabled: Boolean(eventId),
@@ -208,6 +236,15 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
             </div>
             <article className="event-detail">
               <div className="event-detail-heading">
+                {event.logo_url && (
+                  <ProfileMediaImage
+                    className="event-logo event-detail-logo"
+                    src={event.logo_url}
+                    alt={`${event.title} logo`}
+                    width={96}
+                    height={96}
+                  />
+                )}
                 <span
                   className={`event-status event-status-${event.status.toLowerCase()}`}
                 >
@@ -218,6 +255,9 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
                   {event.format === "SOLO" ? "Solo 1v1" : "Factions"} ·{" "}
                   {event.region === "GLOBAL" ? "Global" : event.region}
                 </span>
+              </div>
+              <div className="event-detail-interest">
+                <EventInterest event={event} explain />
               </div>
               <div className="event-detail-grid">
                 <div className="event-description">
@@ -327,7 +367,7 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
         <div>
           <span className="eyebrow">DAWEST</span>
           <h1>Events</h1>
-          <p>Event schedules and results.</p>
+          <p>Sign up your team, follow events, and view results.</p>
         </div>
         {session.data?.user?.is_developer && (
           <a className="button secondary" href="/dev#events">

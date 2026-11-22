@@ -58,8 +58,10 @@ def remove_entry(event, team, user, action):
 
 
 @api_view(["GET", "POST"])
+@transaction.atomic
 def public_entries(request, event_id):
-    event = get_object_or_404(CompetitionEvent, pk=event_id, is_published=True)
+    events = CompetitionEvent.objects.select_for_update() if request.method == "POST" else CompetitionEvent.objects.all()
+    event = get_object_or_404(events, pk=event_id, is_published=True)
     if request.method == "POST":
         if not request.user.is_authenticated:
             return Response({"detail": "Sign in to register your faction."}, status=status.HTTP_403_FORBIDDEN)
@@ -75,8 +77,9 @@ def public_entries(request, event_id):
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def withdraw(request, event_id, team_slug):
-    event = get_object_or_404(CompetitionEvent, pk=event_id, is_published=True)
+    event = get_object_or_404(CompetitionEvent.objects.select_for_update(), pk=event_id, is_published=True)
     team = get_object_or_404(registered_teams(), username=team_slug, owner=request.user)
     if not registration_open(event):
         return Response({"detail": "Registration is closed; contact a developer to withdraw."}, status=status.HTTP_409_CONFLICT)
@@ -95,8 +98,10 @@ def entries_payload(event, user):
 
 @api_view(["GET", "POST"])
 @permission_classes([DeveloperOnly])
+@transaction.atomic
 def manage_entries(request, event_id):
-    event = get_object_or_404(CompetitionEvent, pk=event_id)
+    events = CompetitionEvent.objects.select_for_update() if request.method == "POST" else CompetitionEvent.objects.all()
+    event = get_object_or_404(events, pk=event_id)
     if request.method == "POST":
         if error := faction_only(event):
             return error
@@ -112,8 +117,9 @@ def manage_entries(request, event_id):
 
 @api_view(["DELETE"])
 @permission_classes([DeveloperOnly])
+@transaction.atomic
 def manage_entry(request, event_id, team_slug):
-    event = get_object_or_404(CompetitionEvent, pk=event_id)
+    event = get_object_or_404(CompetitionEvent.objects.select_for_update(), pk=event_id)
     team = get_object_or_404(registered_teams().model.objects, username=team_slug)
     if error := remove_entry(event, team, request.user, "event.team_removed"):
         return error

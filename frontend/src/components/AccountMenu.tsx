@@ -3,6 +3,7 @@ import { LogOut, Shield, UserRound, UsersRound } from "lucide-react";
 import { request } from "../lib/api";
 import { useSession } from "../hooks/useSession";
 import { accountDestination } from "../lib/profile";
+import { EventNotifications } from "./EventNotifications";
 export function AccountMenu() {
   const session = useSession();
   const client = useQueryClient();
@@ -38,6 +39,7 @@ export function AccountMenu() {
         <UserRound size={14} />
         {session.data.user?.username}
       </a>
+      <EventNotifications userId={session.data.user!.id} />
       {session.data.user?.is_developer && (
         <a href="/dev" aria-label="Developer console">
           <Shield size={15} />

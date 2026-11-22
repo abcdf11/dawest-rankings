@@ -44,6 +44,11 @@ The console supports:
 - Creating approved teams from already registered players.
 - Removing and restoring players and teams on the public leaderboard.
 - Viewing the audit trail of account and moderation actions.
+- Creating and publishing events with uploaded logos, plus managing team entrants and pick'ems.
+
+Faction leaders can sign up their teams from an upcoming faction event and withdraw before it starts. Players can mark an event as **Interested** from the event list or detail page. The account bell shows private notifications for event changes, cancellations, and starts, with unread counts and read controls. It refreshes every 30 seconds while the site is active and catches up on scheduled starts when the player returns. Interest preferences, notifications, and uploaded logos are stored in the database.
+
+In **Developer console > Events > Create event / Edit**, use **Event logo** to upload a PNG, JPG, WebP, or GIF up to 8 MB. Logos are fitted to a square and can be replaced or removed. Draft logos are visible only to developers.
 
 Removing a player deactivates their account and revokes their tracked login sessions. Restoring it requires the player to sign in again. Removing a team hides it from the ladder; match history and roster data are retained. Staff account roles are managed through Django Admin.
 
@@ -242,6 +247,10 @@ The earlier private Sites deployment is a static build and does not host Django 
 | GET | `/api/v1/factions/` | Public faction directory; optional `search` query |
 | GET | `/api/v1/events/` | Published event schedules and statuses; optional `search` query |
 | GET | `/api/v1/events/<uuid>/` | Published event details and verified linked results |
+| POST / DELETE | `/api/v1/events/<uuid>/interested/` | Follow an event or stop future notifications |
+| GET | `/api/v1/event-notifications/` | Signed-in account's event inbox and unread count |
+| POST | `/api/v1/event-notifications/read/` | Mark own notification `ids` or `all: true` as read |
+| GET / HEAD | `/api/v1/events/<uuid>/logo/<version>/` | Stored event logo; drafts require developer access |
 | GET / POST | `/api/v1/dev/events/` | Developer event list and draft/published event creation |
 | PATCH / DELETE | `/api/v1/dev/events/<uuid>/` | Developer event editing; DELETE unpublishes without deleting results |
 | GET | `/api/v1/events/<uuid>/pickems/` | Pick'em matchups, the viewer's picks, and standings |
@@ -303,5 +312,7 @@ Against the same isolated service, `node tests/integration/profile-images.mjs` c
 `node tests/integration/admin-tools.mjs` checks real developer login, player/faction Elo controls, restriction/profile visibility, session revocation and login denial after a ban, recovery through unban/unrestrict, rejected unknown commands, and audit entries. Use the same isolated localhost service and database; credentials stay in process memory. Ignored `artifacts/admin-smoke.json` contains only public usernames and expected ratings for restart verification.
 
 `node tests/integration/events.mjs` checks real event creation, editing, publishing/unpublishing, draft privacy, anonymous write denial, timezone serialization, direct public detail reloads, and mobile navigation. It uses the same isolated localhost service/database and keeps credentials in memory. Ignored `artifacts/events-smoke.json` contains public event metadata for a server restart check.
+
+`node tests/integration/event-signups.mjs` checks event logo upload/removal, real team sign-ups and ownership, interest persistence, private notifications for schedule changes and starts, unread controls, unsubscribe, and desktop/mobile layouts. Run against localhost port 8002 with `SQLITE_PATH` matching the migrated isolated database (default `artifacts/event-signups.sqlite3`). Screenshots are saved under ignored `artifacts/`.
 
 Docker is unavailable in the current workspace, so PostgreSQL locking and actual Redis delivery require deployment-environment integration checks. SQLite, frontend/backend builds, session flows, and browser interactions are verified locally.

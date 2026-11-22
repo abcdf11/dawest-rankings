@@ -10,6 +10,9 @@ export interface CompetitionEvent {
   ends_at: string | null;
   status: EventStatus;
   registration_url: string;
+  logo_url?: string;
+  interested_count?: number;
+  is_interested?: boolean;
   url: string;
   updated_at: string;
   is_published?: boolean;
@@ -26,6 +29,17 @@ export interface EventMatch {
 }
 export interface EventDetail extends CompetitionEvent {
   matches: EventMatch[];
+}
+export interface EventNotice {
+  id: number;
+  message: string;
+  created_at: string;
+  read_at: string | null;
+  event: { id: string; title: string; url: string; logo_url: string };
+}
+export interface EventInbox {
+  unread_count: number;
+  notifications: EventNotice[];
 }
 export type PickSide = "A" | "B";
 export interface EventTeam {

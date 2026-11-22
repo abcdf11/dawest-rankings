@@ -9,8 +9,9 @@ export function ProfileMediaImage({
   const source =
     reducedMotion &&
     (src.startsWith("/api/v1/players/") ||
-      src.startsWith("/api/v1/factions/")) &&
-    src.includes("/media/")
+      src.startsWith("/api/v1/factions/") ||
+      src.startsWith("/api/v1/events/")) &&
+    (src.includes("/media/") || src.includes("/logo/"))
       ? `${src}${src.includes("?") ? "&" : "?"}still=1`
       : src;
   return <img {...props} src={source} />;

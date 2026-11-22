@@ -26,9 +26,33 @@ export function EventTeams({ eventId }: { eventId: string }) {
     },
   });
   const data = entries.data;
-  if (!data) return null;
+  if (!data)
+    return (
+      <section
+        className="event-results event-teams"
+        aria-labelledby="event-teams-title"
+      >
+        <h2 id="event-teams-title">Teams</h2>
+        {entries.error ? (
+          <p className="registration-error" role="alert">
+            {entries.error.message}{" "}
+            <button
+              className="button secondary"
+              onClick={() => void entries.refetch()}
+            >
+              Try again
+            </button>
+          </p>
+        ) : (
+          <p role="status">Loading team sign-ups…</p>
+        )}
+      </section>
+    );
   return (
-    <section className="event-results event-teams" aria-labelledby="event-teams-title">
+    <section
+      className="event-results event-teams"
+      aria-labelledby="event-teams-title"
+    >
       <div className="pickem-panel-heading">
         <h2 id="event-teams-title">Teams</h2>
         <span>
@@ -48,7 +72,11 @@ export function EventTeams({ eventId }: { eventId: string }) {
                   change.mutate({ slug: team.slug, withdraw: team.registered })
                 }
               >
-                {team.registered ? `Withdraw ${team.name}` : `Register ${team.name}`}
+                {change.isPending && change.variables?.slug === team.slug
+                  ? "Saving…"
+                  : team.registered
+                    ? `Withdraw ${team.name}`
+                    : `Register ${team.name}`}
               </button>
             ))}
           </div>
@@ -58,7 +86,9 @@ export function EventTeams({ eventId }: { eventId: string }) {
               "Faction leaders can register their faction for this event."
             ) : (
               <>
-                <a href={`/login?next=${encodeURIComponent(location.pathname)}`}>
+                <a
+                  href={`/login?next=${encodeURIComponent(location.pathname)}`}
+                >
                   Sign in
                 </a>{" "}
                 as a faction leader to register your faction.
@@ -71,13 +101,26 @@ export function EventTeams({ eventId }: { eventId: string }) {
           {change.error.message}
         </p>
       )}
+      {change.isSuccess && (
+        <p className="event-registration-success" role="status">
+          {change.variables.withdraw
+            ? "Your team has been withdrawn."
+            : "Your team is signed up for this event."}
+        </p>
+      )}
       {data.entries.length ? (
         <ul className="event-team-grid">
           {data.entries.map((team) => (
             <li key={team.slug}>
               <a href={team.url}>
                 {team.logo_url ? (
-                  <img src={team.logo_url} alt="" width={36} height={36} loading="lazy" />
+                  <img
+                    src={team.logo_url}
+                    alt=""
+                    width={36}
+                    height={36}
+                    loading="lazy"
+                  />
                 ) : (
                   <span className="event-team-logo" aria-hidden="true">
                     <UsersRound size={16} />
