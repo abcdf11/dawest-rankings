@@ -93,7 +93,35 @@ class KohResultTests(TestCase):
         self.assertEqual((match.team_a, match.score_a, match.score_b, match.status), (t1, 7, 3, "COMPLETED"))
         t1.refresh_from_db()
         self.assertGreater(t1.rating, 1500)
-        self.assertEqual(Player.objects.get(pk=self.a.pk).rating, 1500)  # solo ladder untouched
+        # the players fought too: the winning side's linked player gains, the losing side's loses
+        a, b = Player.objects.get(pk=self.a.pk), Player.objects.get(pk=self.b.pk)
+        self.assertGreater(a.rating, 1500)
+        self.assertAlmostEqual(a.rating - 1500, 1500 - b.rating, places=1)
+        self.assertEqual((a.wins, b.losses), (1, 1))
+        rows = {r["roblox_user_id"]: r for r in res.json()["players"]}
+        self.assertGreater(rows[101]["rating_delta"], 0)
+
+    def test_faction_war_rates_players_even_without_site_factions(self):
+        # in-game factions not on the site: no faction ladder match, but the linked players still fight
+        res = self.game.post(URL, {"round_id": "job-1:round-4", "mode": "FACTION", "winner_faction_id": "ingameA", "players": [
+            {"roblox_user_id": 101, "kills": 4, "faction_id": "ingameA"}, {"roblox_user_id": 103, "kills": 2, "faction_id": "ingameA"},
+            {"roblox_user_id": 102, "kills": 3, "faction_id": "ingameB"}, {"roblox_user_id": 999, "kills": 9}]}, format="json")
+        self.assertEqual(res.status_code, 201, res.content)
+        self.assertTrue(res.json()["rated"])
+        self.assertFalse(TeamMatch.objects.exists())
+        a, b, c = (Player.objects.get(pk=p.pk) for p in (self.a, self.b, self.c))
+        self.assertGreater(a.rating, 1500)
+        self.assertGreater(c.rating, 1500)
+        self.assertLess(b.rating, 1500)
+        self.assertAlmostEqual((a.rating - 1500) + (c.rating - 1500), 1500 - b.rating, places=1)
+
+    def test_team_war_teammates_never_trade_elo(self):
+        from .koh import team_war_deltas
+        d = team_war_deltas([(1, 1500), (2, 2000)], [(3, 1500)])
+        self.assertGreater(d[1], 0)
+        self.assertGreater(d[2], 0)  # a strong teammate still gains (a little), never pays the weak one
+        self.assertLess(d[3], 0)
+        self.assertAlmostEqual(sum(d.values()), 0, places=1)
 
     def test_kill_gap_only_counts_for_the_better_placed_player(self):
         # winner held the hill with fewer kills: a plain result, same as an equal-kills win

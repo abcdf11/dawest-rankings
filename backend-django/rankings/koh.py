@@ -88,6 +88,23 @@ def multiplayer_deltas(entries, weight=1.0, k=32):
     return {key: round(d, 2) for key, d in deltas.items()}
 
 
+def team_war_deltas(winners, losers, margin=1.0, weight=1.0, k=32):
+    """Faction KOH: [(key, rating)] per side. Every winner plays a zero-sum mini-match against every
+    loser; teammates never trade Elo. K is split by the bigger side, so a player's swing stays about
+    one match's worth however many fought."""
+    deltas = {key: 0.0 for key, _ in winners + losers}
+    if not winners or not losers:
+        return deltas
+    k_pair = k * weight * margin / max(len(winners), len(losers))
+    for kw, rw in winners:
+        for kl, rl in losers:
+            expected = 1 / (1 + 10 ** (max(-4000, min(4000, rl - rw)) / 400))
+            d = k_pair * (1 - expected)
+            deltas[kw] += d
+            deltas[kl] -= d
+    return {key: round(d, 2) for key, d in deltas.items()}
+
+
 def placements(rows, winner_of):
     """Winner(s) first, then most kills, then fewest deaths. Equal records share a placement."""
     order = sorted(rows, key=lambda r: (not winner_of(r), -r["kills"], r["deaths"]))
@@ -108,23 +125,53 @@ def _rerank_players(players, eligible_ids):
         p.regional_rank = regions[p.region]
 
 
+def _note(koh, text):
+    koh.rating_note = (f"{koh.rating_note} {text}" if koh.rating_note else text)[:200]
+
+
 def _rate_solo(koh, rows):
     RankingState.objects.get_or_create(pk=1)
     state = RankingState.objects.select_for_update().get(pk=1)
     eligible_ids = set(competitive_players().values_list("pk", flat=True))
     rated_rows = [r for r in rows if r.player_id in eligible_ids]
     if len(rated_rows) < 2:
-        koh.rating_note = "Needs two or more linked, unrestricted players for Elo."
+        _note(koh, "Needs two or more linked, unrestricted players for Elo.")
         return
     players = list(Player.objects.select_for_update().order_by("pk"))
     by_id = {p.pk: p for p in players}
     deltas = multiplayer_deltas([(r.player_id, by_id[r.player_id].rating, r.placement, r.kills) for r in rated_rows], EVENT_WEIGHTS["RANKED_1V1"])
+    _apply_player_deltas(koh, state, players, eligible_ids, rated_rows, deltas, lambda r: r.placement == 1)
+
+
+def _rate_faction_players(koh, rows, sides):
+    """Faction KOH: each linked player gains or loses Elo by their side's result (sides: roblox id ->
+    "W" / "L"; players without a faction in the round aren't rated)."""
+    RankingState.objects.get_or_create(pk=1)
+    state = RankingState.objects.select_for_update().get(pk=1)
+    eligible_ids = set(competitive_players().values_list("pk", flat=True))
+    rated_rows = [r for r in rows if r.player_id in eligible_ids and sides.get(r.roblox_user_id)]
+    win_rows = [r for r in rated_rows if sides[r.roblox_user_id] == "W"]
+    lose_rows = [r for r in rated_rows if sides[r.roblox_user_id] == "L"]
+    if not win_rows or not lose_rows:
+        _note(koh, "Player Elo needs a linked, unrestricted player on each side.")
+        return
+    players = list(Player.objects.select_for_update().order_by("pk"))
+    by_id = {p.pk: p for p in players}
+    gap = sum(r.kills for r in rows if sides.get(r.roblox_user_id) == "W") - sum(r.kills for r in rows if sides.get(r.roblox_user_id) == "L")
+    margin = 1 + .35 * math.log1p(max(0, gap))
+    deltas = team_war_deltas([(r.player_id, by_id[r.player_id].rating) for r in win_rows],
+                             [(r.player_id, by_id[r.player_id].rating) for r in lose_rows], margin, EVENT_WEIGHTS["RANKED_TEAM"])
+    _apply_player_deltas(koh, state, players, eligible_ids, rated_rows, deltas, lambda r: sides[r.roblox_user_id] == "W")
+
+
+def _apply_player_deltas(koh, state, players, eligible_ids, rated_rows, deltas, won_of):
+    by_id = {p.pk: p for p in players}
     for p in players:
         p.previous_rank = p.rank
     now = timezone.now()
     for r in rated_rows:
         p = by_id[r.player_id]
-        won = r.placement == 1
+        won = won_of(r)
         r.rating_before = p.rating
         p.previous_rating = p.rating
         p.rating = round(max(0.0, p.rating + deltas[p.pk]), 2)
@@ -155,7 +202,7 @@ def _rate_factions(koh, rows, winner_team_id):
             teams.setdefault(r.team_id, []).append(r)
     winner = winner_team_id if winner_team_id in teams else None
     if len(teams) != 2 or winner is None:
-        koh.rating_note = "Faction Elo needs exactly two registered site factions and a winner."
+        _note(koh, "Faction Elo needs exactly two registered site factions and a winner.")
         return
     loser = next(t for t in teams if t != winner)
     kw, kl = (sum(r.kills for r in teams[t]) for t in (winner, loser))
@@ -168,7 +215,7 @@ def _rate_factions(koh, rows, winner_team_id):
             process_team_match(match.pk)
     except ValueError as exc:
         match.delete()
-        koh.rating_note = str(exc)[:200]
+        _note(koh, str(exc))
         return
     koh.team_match, koh.winner_team_id, koh.rated = match, winner, True
 
@@ -212,8 +259,10 @@ def report_round(request):
             winner_of = lambda r: bool(d["winner_faction_tag"]) and r["faction_tag"].upper() == d["winner_faction_tag"].upper()
         places = placements(d["players"], winner_of)
         koh = KohRound.objects.create(round_id=d["round_id"], mode=d["mode"], place_id=d["place_id"], job_id=d["job_id"], duration_seconds=d["duration_seconds"], winner_roblox_user_id=d["winner_roblox_user_id"])
-        rows = []
+        rows, sides = [], {}
         for r in d["players"]:
+            if faction:
+                sides[r["roblox_user_id"]] = "W" if winner_of(r) else ("L" if (r["faction_id"] or r["faction_tag"]) else None)
             player = linked.get(r["roblox_user_id"])
             team = site_team(r) if faction else None
             rows.append(KohParticipant(round=koh, roblox_user_id=r["roblox_user_id"], roblox_username=r["roblox_username"] or (player.roblox_username if player else ""), player=player, team=team, kills=r["kills"], deaths=r["deaths"], placement=places[r["roblox_user_id"]], is_winner=winner_of(r)))
@@ -222,6 +271,7 @@ def report_round(request):
         if d["mode"] == "SOLO":
             _rate_solo(koh, rows)
         else:
+            _rate_faction_players(koh, rows, sides)
             _rate_factions(koh, rows, winner_team.pk if winner_team else None)
         koh.save()
     return Response(round_payload(koh), status=201)
