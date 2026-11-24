@@ -34,6 +34,9 @@ class PlayerSerializer(serializers.ModelSerializer):
         if membership is None:
             return None
         team = membership.team
+        # a faction removed in the developer console isn't shown
+        if not team.is_active:
+            return None
         return {"username": team.username, "display_name": team.display_name, "tag": team.tag}
     def get_avatar_url(self, obj):
         return getattr(obj, "profile_avatar_url", obj.avatar_url)

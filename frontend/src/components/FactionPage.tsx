@@ -15,11 +15,11 @@ import { ApiError, request } from "../lib/api";
 import { factionUrl, profileUrl } from "../lib/profile";
 import { formatRating } from "../lib/rating";
 import { useSession } from "../hooks/useSession";
+import { useMyFactions } from "../hooks/useMyFactions";
 import type {
   FactionDetail,
   FactionManagement,
   FactionSummary,
-  MyFactions,
 } from "../types/factions";
 import { AccountMenu } from "./AccountMenu";
 import { MainNavigation } from "./MainNavigation";
@@ -84,16 +84,6 @@ function State({
       </div>
     </Frame>
   );
-}
-
-function useMyFactions() {
-  const session = useSession();
-  return useQuery({
-    queryKey: ["my-factions"],
-    queryFn: () => request<MyFactions>("/factions/mine/"),
-    enabled: session.data?.authenticated === true,
-    staleTime: 10_000,
-  });
 }
 
 function useFactionAction() {
@@ -212,6 +202,8 @@ export function FactionsDirectory() {
     : [];
   const pending =
     mine.data?.requests.filter((row) => row.status === "PENDING") ?? [];
+  // already leading / in a faction, or a registration is awaiting review: no second faction
+  const inFaction = own.length > 0 || mine.data?.pending_registration === true;
   if (directory.isPending) return <State />;
   if (directory.error) return <State error={directory.error} />;
   const filtered = directory.data.factions.filter((team) =>
@@ -226,9 +218,11 @@ export function FactionsDirectory() {
           <h1>Factions</h1>
           <p>Browse approved factions and request membership.</p>
         </div>
-        <a className="button primary" href="/register">
-          <Shield size={16} /> Register a faction
-        </a>
+        {!inFaction && (
+          <a className="button primary" href="/register">
+            <Shield size={16} /> Register a faction
+          </a>
+        )}
       </div>
       {session.data?.authenticated && (
         <section className="faction-section">
@@ -339,6 +333,7 @@ export default function FactionPage({
   const closeEditor = useCallback(() => setEditing(false), []);
   const [message, setMessage] = useState("");
   const [removing, setRemoving] = useState<number | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const [tab, setTab] = useState<"members" | "matches">("members");
   const action = useFactionAction();
   const profile = useQuery({
@@ -586,6 +581,44 @@ export default function FactionPage({
             )}
           </section>
         )}
+        {!managing && member && !owner && !member.is_leader && (
+          <section className="faction-join faction-leave">
+            <div>
+              <h2>You're a member</h2>
+              <p>
+                Leaving takes you off {faction.display_name}'s roster. You can
+                request to join another faction afterwards.
+              </p>
+            </div>
+            {leaving ? (
+              <div className="faction-leave-confirm">
+                <button
+                  className="button primary"
+                  disabled={action.isPending}
+                  onClick={() =>
+                    submit(`/members/${member.id}/remove/`)
+                  }
+                >
+                  {action.isPending ? "Leaving…" : "Yes, leave"}
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={action.isPending}
+                  onClick={() => setLeaving(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                className="button secondary"
+                onClick={() => setLeaving(true)}
+              >
+                Leave faction
+              </button>
+            )}
+          </section>
+        )}
       </article>
       {action.error && (
         <p className="registration-error faction-feedback" role="alert">
@@ -791,7 +824,7 @@ export default function FactionPage({
                   </span>
                   {!player.is_leader &&
                     !player.is_captain &&
-                    ((managing && owner) || player.id === member?.id) && (
+                    managing && owner && (
                       <div className="faction-member-controls">
                         {removing === player.id ? (
                           <>

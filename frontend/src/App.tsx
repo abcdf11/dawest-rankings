@@ -21,6 +21,7 @@ import {
 import type { RankingEntry, RankingKind, Region, Tier } from "./types/rankings";
 import { getLadder } from "./lib/api";
 import { useRankingsSocket } from "./hooks/useRankingsSocket";
+import { useHasFaction } from "./hooks/useMyFactions";
 import { Brand } from "./components/Shared";
 import { PodiumHero } from "./components/PodiumHero";
 import { RankingsTable } from "./components/RankingsTable";
@@ -56,6 +57,7 @@ export default function App() {
       : "players",
   );
   const isTeams = kind === "teams";
+  const hasFaction = useHasFaction();
   const noun = isTeams ? "teams" : "players";
   const [tier, setTier] = useState<Tier | "ALL">("ALL"),
     [region, setRegion] = useState<Region | "ALL">("ALL");
@@ -206,10 +208,12 @@ export default function App() {
                   <small>Team circuit rankings</small>
                 </span>
               </button>
-              <a href="/register" className="register-team-link">
-                <UsersRound size={15} />
-                Register a faction
-              </a>
+              {!hasFaction && (
+                <a href="/register" className="register-team-link">
+                  <UsersRound size={15} />
+                  Register a faction
+                </a>
+              )}
             </div>
             <div className="page-heading">
               <div>

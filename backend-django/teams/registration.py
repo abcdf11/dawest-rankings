@@ -90,7 +90,7 @@ def submit_registration(data, user):
         raise RegistrationConflict("That team name is already registered or awaiting review.")
     members = data.pop("members")
     names = [m["username"] for m in members]
-    if TeamMembership.objects.annotate(username_lower=Lower("player__username")).filter(username_lower__in=names).exists():
+    if TeamMembership.objects.filter(team__is_active=True).annotate(username_lower=Lower("player__username")).filter(username_lower__in=names).exists():
         raise RegistrationConflict("A roster member already belongs to another team.")
     if RegistrationMember.objects.annotate(username_lower=Lower("username")).filter(username_lower__in=names, registration__status="PENDING").exists():
         raise RegistrationConflict("A roster member is already in a pending registration.")
@@ -133,7 +133,7 @@ def review_registration(registration_id, actor, approve, note=""):
         if Team.objects.filter(tag__iexact=registration.tag).exists() or Team.objects.filter(display_name__iexact=registration.team_name).exists():
             raise RegistrationConflict("The team name or tag has been taken.")
         names = [m.username for m in members]
-        if TeamMembership.objects.annotate(username_lower=Lower("player__username")).filter(username_lower__in=names).exists():
+        if TeamMembership.objects.filter(team__is_active=True).annotate(username_lower=Lower("player__username")).filter(username_lower__in=names).exists():
             raise RegistrationConflict("A roster member has joined another team since this application.")
         slug = (slugify(registration.team_name)[:30] or "team") + "-" + registration.id.hex[:8]
         if not registration.submitted_by_id or not registration.submitted_by.is_active:
@@ -144,6 +144,7 @@ def review_registration(registration_id, actor, approve, note=""):
             player = competitive_players().filter(username__iexact=member.username).first()
             if player is None:
                 raise RegistrationConflict(f"{member.username} must register an active player account first.")
+            TeamMembership.objects.filter(player=player, team__is_active=False).delete()  # left over from a removed faction
             TeamMembership.objects.create(team=team, player=player, is_captain=member.is_captain)
         players = _place_competitors(Player, created_players)
         teams = _place_competitors(Team, {team.pk})

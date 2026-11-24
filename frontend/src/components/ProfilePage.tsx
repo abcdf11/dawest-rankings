@@ -281,7 +281,6 @@ export default function ProfilePage({ username }: { username: string }) {
             <span>
               <UserRound size={14} /> PLAYER PROFILE
             </span>
-            <span>SOLO / 1V1</span>
           </div>
         </div>
         <div className="profile-identity">

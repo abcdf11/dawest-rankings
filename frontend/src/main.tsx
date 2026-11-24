@@ -7,6 +7,7 @@ import TeamRegistrationPage from "./components/TeamRegistrationPage";
 import AuthPage from "./components/AuthPage";
 import DeveloperPage from "./components/DeveloperPage";
 import EventsPage from "./components/EventsPage";
+import NewsPage from "./components/NewsPage";
 import ProfilePage, { ProfileRedirect } from "./components/ProfilePage";
 import FactionPage, {
   FactionRedirect,
@@ -23,8 +24,10 @@ const playerName = path.match(/^\/players\/([a-zA-Z0-9_-]+)$/)?.[1];
 const factionMatch = path.match(/^\/factions\/([a-zA-Z0-9_-]+)(\/manage)?$/);
 const teamName = path.match(/^\/teams\/([a-zA-Z0-9_-]+)$/)?.[1];
 const eventId = path.match(/^\/events\/([a-fA-F0-9-]+)$/)?.[1];
-const Screen =
-  path === "/events" || eventId
+const newsMatch = path.match(/^\/news(?:\/([a-zA-Z0-9_-]+)(\/edit)?)?$/);
+const Screen = newsMatch
+  ? () => <NewsPage slug={newsMatch[1]} editing={Boolean(newsMatch[2])} />
+  : path === "/events" || eventId
     ? () => <EventsPage eventId={eventId} />
     : factionMatch
       ? () => (

@@ -53,6 +53,7 @@ export interface JoinRequest {
 export interface MyFactions {
   owned: FactionSummary[];
   membership: FactionSummary | null;
+  pending_registration?: boolean;
   requests: JoinRequest[];
 }
 export interface FactionManagement {

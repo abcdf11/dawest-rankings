@@ -20,7 +20,7 @@ from rankings.engine import publish_pending_events
 from rankings.models import RankingEvent
 from rankings.profile_images import normalize_image
 from rankings.serializers import PlayerSerializer
-from .models import FactionJoinRequest, FactionMedia, RegistrationMember, TeamMembership, TeamMatch
+from .models import FactionJoinRequest, FactionMedia, RegistrationMember, TeamMembership, TeamMatch, TeamRegistration
 from .serializers import TeamHistorySerializer, TeamSerializer, form_for_team
 
 MAX_MEMBERS = 10
@@ -41,6 +41,12 @@ def factions():
     return registered_teams().select_related("owner", "registration").prefetch_related(
         "memberships__player__user", "memberships__player__team_membership__team",
         Prefetch("roster", queryset=players))
+
+
+def clear_stale_membership(player):
+    """A membership in a faction the developers removed no longer counts: drop it so the player can
+    join or register another faction."""
+    TeamMembership.objects.filter(player=player, team__is_active=False).delete()
 
 
 def own_faction(request, username, lock=False):
@@ -120,8 +126,11 @@ def mine(request):
     membership = TeamMembership.objects.select_related("team").filter(player__user=request.user, player__in=registered_players(), team__in=registered_teams()).first()
     member_team = membership.team if membership else None
     requests = FactionJoinRequest.objects.select_related("team", "player").filter(player__user=request.user, team__in=registered_teams())[:50]
+    pending_registration = TeamRegistration.objects.filter(status="PENDING").filter(
+        Q(submitted_by=request.user) | Q(members__username__iexact=request.user.username)).exists()
     return Response({"owned": [summary(team) for team in owned],
                      "membership": summary(member_team) if member_team else None,
+                     "pending_registration": pending_registration,
                      "requests": [request_payload(row) for row in requests]})
 
 
@@ -159,6 +168,7 @@ def join(request, username):
     lock_ladders()
     team = get_object_or_404(registered_teams().select_for_update(), username__iexact=username)
     player = get_object_or_404(registered_players().select_for_update(), user=request.user)
+    clear_stale_membership(player)
     if team.owner_id == request.user.pk or TeamMembership.objects.filter(player=player).exists():
         raise FactionConflict("You already belong to a faction. Leave it before requesting another.")
     if RegistrationMember.objects.filter(username__iexact=player.username, registration__status="PENDING").exists():
@@ -197,6 +207,7 @@ def review(request, username, request_id):
         raise FactionConflict("This request has already been resolved.")
     if decision == "ACCEPTED":
         player = get_object_or_404(competitive_players().select_for_update(), pk=row.player_id)
+        clear_stale_membership(player)
         if TeamMembership.objects.filter(player=player).exists():
             raise FactionConflict("This player has already joined another faction.")
         if RegistrationMember.objects.filter(username__iexact=player.username, registration__status="PENDING").exists():

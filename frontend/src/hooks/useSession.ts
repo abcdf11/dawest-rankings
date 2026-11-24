@@ -22,6 +22,7 @@ export interface SessionUser {
     } | null;
   } | null;
   roblox_link_available?: boolean;
+  can_post_news?: boolean;
 }
 export interface Session {
   authenticated: boolean;
