@@ -1053,6 +1053,102 @@
   border-bottom: 1px solid #ffffff12;
   scroll-margin-top: 110px;
 }
+.event-faction-registration {
+  padding: 28px 32px;
+  border-bottom: 1px solid #ffffff18;
+  background: #ffffff04;
+  scroll-margin-top: 110px;
+}
+.event-registration-heading {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.event-registration-heading > div {
+  flex: 1;
+  min-width: 180px;
+}
+.event-registration-heading h2 {
+  font-size: 1.25rem;
+  font-weight: 650;
+  margin: 0 0 8px;
+}
+.event-registration-heading p,
+.event-registration-prompt p {
+  color: #aaa;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.event-registration-state {
+  padding: 6px 10px;
+  border: 1px solid #ffffff20;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  color: #aaa;
+}
+.event-registration-state.is-open {
+  color: #c9dfcd;
+  border-color: #a0d0aa40;
+}
+.event-faction-form label {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 10px;
+  color: #ddd;
+}
+.event-faction-form > div,
+.event-registration-prompt {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.event-registration-prompt p {
+  flex-basis: 100%;
+}
+.event-faction-form select {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #ffffff30;
+  border-radius: 5px;
+  background: #171717;
+  color: #eee;
+  font: inherit;
+}
+.event-my-entries {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: grid;
+  gap: 10px;
+}
+.event-my-entries li,
+.event-my-entries li > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.event-my-entries li {
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #ffffff20;
+  border-radius: 5px;
+}
+.event-my-entries a {
+  color: #eee;
+  overflow-wrap: anywhere;
+}
+.event-my-entries span,
+.event-my-entries svg {
+  color: #b6d4bd;
+  font-size: 0.8125rem;
+}
 #event-teams-title {
   scroll-margin-top: 110px;
 }
@@ -1060,6 +1156,16 @@
   min-height: 100px;
 }
 @media (max-width: 760px) {
+  .event-faction-registration {
+    padding: 20px;
+  }
+  .event-faction-form > div {
+    align-items: stretch;
+  }
+  .event-faction-form .button,
+  .event-faction-form select {
+    width: 100%;
+  }
   .event-detail > .event-teams {
     padding: 20px;
   }

@@ -50,6 +50,7 @@ export interface Player extends RankedCompetitor {
 }
 export interface Team extends RankedCompetitor {
   kind: "teams";
+  is_verified?: boolean;
   tag: string;
   roster: Player[];
 }

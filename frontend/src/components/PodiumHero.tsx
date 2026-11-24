@@ -2,6 +2,7 @@ import { Crosshair, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import type { RankingEntry } from "../types/rankings";
 import { formatRating } from "../lib/rating";
+import { VerifiedFactionBadge } from "./VerifiedFactionBadge";
 import {
   CompetitorLink,
   Delta,
@@ -43,7 +44,7 @@ export function PodiumHero({
             <Sigil player={player} large />
             <span className="podium-identity">
               <TierBadge tier={player.tier} />
-              <span className="player-title">{player.display_name}</span>
+              <span className="player-title">{player.display_name}{"tag" in player && player.is_verified && <VerifiedFactionBadge compact />}</span>
               <span className="player-meta">
                 {player.region} <span> / </span>{" "}
                 {"tag" in player

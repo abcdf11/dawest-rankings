@@ -100,6 +100,34 @@ class FactionLinkTests(TestCase):
         self.assertEqual(data["abc123def456"]["tag"], "FT")
         self.assertFalse(data["nope"]["linked"])
 
+    def test_verification_follows_the_link_across_profiles_directory_and_cached_rankings(self):
+        def check(verified):
+            detail = self.site.get("/api/v1/factions/frontier/").json()
+            self.assertEqual(detail["is_verified"], verified)
+            self.assertEqual(self.site.get("/api/v1/teams/frontier/").json()["is_verified"], verified)
+            self.assertEqual(self.site.get("/api/v1/factions/frontier/manage/").json()["faction"]["is_verified"], verified)
+            directory = self.site.get("/api/v1/factions/").json()["factions"]
+            rankings = self.site.get("/api/v1/teams/rankings/").json()["teams"]
+            owned = self.site.get("/api/v1/factions/mine/").json()["owned"]
+            for rows in (directory, rankings, owned):
+                self.assertEqual(next(row for row in rows if row["username"] == "frontier")["is_verified"], verified)
+            self.assertFalse(next(row for row in directory if row["username"] == "rivals")["is_verified"])
+
+        check(False)  # Prime the leaderboard cache before linking.
+        code = self.code()
+        check(False)  # Merely requesting a code is not verification.
+        self.assertEqual(self.link(code).status_code, 200)
+        check(True)
+        self.assertEqual(self.site.delete("/api/v1/factions/frontier/roblox-link/").status_code, 200)
+        check(False)
+        self.assertFalse(self.site.get(LOOKUP, {"ids": "abc123def456"}).json()["factions"]["abc123def456"]["linked"])
+
+    def test_public_game_standings_expose_the_faction_rank_and_rating(self):
+        Team.objects.filter(pk=self.team.pk).update(rank=7, rating=1725)
+        self.assertEqual(self.link(self.code()).status_code, 200)
+        entry = self.site.get(LOOKUP, {"ids": "abc123def456"}).json()["factions"]["abc123def456"]
+        self.assertEqual((entry["rank"], entry["rating"]), (7, 1725))
+
     def test_koh_faction_round_matches_linked_ids(self):
         self.link(self.code(), faction_id="ingameFT01")
         rivals = APIClient()

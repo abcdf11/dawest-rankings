@@ -1,0 +1,17 @@
+.verified-faction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: #b7d5f5;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.verified-faction.is-compact {
+  margin-left: 0.4rem;
+}
+.verified-faction svg {
+  flex-shrink: 0;
+}

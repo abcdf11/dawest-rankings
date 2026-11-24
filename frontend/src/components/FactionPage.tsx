@@ -28,6 +28,7 @@ import { ProfileMediaImage } from "./ProfileMediaImage";
 import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
 import { ThemeAudioEditor, ThemePlayer } from "./ThemeAudio";
 import { FactionRobloxLink } from "./FactionRobloxLink";
+import { VerifiedFactionBadge } from "./VerifiedFactionBadge";
 import "../profile.css";
 import "../factions.css";
 
@@ -148,7 +149,7 @@ function FactionCard({
             </span>
           )}
         </div>
-        <h3>{faction.display_name}</h3>
+        <h3>{faction.display_name}{faction.is_verified && <VerifiedFactionBadge compact />}</h3>
         <div className="faction-card-numbers">
           <span>
             <b>#{faction.rank}</b> global
@@ -451,6 +452,7 @@ export default function FactionPage({
           <div className="faction-name">
             <TierBadge tier={faction.tier} />
             <h1>{faction.display_name}</h1>
+            {faction.is_verified && <VerifiedFactionBadge />}
             <p>
               [{faction.tag}] <span>·</span> {faction.region} <span>·</span>{" "}
               {faction.member_count}/{faction.capacity} members
@@ -625,6 +627,18 @@ export default function FactionPage({
             username={faction.username}
             linked={faction.roblox_faction ?? null}
           />
+        </section>
+      )}
+      {managing && (
+        <section className="faction-section" aria-labelledby="faction-events-title">
+          <div className="faction-section-heading">
+            <div>
+              <span className="eyebrow">LEADER DASHBOARD</span>
+              <h2 id="faction-events-title">Event registration</h2>
+            </div>
+            <a className="button primary" href="/events?format=FACTION">Find faction events</a>
+          </div>
+          <p>Choose an upcoming faction event, then register your faction on its event page.</p>
         </section>
       )}
       {managing && (

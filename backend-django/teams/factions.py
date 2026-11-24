@@ -55,7 +55,7 @@ def summary(team):
     return {"id": team.pk, "username": team.username, "display_name": team.display_name,
             "tag": team.tag, "region": team.region, "avatar_url": team.profile_avatar_url,
             "banner_url": team.profile_banner_url, "rating": team.rating, "rank": team.rank,
-            "profile_url": f"/factions/{team.username}"}
+            "profile_url": f"/factions/{team.username}", "is_verified": team.is_verified}
 
 
 def member_rows(team):

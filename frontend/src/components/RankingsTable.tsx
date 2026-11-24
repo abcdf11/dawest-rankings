@@ -2,6 +2,7 @@ import { ChevronDown, SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 import type { RankingEntry, RankingKind } from "../types/rankings";
 import { formatRating } from "../lib/rating";
+import { VerifiedFactionBadge } from "./VerifiedFactionBadge";
 import {
   CompetitorLink,
   Delta,
@@ -107,7 +108,7 @@ export function RankingsTable({
                 >
                   <Sigil player={player} />
                   <span>
-                    <strong>{player.display_name}</strong>
+                    <strong>{player.display_name}{"tag" in player && player.is_verified && <VerifiedFactionBadge compact />}</strong>
                     <span className="player-meta">
                       {"tag" in player
                         ? `${player.tag} · ${player.roster.length} players`

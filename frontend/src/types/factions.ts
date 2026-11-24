@@ -10,6 +10,7 @@ export interface FactionSummary {
   banner_url: string;
   rating: number;
   rank: number;
+  is_verified?: boolean;
   profile_url: string;
   member_count?: number;
   capacity?: number;

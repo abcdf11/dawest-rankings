@@ -55,6 +55,11 @@ class Team(models.Model):
         return self.display_name
 
     @property
+    def is_verified(self):
+        """A verified faction has proved ownership of its linked in-game faction."""
+        return bool(self.roblox_faction_id)
+
+    @property
     def profile_avatar_url(self):
         return f"/api/v1/factions/{self.username}/media/logo/{self.logo_version}/" if self.logo_version else self.avatar_url
 

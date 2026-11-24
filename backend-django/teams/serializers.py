@@ -16,11 +16,12 @@ def form_for_team(team, matches):
 
 class TeamSerializer(PlayerSerializer):
     kind = serializers.CharField(default="teams", read_only=True)
+    is_verified = serializers.BooleanField(read_only=True)
     roster = serializers.SerializerMethodField()
 
     class Meta(PlayerSerializer.Meta):
         model = Team
-        fields = [f for f in PlayerSerializer.Meta.fields if f != "team"] + ["kind", "tag", "roster"]
+        fields = [f for f in PlayerSerializer.Meta.fields if f != "team"] + ["kind", "tag", "roster", "is_verified"]
 
     def get_last_five(self, obj):
         return form_for_team(obj, self.context.get("forms", {}).get(obj.pk, [])[:5])

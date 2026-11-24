@@ -84,6 +84,10 @@ def rankings(request):
         teams = list(qs[:500])
         data = {"teams": TeamSerializer(teams, many=True, context={"forms": team_forms(teams)}).data, "total": qs.count(), "revision": revision, "updated_at": state.updated_at.isoformat() if state else None, "source": "official", "realtime_enabled": settings.USE_REDIS}
         cache.set(key, data, 60)
+    else:
+        # Link/unlink must update verification even while the rating payload is cached.
+        verified = {pk for pk, faction_id in registered_teams().filter(pk__in=[row["id"] for row in data["teams"]]).values_list("pk", "roblox_faction_id") if faction_id}
+        data = {**data, "teams": [{**row, "is_verified": row["id"] in verified} for row in data["teams"]]}
     return Response(data)
 
 

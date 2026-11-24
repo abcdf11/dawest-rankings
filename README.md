@@ -46,7 +46,7 @@ The console supports:
 - Viewing the audit trail of account and moderation actions.
 - Creating and publishing events with uploaded logos, plus managing team entrants and pick'ems.
 
-Faction leaders can sign up their teams from an upcoming faction event and withdraw before it starts. Players can mark an event as **Interested** from the event list or detail page. The account bell shows private notifications for event changes, cancellations, and starts, with unread counts and read controls. It refreshes every 30 seconds while the site is active and catches up on scheduled starts when the player returns. Interest preferences, notifications, and uploaded logos are stored in the database.
+Faction leaders can open **Leader dashboard → Event registration → Find faction events**, or press **Register faction** on an upcoming faction event card. Both lead to the event's **Faction registration** panel, where a leader chooses one of their approved factions, registers it, sees confirmation, and can withdraw before the event starts. Existing entries remain visible after reloading. Signed-out visitors can sign in and return directly to the panel; non-leaders and restricted accounts see their registration requirements. Players can mark an event as **Interested** from the event list or detail page. The account bell shows private notifications for event changes, cancellations, and starts, with unread counts and read controls. It refreshes every 30 seconds while the site is active and catches up on scheduled starts when the player returns. Interest preferences, notifications, and uploaded logos are stored in the database.
 
 Faction event cards show the registered team count and a preview of up to four teams with logos, tags, and profile links. **View teams** opens the full public team list near the top of the event page. Sign-ups and withdrawals update the list; inactive teams are excluded.
 
@@ -115,6 +115,26 @@ In the Studio place, `SettingsController` supplies the code field and result fee
 `DaWestRankings` listens for `DaWestLinkConfirmedAt` to refresh the rating, and
 `DaWestSite` bounds authenticated requests with a 15-second timeout.
 
+### Verified factions and in-game standings
+
+A site faction is verified when its leader has linked it to an in-game faction.
+The check badge appears on its profile, directory cards, and faction leaderboard.
+Verification is derived from the link; generating a code alone does not verify a
+faction, and unlinking removes its badge, including from cached leaderboard results.
+
+In the game, open **U → Factions**. Linked factions show **Verified**, their global
+faction rank, and Elo under their names; expanding a row also shows its tier. Your
+own faction's standing appears in the menu header on every tab. Rank changes and
+unlinking update the menu when the existing server sync refreshes. An unavailable
+rank is shown as **Unranked**, never `#0`.
+
+The server publishes these public standings under
+`ReplicatedStorage.DaWestRankings.FactionRatings`, keyed by the in-game faction ID.
+`FactionController` reads those records and reacts to updates and removals. Source
+copies of the modified Studio scripts are in `roblox/DaWestRankings.server.luau`
+and `roblox/FactionController.luau`. Publish the Studio place to release game changes;
+deploy the website to release the badges. No database migration is needed.
+
 Players can customize their own picture and banner through **Customize profile** on `/profile`. PNG, JPG, static WebP, and GIF uploads are supported, with a live preview and remove/restore-default controls. The server center-crops and resizes pictures to **256 × 256** and banners to **1280 × 240**. Animated GIF frames, frame durations, transparency, and loop settings are preserved; static images become optimized WebP files. Reduced-motion visitors receive a still first-frame image.
 
 Each image is limited to **8 MB**, **16 megapixels per source frame**, and **120 GIF frames**, with an additional total decoding budget. Images are validated by their contents and re-encoded without EXIF metadata. The authenticated session determines the owner; the upload endpoint cannot target another player. Both selected images are processed before the database transaction, so a failed upload does not partially replace the existing profile.
@@ -133,7 +153,7 @@ Public signup cannot assign staff roles. The developer login checks staff permis
 
 The **Events** navigation tab opens `/events`, available on desktop and mobile. Published events can be searched and filtered by upcoming/live/past status or solo/faction format. `/events/<uuid>` displays the description, region, location, schedule, optional registration link, and verified linked match results. Times use the visitor's browser timezone. Public pages refresh their data every minute; drafts return 404.
 
-Developers manage events at **`/dev` → Events** (or `/dev#events`). They can create drafts, edit details and schedules, publish/unpublish, and mark events live, completed, or cancelled. Scheduled events automatically become live at their start time and completed at their end time; manual completed/cancelled states take priority. An event without an end time remains live until a developer completes it. Registration links accept HTTP(S) only. These are external links; this feature does not add a separate participant signup system.
+Developers manage events at **`/dev` → Events** (or `/dev#events`). They can create drafts, edit details and schedules, publish/unpublish, and mark events live, completed, or cancelled. Scheduled events automatically become live at their start time and completed at their end time; manual completed/cancelled states take priority. An event without an end time remains live until a developer completes it. The optional registration URL accepts HTTP(S) and opens an external service; faction entries use the built-in **Faction registration** panel.
 
 Select an event in the **Event** field of a solo or faction match in Django Admin to associate its results. The association remains editable after verification while scores and rating fields stay locked. Only completed, processed matches appear in event results, and player/faction names link to their profiles. Formats must match the linked matches; events with existing matches cannot change format through the developer UI.
 

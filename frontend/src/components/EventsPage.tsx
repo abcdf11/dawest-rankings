@@ -178,10 +178,10 @@ function EventCard({ event }: { event: CompetitionEvent }) {
         <EventInterest event={event} />
         {event.format === "FACTION" && event.status === "UPCOMING" && (
           <a
-            href={`${event.url}#event-teams-title`}
-            className="event-signup-link"
+            href={`${event.url}#faction-registration`}
+            className="button primary event-signup-link"
           >
-            Team sign-up
+            Register faction
           </a>
         )}
       </div>
@@ -193,7 +193,10 @@ export default function EventsPage({ eventId }: { eventId?: string }) {
   const session = useSession();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [search, setSearch] = useState("");
-  const [format, setFormat] = useState("ALL");
+  const [format, setFormat] = useState(() => {
+    const value = new URLSearchParams(window.location.search).get("format");
+    return value === "FACTION" || value === "SOLO" ? value : "ALL";
+  });
   const list = useQuery({
     queryKey: ["events", session.data?.user?.id ?? null],
     queryFn: () => request<{ events: CompetitionEvent[] }>("/events/"),
