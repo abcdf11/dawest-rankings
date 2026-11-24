@@ -45,7 +45,8 @@ class ParticipantInput(serializers.Serializer):
     roblox_username = serializers.CharField(max_length=40, required=False, allow_blank=True, default="")
     kills = serializers.IntegerField(min_value=0, max_value=1000)
     deaths = serializers.IntegerField(min_value=0, max_value=1000, required=False, default=0)
-    faction_tag = serializers.CharField(max_length=5, required=False, allow_blank=True, default="")
+    faction_tag = serializers.CharField(max_length=16, required=False, allow_blank=True, default="")
+    faction_id = serializers.CharField(max_length=32, required=False, allow_blank=True, default="")
 
 
 class RoundInput(serializers.Serializer):
@@ -55,7 +56,8 @@ class RoundInput(serializers.Serializer):
     job_id = serializers.CharField(max_length=64, required=False, allow_blank=True, default="")
     duration_seconds = serializers.IntegerField(min_value=0, max_value=86400, required=False, default=0)
     winner_roblox_user_id = serializers.IntegerField(min_value=1, required=False, allow_null=True, default=None)
-    winner_faction_tag = serializers.CharField(max_length=5, required=False, allow_blank=True, default="")
+    winner_faction_tag = serializers.CharField(max_length=16, required=False, allow_blank=True, default="")
+    winner_faction_id = serializers.CharField(max_length=32, required=False, allow_blank=True, default="")
     players = ParticipantInput(many=True)
 
     def validate_players(self, value):
@@ -144,14 +146,14 @@ def _rate_solo(koh, rows):
     transaction.on_commit(_after_commit)
 
 
-def _rate_factions(koh, rows, winner_tag):
+def _rate_factions(koh, rows, winner_team_id):
     from teams.engine import process_team_match
     from teams.models import TeamMatch
     teams = {}
     for r in rows:
         if r.team_id:
             teams.setdefault(r.team_id, []).append(r)
-    winner = next((t for t, members in teams.items() if members[0].team.tag.upper() == winner_tag), None)
+    winner = winner_team_id if winner_team_id in teams else None
     if len(teams) != 2 or winner is None:
         koh.rating_note = "Faction Elo needs exactly two registered site factions and a winner."
         return
@@ -186,29 +188,41 @@ def report_round(request):
         if KohRound.objects.select_for_update().filter(round_id=d["round_id"]).exists():
             return Response(round_payload(KohRound.objects.get(round_id=d["round_id"])))
         linked = {p.roblox_user_id: p for p in competitive_players().select_related("team_membership__team").filter(roblox_user_id__in=[r["roblox_user_id"] for r in d["players"]])}
-        tags = {t.tag.upper(): t for t in registered_teams().filter(tag__in=[r["faction_tag"] for r in d["players"] if r["faction_tag"]] + [d["winner_faction_tag"]])} if d["mode"] == "FACTION" else {}
-        winner_tag = d["winner_faction_tag"].upper()
+        faction = d["mode"] == "FACTION"
+        # A site faction linked to its in-game faction (teams/roblox_link.py) is matched by that id, and
+        # the game server is trusted for who is in it. Otherwise fall back to the tag, counting only
+        # linked players who are on that site faction's roster.
+        by_fid = {t.roblox_faction_id: t for t in registered_teams().filter(roblox_faction_id__in=[r["faction_id"] for r in d["players"] if r["faction_id"]] + [d["winner_faction_id"]])} if faction else {}
+        tags = {t.tag.upper(): t for t in registered_teams().filter(tag__in=[r["faction_tag"] for r in d["players"] if r["faction_tag"]] + [d["winner_faction_tag"]])} if faction else {}
+
+        def site_team(r):
+            if r["faction_id"] in by_fid:
+                return by_fid[r["faction_id"]]
+            team = tags.get(r["faction_tag"].upper()) if r["faction_tag"] else None
+            player = linked.get(r["roblox_user_id"])
+            membership = getattr(player, "team_membership", None) if player else None
+            return team if team and membership is not None and membership.team_id == team.pk else None
+
+        winner_team = by_fid.get(d["winner_faction_id"]) or tags.get(d["winner_faction_tag"].upper())
         if d["mode"] == "SOLO":
             winner_of = lambda r: r["roblox_user_id"] == d["winner_roblox_user_id"]
+        elif d["winner_faction_id"]:
+            winner_of = lambda r: r["faction_id"] == d["winner_faction_id"]
         else:
-            winner_of = lambda r: bool(winner_tag) and r["faction_tag"].upper() == winner_tag
+            winner_of = lambda r: bool(d["winner_faction_tag"]) and r["faction_tag"].upper() == d["winner_faction_tag"].upper()
         places = placements(d["players"], winner_of)
         koh = KohRound.objects.create(round_id=d["round_id"], mode=d["mode"], place_id=d["place_id"], job_id=d["job_id"], duration_seconds=d["duration_seconds"], winner_roblox_user_id=d["winner_roblox_user_id"])
         rows = []
         for r in d["players"]:
             player = linked.get(r["roblox_user_id"])
-            team = tags.get(r["faction_tag"].upper()) if r["faction_tag"] else None
-            # A linked player only counts for a site faction they actually belong to.
-            membership = getattr(player, "team_membership", None) if player else None
-            if team and (membership is None or membership.team_id != team.pk):
-                team = None
+            team = site_team(r) if faction else None
             rows.append(KohParticipant(round=koh, roblox_user_id=r["roblox_user_id"], roblox_username=r["roblox_username"] or (player.roblox_username if player else ""), player=player, team=team, kills=r["kills"], deaths=r["deaths"], placement=places[r["roblox_user_id"]], is_winner=winner_of(r)))
         rows = KohParticipant.objects.bulk_create(rows)
         rows = list(koh.participants.select_related("team"))
         if d["mode"] == "SOLO":
             _rate_solo(koh, rows)
         else:
-            _rate_factions(koh, rows, winner_tag)
+            _rate_factions(koh, rows, winner_team.pk if winner_team else None)
         koh.save()
     return Response(round_payload(koh), status=201)
 

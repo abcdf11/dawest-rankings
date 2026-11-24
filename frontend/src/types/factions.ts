@@ -30,6 +30,12 @@ export interface FactionDetail extends TeamDetail {
   member_count: number;
   capacity: number;
   profile_url: string;
+  roblox_faction: RobloxFactionLink | null;
+}
+export interface RobloxFactionLink {
+  faction_id: string;
+  name: string;
+  linked_at: string;
 }
 export interface JoinRequest {
   id: string;

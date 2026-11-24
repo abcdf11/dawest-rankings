@@ -37,6 +37,13 @@ class Team(models.Model):
     rounds_won = models.PositiveIntegerField(default=0)
     rounds_lost = models.PositiveIntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
+    # Linked in-game faction (teams/roblox_link.py): the leader gets a short code on the site and
+    # enters it in the game's faction menu; one in-game faction per site faction.
+    roblox_faction_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
+    roblox_faction_name = models.CharField(max_length=64, blank=True)
+    roblox_linked_at = models.DateTimeField(null=True, blank=True)
+    roblox_link_code = models.CharField(max_length=12, blank=True, db_index=True)
+    roblox_link_code_expires = models.DateTimeField(null=True, blank=True)
     roster = models.ManyToManyField(Player, through="TeamMembership", related_name="teams")
 
     class Meta:

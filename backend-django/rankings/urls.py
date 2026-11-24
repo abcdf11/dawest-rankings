@@ -18,3 +18,5 @@ urlpatterns += [path("players/<slug:username>/audio/<slug:version>/", audio.serv
 urlpatterns += [path("roblox/", views.roblox_players), path("roblox/<int:user_id>/", views.roblox_player)]
 from . import koh
 urlpatterns += [path("game/koh/rounds/", koh.report_round), path("koh/rounds/", koh.recent_rounds)]
+from teams import roblox_link
+urlpatterns += [path("game/factions/link/", roblox_link.game_link), path("roblox/factions/", roblox_link.roblox_factions)]

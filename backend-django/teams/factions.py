@@ -75,7 +75,9 @@ def faction_payload(team):
             "description": registration.description if registration else "",
             "registered_at": team.registered_at, "leader": leader,
             "members": members, "member_count": len(members),
-            "capacity": MAX_MEMBERS, "profile_url": f"/factions/{team.username}"}
+            "capacity": MAX_MEMBERS, "profile_url": f"/factions/{team.username}",
+            "roblox_faction": {"faction_id": team.roblox_faction_id, "name": team.roblox_faction_name,
+                               "linked_at": team.roblox_linked_at} if team.roblox_faction_id else None}
 
 
 def request_payload(row, include_message=True):

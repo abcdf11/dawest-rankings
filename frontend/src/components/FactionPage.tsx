@@ -27,6 +27,7 @@ import { Brand, Sigil, TierBadge } from "./Shared";
 import { ProfileMediaImage } from "./ProfileMediaImage";
 import { ProfileAppearanceEditor } from "./ProfileAppearanceEditor";
 import { ThemeAudioEditor, ThemePlayer } from "./ThemeAudio";
+import { FactionRobloxLink } from "./FactionRobloxLink";
 import "../profile.css";
 import "../factions.css";
 
@@ -606,6 +607,23 @@ export default function FactionPage({
             audioTitle={faction.audio_title}
             refresh={[["faction", faction.username]]}
             profileLabel="your faction profile"
+          />
+        </section>
+      )}
+      {managing && (
+        <section
+          className="faction-section"
+          aria-labelledby="faction-roblox-title"
+        >
+          <div className="faction-section-heading">
+            <div>
+              <span className="eyebrow">LEADER DASHBOARD</span>
+              <h2 id="faction-roblox-title">In-game faction</h2>
+            </div>
+          </div>
+          <FactionRobloxLink
+            username={faction.username}
+            linked={faction.roblox_faction ?? null}
           />
         </section>
       )}
