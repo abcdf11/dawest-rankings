@@ -57,3 +57,5 @@ X_FRAME_OPTIONS = "DENY"
 ROBLOX_OAUTH_CLIENT_ID = os.getenv("ROBLOX_OAUTH_CLIENT_ID", "")
 ROBLOX_OAUTH_CLIENT_SECRET = os.getenv("ROBLOX_OAUTH_CLIENT_SECRET", "")
 ROBLOX_OAUTH_REDIRECT_URI = os.getenv("ROBLOX_OAUTH_REDIRECT_URI", "")
+# Shared secret the Roblox game servers send when reporting King of the Hill results.
+DAWEST_GAME_API_KEY = os.getenv("DAWEST_GAME_API_KEY", "")

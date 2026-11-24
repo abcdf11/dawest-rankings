@@ -71,6 +71,26 @@ export interface PlayerDetail extends Player {
   roblox_username?: string | null;
   history: History[];
   matches: Form[];
+  koh?: KohSummary;
+}
+export interface KohRoundResult {
+  round_id: string;
+  mode: "SOLO" | "FACTION";
+  ended_at: string;
+  kills: number;
+  deaths: number;
+  placement: number;
+  players: number;
+  is_winner: boolean;
+  rating_delta: number | null;
+}
+export interface KohSummary {
+  rounds: number;
+  wins: number;
+  kills: number;
+  deaths: number;
+  kd: number;
+  recent: KohRoundResult[];
 }
 export interface TeamDetail extends Team {
   history: History[];

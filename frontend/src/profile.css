@@ -1495,3 +1495,69 @@
   opacity: 0.5;
   cursor: default;
 }
+
+/* King of the Hill kills panel */
+.koh-totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+.koh-totals > div {
+  background: #ffffff06;
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+.koh-totals span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.koh-totals strong {
+  font-size: 22px;
+}
+.koh-totals small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.koh-rounds {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.koh-rounds th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  padding: 0 8px 8px;
+}
+.koh-rounds td {
+  border-top: 1px solid var(--line);
+  padding: 9px 8px;
+}
+.koh-rounds td small {
+  color: var(--muted);
+}
+.koh-rounds tr.is-winner td:nth-child(3) {
+  color: var(--gold);
+  font-weight: 600;
+}
+.koh-gain {
+  color: #4ade80;
+}
+.koh-loss {
+  color: #f87171;
+}
+.koh-unrated {
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  .koh-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .koh-rounds th:nth-child(2),
+  .koh-rounds td:nth-child(2) {
+    display: none;
+  }
+}

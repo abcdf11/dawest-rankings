@@ -54,3 +54,18 @@ class HistoryAdmin(admin.ModelAdmin):
 
 admin.site.site_header = "DaWest Competition Control"
 admin.site.site_title = "DaWest Admin"
+
+from .models import KohParticipant, KohRound
+
+class KohParticipantInline(admin.TabularInline):
+    model = KohParticipant
+    extra = 0
+    readonly_fields = ["roblox_user_id", "roblox_username", "player", "team", "kills", "deaths", "placement", "is_winner", "rating_before", "rating_after", "rating_delta"]
+    can_delete = False
+
+@admin.register(KohRound)
+class KohRoundAdmin(admin.ModelAdmin):
+    list_display = ["round_id", "mode", "ended_at", "rated", "rating_note"]
+    list_filter = ["mode", "rated"]
+    readonly_fields = ["round_id", "mode", "place_id", "job_id", "ended_at", "duration_seconds", "winner_roblox_user_id", "winner_team", "team_match", "rated", "rating_note"]
+    inlines = [KohParticipantInline]

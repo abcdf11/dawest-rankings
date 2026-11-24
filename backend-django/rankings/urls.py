@@ -16,3 +16,5 @@ urlpatterns += [path("events/<uuid:event_id>/entries/", entries.public_entries),
 from . import audio
 urlpatterns += [path("players/<slug:username>/audio/<slug:version>/", audio.serve_player_audio)]
 urlpatterns += [path("roblox/", views.roblox_players), path("roblox/<int:user_id>/", views.roblox_player)]
+from . import koh
+urlpatterns += [path("game/koh/rounds/", koh.report_round), path("koh/rounds/", koh.recent_rounds)]

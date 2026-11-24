@@ -310,3 +310,48 @@ class RankingEvent(models.Model):
     payload = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
+
+class KohRound(models.Model):
+    """One King of the Hill round reported by a game server; its kills and Elo result."""
+    class Mode(models.TextChoices):
+        SOLO = "SOLO", "Solo"
+        FACTION = "FACTION", "Faction vs faction"
+
+    round_id = models.CharField(max_length=80, unique=True)
+    mode = models.CharField(max_length=8, choices=Mode.choices)
+    place_id = models.BigIntegerField(null=True, blank=True)
+    job_id = models.CharField(max_length=64, blank=True)
+    ended_at = models.DateTimeField(default=timezone.now, db_index=True)
+    duration_seconds = models.PositiveIntegerField(default=0)
+    winner_roblox_user_id = models.BigIntegerField(null=True, blank=True)
+    winner_team = models.ForeignKey("teams.Team", null=True, blank=True, on_delete=models.PROTECT, related_name="koh_wins")
+    team_match = models.OneToOneField("teams.TeamMatch", null=True, blank=True, on_delete=models.PROTECT, related_name="koh_round")
+    rated = models.BooleanField(default=False)
+    rating_note = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-ended_at", "-pk"]
+
+    def __str__(self):
+        return f"KOH {self.mode} {self.round_id}"
+
+
+class KohParticipant(models.Model):
+    round = models.ForeignKey(KohRound, on_delete=models.CASCADE, related_name="participants")
+    roblox_user_id = models.BigIntegerField()
+    roblox_username = models.CharField(max_length=40, blank=True)
+    player = models.ForeignKey(Player, null=True, blank=True, on_delete=models.PROTECT, related_name="koh_results")
+    team = models.ForeignKey("teams.Team", null=True, blank=True, on_delete=models.PROTECT, related_name="koh_results")
+    kills = models.PositiveIntegerField(default=0)
+    deaths = models.PositiveIntegerField(default=0)
+    placement = models.PositiveSmallIntegerField(default=0)
+    is_winner = models.BooleanField(default=False)
+    rating_before = models.FloatField(null=True, blank=True)
+    rating_after = models.FloatField(null=True, blank=True)
+    rating_delta = models.FloatField(default=0)
+
+    class Meta:
+        ordering = ["placement", "-kills", "pk"]
+        constraints = [models.UniqueConstraint(fields=["round", "roblox_user_id"], name="koh_one_row_per_player")]

@@ -1,3 +1,4 @@
+import { KohPanel } from "./KohPanel";
 import { useCallback, useEffect, useState } from "react";
 import type { ReactNode, KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -589,6 +590,9 @@ export default function ProfilePage({ username }: { username: string }) {
                     own={ownProfile}
                   />
                 </section>
+                {player.koh && player.koh.rounds > 0 && (
+                  <KohPanel koh={player.koh} />
+                )}
                 {standout.length > 0 && (
                   <section className="profile-panel">
                     <div className="profile-section-title">
