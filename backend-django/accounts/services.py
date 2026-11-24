@@ -27,7 +27,7 @@ def roblox_payload(player):
 
 def user_payload(user):
     player = getattr(user, "player_profile", None)
-    return {"id": user.pk, "username": user.username, "is_developer": is_developer(user), "player": {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active, "is_restricted": player.is_restricted, "restriction_reason": player.restriction_reason, "roblox": roblox_payload(player)} if player else None, "roblox_login_available": bool(settings.ROBLOX_OAUTH_CLIENT_ID and settings.ROBLOX_OAUTH_CLIENT_SECRET)}
+    return {"id": user.pk, "username": user.username, "is_developer": is_developer(user), "player": {"id": player.pk, "username": player.username, "display_name": player.display_name, "region": player.region, "rating": player.rating, "rank": player.rank, "is_active": player.is_active, "is_restricted": player.is_restricted, "restriction_reason": player.restriction_reason, "roblox": roblox_payload(player)} if player else None, "roblox_link_available": bool(settings.DAWEST_GAME_API_KEY.strip())}
 
 
 def lock_ladders():

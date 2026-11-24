@@ -20,3 +20,5 @@ from . import koh
 urlpatterns += [path("game/koh/rounds/", koh.report_round), path("koh/rounds/", koh.recent_rounds)]
 from teams import roblox_link
 urlpatterns += [path("game/factions/link/", roblox_link.game_link), path("roblox/factions/", roblox_link.roblox_factions)]
+from accounts import roblox as account_roblox
+urlpatterns += [path("game/players/link/", account_roblox.game_link)]

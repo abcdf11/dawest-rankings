@@ -1478,22 +1478,56 @@
 .profile-roblox-notice.is-error {
   background: rgba(230, 90, 90, 0.12);
 }
-.profile-roblox-login,
+.profile-roblox-action,
 .profile-roblox-unlink {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
 }
+.profile-roblox-action,
 .profile-roblox-unlink {
   background: none;
   border: 0;
-  font: inherit;
+  margin-top: 0;
+  padding: 0.4rem 0;
+  font-family: inherit;
   color: inherit;
 }
+.profile-roblox-action:disabled,
 .profile-roblox-unlink:disabled {
   opacity: 0.5;
   cursor: default;
+}
+.profile-roblox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.profile-roblox-code {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  border: 1px solid var(--line, #ffffff20);
+  border-radius: 6px;
+  margin-bottom: 0.8rem;
+}
+.profile-roblox-code code {
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  user-select: all;
+}
+.profile-roblox-code p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .profile-roblox {
+    grid-column: 1 / -1;
+    order: -1;
+  }
 }
 
 /* King of the Hill kills panel */

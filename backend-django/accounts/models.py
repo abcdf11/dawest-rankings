@@ -32,3 +32,10 @@ class UsernameAlias(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(Lower("username"), name="previous_username_case_insensitive")]
+
+
+class RobloxLinkCode(models.Model):
+    """At most one pending verification per player; never store the usable code."""
+    player = models.OneToOneField("rankings.Player", primary_key=True, on_delete=models.CASCADE)
+    digest = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField()

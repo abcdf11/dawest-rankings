@@ -1,63 +1,94 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { BadgeCheck, Gamepad2, LoaderCircle, Unlink } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BadgeCheck, Copy, Gamepad2, LoaderCircle, Unlink } from "lucide-react";
 import { request } from "../lib/api";
 import type { SessionUser } from "../hooks/useSession";
 
-// what /api/v1/auth/roblox/callback/ sends back in ?roblox=
-const outcomes: Record<string, { tone: "ok" | "error"; text: string }> = {
-  linked: { tone: "ok", text: "Roblox account linked. Your rating now shows in-game." },
-  cancelled: { tone: "error", text: "Roblox login was cancelled." },
-  expired: { tone: "error", text: "That Roblox login expired. Please try again." },
-  failed: { tone: "error", text: "Roblox didn't respond. Please try again in a moment." },
-  taken: { tone: "error", text: "That Roblox account is already linked to another DaWest player." },
-  unavailable: { tone: "error", text: "Roblox login isn't set up on this site yet." },
-};
-
-// Roblox's error code from the failed exchange -> what the site owner should check
-function reasonHint(reason: string) {
-  if (reason === "token_invalid_client")
-    return "Roblox rejected the site's Client ID / Secret: check ROBLOX_OAUTH_CLIENT_ID and ROBLOX_OAUTH_CLIENT_SECRET in Render";
-  if (reason === "token_invalid_grant")
-    return "Roblox rejected the login code: check the redirect URL matches exactly, then try again";
-  if (reason.endsWith("_unreachable")) return "couldn't reach Roblox";
-  return `error: ${reason}`;
+interface LinkCode {
+  code: string;
+  expires_at: string;
+}
+interface LinkStatus {
+  available: boolean;
+  roblox: NonNullable<SessionUser["player"]>["roblox"];
+  expires_at: string | null;
 }
 
-/** Own profile only: Log in with Roblox to link the account the game reads your rating for. */
+const endpoint = "/auth/roblox/link/";
+
+/** Own profile: verify the account by entering a short-lived code inside DaWest. */
 export function RobloxLinkCard({ user }: { user: SessionUser }) {
-  const queryClient = useQueryClient();
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
-  const roblox = user.player?.roblox ?? null;
+  const client = useQueryClient();
+  const key = ["roblox-link", user.id];
+  const [code, setCode] = useState<LinkCode | null>(null);
+  const [now, setNow] = useState(Date.now());
+  const [notice, setNotice] = useState<string | null>(null);
+  const status = useQuery({
+    queryKey: key,
+    queryFn: () => request<LinkStatus>(endpoint),
+    refetchInterval: (query) =>
+      query.state.data?.expires_at && !query.state.data.roblox ? 3000 : false,
+    retry: false,
+  });
+  const roblox = status.data ? status.data.roblox : user.player?.roblox;
+  const available = status.data?.available ?? user.roblox_link_available;
+  const seconds = code ? Math.max(0, Math.ceil((Date.parse(code.expires_at) - now) / 1000)) : 0;
+  const refreshProfile = () => {
+    void client.invalidateQueries({ queryKey: ["session"] });
+    void client.invalidateQueries({ queryKey: ["player-profile"] });
+  };
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const outcome = url.searchParams.get("roblox");
-    if (!outcome) return;
-    const reason = url.searchParams.get("reason");
-    const base = outcomes[outcome] ?? null;
-    setNotice(
-      base && reason
-        ? { tone: base.tone, text: `${base.text} (${reasonHint(reason)})` }
-        : base,
-    );
-    url.searchParams.delete("roblox");
-    url.searchParams.delete("reason");
-    window.history.replaceState(null, "", url);
-    void queryClient.invalidateQueries({ queryKey: ["session"] });
-  }, [queryClient]);
+    if (!code) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [code]);
 
-  async function unlink() {
-    setBusy(true);
+  useEffect(() => {
+    if ((roblox?.user_id ?? null) !== (user.player?.roblox?.user_id ?? null)) {
+      void client.invalidateQueries({ queryKey: ["session"] });
+      void client.invalidateQueries({ queryKey: ["player-profile"] });
+    }
+    if (roblox) setCode(null);
+  }, [roblox?.user_id, user.player?.roblox?.user_id, client]);
+
+  const getCode = useMutation({
+    mutationFn: () => request<LinkCode>(endpoint, { method: "POST" }),
+    onMutate: () => setNotice(null),
+    onSuccess: (next) => {
+      setNow(Date.now());
+      setCode(next);
+      client.setQueryData<LinkStatus>(key, { available: true, roblox: null, expires_at: next.expires_at });
+    },
+  });
+  const cancel = useMutation({
+    mutationFn: () => request<LinkStatus>(endpoint, { method: "DELETE" }),
+    onMutate: () => setNotice(null),
+    onSuccess: (next) => {
+      setCode(null);
+      client.setQueryData(key, next);
+    },
+  });
+  const unlink = useMutation({
+    mutationFn: () => request("/auth/roblox/unlink/", { method: "POST" }),
+    onMutate: () => setNotice(null),
+    onSuccess: () => {
+      setCode(null);
+      setNotice("Roblox account unlinked.");
+      client.setQueryData<LinkStatus>(key, { available: available !== false, roblox: null, expires_at: null });
+      refreshProfile();
+    },
+  });
+  const busy = getCode.isPending || cancel.isPending || unlink.isPending;
+  const error = getCode.error ?? cancel.error ?? unlink.error ?? status.error;
+
+  async function copyCode() {
+    if (!code || !seconds) return;
     try {
-      await request("/auth/roblox/unlink/", { method: "POST" });
-      setNotice({ tone: "ok", text: "Roblox account unlinked." });
-      await queryClient.invalidateQueries({ queryKey: ["session"] });
+      await navigator.clipboard.writeText(code.code);
+      setNotice("Link code copied.");
     } catch {
-      setNotice({ tone: "error", text: "Couldn't unlink right now. Please try again." });
-    } finally {
-      setBusy(false);
+      setNotice("Select the code and copy it to your clipboard.");
     }
   }
 
@@ -65,37 +96,59 @@ export function RobloxLinkCard({ user }: { user: SessionUser }) {
     <section className="profile-side-card profile-roblox">
       <div className="profile-section-title">
         <h2>Roblox account</h2>
-        <Gamepad2 size={17} />
+        <Gamepad2 size={17} aria-hidden />
       </div>
-      {notice && (
-        <p className={`profile-roblox-notice is-${notice.tone}`} role="status">
-          {notice.text}
-        </p>
-      )}
+      {notice && <p className="profile-roblox-notice" role="status">{notice}</p>}
       {roblox ? (
         <>
           <p className="profile-roblox-linked">
-            <BadgeCheck size={16} /> Linked to <strong>{roblox.display_name || roblox.username}</strong>
+            <BadgeCheck size={16} aria-hidden /> Linked to <strong>{roblox.display_name || roblox.username}</strong>
             <small>@{roblox.username}</small>
           </p>
-          <p className="profile-roblox-help">Your DaWest rating syncs to the game automatically when you join.</p>
-          <button type="button" className="profile-side-link profile-roblox-unlink" onClick={unlink} disabled={busy}>
-            {busy ? <LoaderCircle size={15} className="profile-spinner" /> : <Unlink size={15} />} Unlink Roblox
+          <p className="profile-roblox-help">Your DaWest rating syncs to the game automatically.</p>
+          <button type="button" className="profile-side-link profile-roblox-unlink" onClick={() => unlink.mutate()} disabled={busy}>
+            {unlink.isPending ? <LoaderCircle size={15} className="profile-spinner" /> : <Unlink size={15} />} Unlink Roblox
           </button>
         </>
       ) : (
         <>
-          <p className="profile-roblox-help">Link your Roblox account so your rating shows up in the DaWest game.</p>
-          {user.roblox_login_available === false ? (
-            <p className="profile-roblox-notice is-error">Roblox login isn't set up on this site yet.</p>
+          <p className="profile-roblox-help">Get a code, then join DaWest on the Roblox account you want to link.</p>
+          {available === false ? (
+            <p className="profile-roblox-notice is-error">Roblox account linking is temporarily unavailable.</p>
           ) : (
-            // a full page navigation: the server redirects to Roblox's own login and back
-            <a href="/api/v1/auth/roblox/start/" className="profile-side-link profile-roblox-login">
-              <Gamepad2 size={15} /> Log in with Roblox
-            </a>
+            <>
+              {code && (
+                <div className="profile-roblox-code">
+                  <span className="eyebrow">YOUR LINK CODE</span>
+                  <code aria-label="Roblox link code">{code.code}</code>
+                  <p role="timer" aria-label="Code expires in">
+                    {seconds ? `Expires in ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}` : "Code expired. Get a new link code."}
+                  </p>
+                  <button type="button" className="profile-side-link profile-roblox-action" onClick={copyCode} disabled={!seconds || busy}>
+                    <Copy size={15} aria-hidden /> Copy code
+                  </button>
+                </div>
+              )}
+              <p className="profile-roblox-help">
+                In the game, open <strong>Settings → Ranked</strong>, enter your code and press <strong>Link account</strong>.
+                This page updates when verification succeeds. Keep your code private.
+              </p>
+              <div className="profile-roblox-actions">
+                <button type="button" className="profile-side-link profile-roblox-action" onClick={() => getCode.mutate()} disabled={busy || status.isPending}>
+                  {getCode.isPending ? <LoaderCircle size={15} className="profile-spinner" /> : <Gamepad2 size={15} />}
+                  {code || status.data?.expires_at ? "New link code" : "Get link code"}
+                </button>
+                {(code || status.data?.expires_at) && (
+                  <button type="button" className="profile-side-link profile-roblox-action" onClick={() => cancel.mutate()} disabled={busy}>
+                    Cancel linking
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </>
       )}
+      {error && <p className="profile-roblox-notice is-error" role="alert">{error.message}</p>}
     </section>
   );
 }

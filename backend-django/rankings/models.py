@@ -47,7 +47,7 @@ class Player(models.Model):
     kd_ratio = models.FloatField(default=1)
     rounds_won = models.PositiveIntegerField(default=0)
     rounds_lost = models.PositiveIntegerField(default=0)
-    # Linked Roblox account (Log in with Roblox, accounts/roblox.py). One Roblox account per player.
+    # Linked Roblox account (in-game verification code, accounts/roblox.py). One Roblox account per player.
     roblox_user_id = models.BigIntegerField(null=True, blank=True, unique=True)
     roblox_username = models.CharField(max_length=40, blank=True)
     roblox_display_name = models.CharField(max_length=64, blank=True)

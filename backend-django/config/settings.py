@@ -53,9 +53,5 @@ if os.getenv("TRUST_PROXY_HEADERS", "0") == "1":
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-# Log in with Roblox (accounts/roblox.py): OAuth app from the Roblox Creator Dashboard
-ROBLOX_OAUTH_CLIENT_ID = os.getenv("ROBLOX_OAUTH_CLIENT_ID", "")
-ROBLOX_OAUTH_CLIENT_SECRET = os.getenv("ROBLOX_OAUTH_CLIENT_SECRET", "")
-ROBLOX_OAUTH_REDIRECT_URI = os.getenv("ROBLOX_OAUTH_REDIRECT_URI", "")
-# Shared secret the Roblox game servers send when reporting King of the Hill results.
-DAWEST_GAME_API_KEY = os.getenv("DAWEST_GAME_API_KEY", "")
+# Shared server credential for account/faction linking and King of the Hill results.
+DAWEST_GAME_API_KEY = os.getenv("DAWEST_GAME_API_KEY", "").strip()

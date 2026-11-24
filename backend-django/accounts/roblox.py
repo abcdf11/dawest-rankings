@@ -1,173 +1,135 @@
-"""Log in with Roblox: links a member's Roblox account to their DaWest player profile.
+"""Link Roblox accounts using a one-time website code redeemed by a trusted game server.
 
-Flow (OAuth 2.0 authorization code + PKCE, https://create.roblox.com/docs/cloud/auth/oauth2-overview):
-  1. GET  /api/v1/auth/roblox/start/     signed-in member -> redirected to Roblox's consent page
-  2. GET  /api/v1/auth/roblox/callback/  Roblox -> here with ?code&state; we swap the code for a token,
-                                         read the Roblox user (openid profile) and store it on the Player
-  3. POST /api/v1/auth/roblox/unlink/    removes the link
-The game reads ratings by Roblox user id from GET /api/v1/roblox/<user_id>/ (rankings.views).
-
-Settings (environment): ROBLOX_OAUTH_CLIENT_ID, ROBLOX_OAUTH_CLIENT_SECRET and optionally
-ROBLOX_OAUTH_REDIRECT_URI (defaults to <this site>/api/v1/auth/roblox/callback/; it must match the
-redirect URL registered on the OAuth app in the Roblox Creator Dashboard exactly).
+The browser never submits a Roblox identity. The game takes it from the connected Player
+and authenticates with DAWEST_GAME_API_KEY (the existing KOH/faction server credential).
+Only code digests are stored; issuing a new code or unlinking invalidates the previous one.
 """
-import base64
 import hashlib
-import json
-import logging
-import re
 import secrets
-import urllib.error
-import urllib.parse
-import urllib.request
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
-from django.http import HttpResponseRedirect
 from django.utils import timezone
-from django.views.decorators.http import require_GET
-from rest_framework.decorators import api_view, permission_classes
+from django.views.decorators.cache import never_cache
+from rest_framework import serializers
+from rest_framework.decorators import api_view, authentication_classes, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 
+from rankings.koh import GameServerKey, GameThrottle
 from rankings.models import Player
-from .models import AuditEntry
+from .models import AuditEntry, RobloxLinkCode
+from .services import roblox_payload
 
-AUTHORIZE_URL = "https://apis.roblox.com/oauth/v1/authorize"
-TOKEN_URL = "https://apis.roblox.com/oauth/v1/token"
-USERINFO_URL = "https://apis.roblox.com/oauth/v1/userinfo"
-SESSION_KEY = "roblox_oauth"
-log = logging.getLogger(__name__)
-
-
-class RobloxError(Exception):
-    """A failed exchange with Roblox. `code` is safe to show (an OAuth error code or HTTP status, never a secret)."""
-
-    def __init__(self, code):
-        super().__init__(code)
-        self.code = code
+CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+CODE_LENGTH = 10
+CODE_LIFETIME = timedelta(minutes=10)
 
 
-def client_id():
-    return (settings.ROBLOX_OAUTH_CLIENT_ID or "").strip()
-
-
-def client_secret():
-    return (settings.ROBLOX_OAUTH_CLIENT_SECRET or "").strip()
+def code_digest(code):
+    return hashlib.sha256(code.encode("ascii")).hexdigest()
 
 
 def configured():
-    return bool(client_id() and client_secret())
+    return bool(settings.DAWEST_GAME_API_KEY.strip())
 
 
-def redirect_uri(request):
-    return (settings.ROBLOX_OAUTH_REDIRECT_URI or "").strip() or request.build_absolute_uri("/api/v1/auth/roblox/callback/")
+class LinkCodeThrottle(UserRateThrottle):
+    scope = "roblox_link_code"
+    rate = "20/hour"
+
+    def allow_request(self, request, view):
+        return request.method != "POST" or super().allow_request(request, view)
 
 
-def _back(player, outcome, reason=""):
-    """Back to the member's profile with ?roblox=<outcome>[&reason=<code>] for the page to show."""
-    path = f"/players/{player.username}" if player else "/profile"
-    extra = f"&{urllib.parse.urlencode({'reason': reason})}" if reason else ""
-    return HttpResponseRedirect(f"{path}?roblox={outcome}{extra}")
+def _player(user, lock=False):
+    qs = Player.objects.filter(user=user, is_active=True, user__is_active=True)
+    return (qs.select_for_update() if lock else qs).first()
 
 
-def _player(user):
-    return getattr(user, "player_profile", None) if user.is_authenticated else None
-
-
-def _call(stage, req):
-    """Run a request to Roblox; on failure raise RobloxError("<stage>_<oauth error or HTTP status>")."""
-    try:
-        with urllib.request.urlopen(req, timeout=15) as res:
-            return json.loads(res.read().decode())
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode(errors="replace")[:500]
-        try:
-            err = str(json.loads(body).get("error") or exc.code)
-        except (ValueError, AttributeError):
-            err = str(exc.code)
-        log.warning("Roblox OAuth %s failed: HTTP %s %s", stage, exc.code, body)
-        raise RobloxError(f"{stage}_{re.sub(r'[^a-z0-9_]', '', err.lower())[:40]}") from exc
-    except (urllib.error.URLError, TimeoutError, ValueError) as exc:
-        log.warning("Roblox OAuth %s failed: %r", stage, exc)
-        raise RobloxError(f"{stage}_unreachable") from exc
-
-
-HEADERS = {"Accept": "application/json", "User-Agent": "DaWestRankings/1.0"}
-
-
-def _post_form(url, data):
-    return _call("token", urllib.request.Request(url, data=urllib.parse.urlencode(data).encode(), method="POST", headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"}))
-
-
-def _get_json(url, token):
-    return _call("userinfo", urllib.request.Request(url, headers={**HEADERS, "Authorization": f"Bearer {token}"}))
-
-
-def roblox_identity(code, verifier):
-    """Swap the authorization code for an access token and read the Roblox user. Returns (id, username, display name)."""
-    token = _post_form(TOKEN_URL, {"client_id": client_id(), "client_secret": client_secret(), "grant_type": "authorization_code", "code": code, "code_verifier": verifier})
-    info = _get_json(USERINFO_URL, token["access_token"])
-    user_id = int(info["sub"])
-    username = str(info.get("preferred_username") or info.get("name") or "")[:40]
-    display = str(info.get("nickname") or info.get("name") or username)[:64]
-    return user_id, username, display
-
-
-@require_GET
-def start(request):
-    player = _player(request.user)
+@never_cache
+@api_view(["GET", "POST", "DELETE"])
+@permission_classes([IsAuthenticated])
+@throttle_classes([UserRateThrottle, LinkCodeThrottle])
+@transaction.atomic
+def link(request):
+    """GET: private status. POST: new code. DELETE: cancel pending verification."""
+    player = _player(request.user, lock=request.method != "GET")
     if player is None:
-        return HttpResponseRedirect("/login?next=/profile")
-    if not configured():
-        return _back(player, "unavailable")
-    state = secrets.token_urlsafe(32)
-    verifier = secrets.token_urlsafe(64)
-    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
-    request.session[SESSION_KEY] = {"state": state, "verifier": verifier, "player": player.pk}
-    params = {"client_id": client_id(), "redirect_uri": redirect_uri(request), "scope": "openid profile", "response_type": "code", "state": state, "code_challenge": challenge, "code_challenge_method": "S256"}
-    return HttpResponseRedirect(f"{AUTHORIZE_URL}?{urllib.parse.urlencode(params)}")
+        return Response({"detail": "Only active player accounts can link Roblox."}, status=400)
+    if request.method == "DELETE":
+        RobloxLinkCode.objects.filter(player=player).delete()
+    if request.method == "POST":
+        if not configured():
+            return Response({"detail": "Roblox account linking is temporarily unavailable."}, status=503)
+        if player.roblox_user_id:
+            return Response({"detail": "Unlink your current Roblox account before linking another."}, status=409)
+        code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
+        expires_at = timezone.now() + CODE_LIFETIME
+        RobloxLinkCode.objects.update_or_create(player=player, defaults={"digest": code_digest(code), "expires_at": expires_at})
+        return Response({"code": code, "expires_at": expires_at}, status=201)
+    pending = RobloxLinkCode.objects.filter(player=player, expires_at__gt=timezone.now()).first()
+    return Response({"available": configured(), "roblox": roblox_payload(player), "expires_at": pending.expires_at if pending else None})
 
 
-@require_GET
-def callback(request):
-    player = _player(request.user)
-    pending = request.session.pop(SESSION_KEY, None)
-    if player is None:
-        return HttpResponseRedirect("/login?next=/profile")
-    if request.GET.get("error"):
-        return _back(player, "cancelled")
-    state = request.GET.get("state", "")
-    code = request.GET.get("code", "")
-    # the state must be the one we just issued, for this same signed-in player (stops forged links)
-    if not (pending and code and secrets.compare_digest(str(pending.get("state", "")), state) and pending.get("player") == player.pk):
-        return _back(player, "expired")
-    try:
-        user_id, username, display = roblox_identity(code, pending["verifier"])
-    except RobloxError as exc:
-        return _back(player, "failed", exc.code)
-    except (KeyError, ValueError, TypeError) as exc:
-        log.warning("Roblox OAuth gave an unexpected answer: %r", exc)
-        return _back(player, "failed", "unexpected_response")
-    if Player.objects.filter(roblox_user_id=user_id).exclude(pk=player.pk).exists():
-        return _back(player, "taken")
+class GameLinkInput(serializers.Serializer):
+    code = serializers.CharField(max_length=32)
+    roblox_user_id = serializers.IntegerField(min_value=1, max_value=2**63 - 1)
+    roblox_username = serializers.RegexField(r"^[A-Za-z0-9_]{1,40}$")
+    roblox_display_name = serializers.CharField(max_length=64)
+
+    def validate_code(self, value):
+        value = value.strip().upper().replace("-", "").replace(" ", "")
+        if len(value) != CODE_LENGTH or any(c not in CODE_ALPHABET for c in value):
+            raise serializers.ValidationError("Enter the 10-character code from your website profile.")
+        return value
+
+
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([GameServerKey])
+@throttle_classes([GameThrottle])
+def game_link(request):
+    form = GameLinkInput(data=request.data)
+    form.is_valid(raise_exception=True)
+    data = form.validated_data
+    digest = code_digest(data["code"])
+    # Resolve the owner, then lock Player first, matching issue/cancel/unlink lock order.
+    player_id = RobloxLinkCode.objects.filter(digest=digest).values_list("player_id", flat=True).first()
     try:
         with transaction.atomic():
-            Player.objects.filter(pk=player.pk).update(roblox_user_id=user_id, roblox_username=username, roblox_display_name=display, roblox_linked_at=timezone.now())
-            AuditEntry.objects.create(actor=request.user, action="player.roblox_linked", target_type="player", target_id=str(player.pk), details={"roblox_user_id": user_id, "roblox_username": username})
+            player = Player.objects.select_for_update().filter(pk=player_id, is_active=True, user__is_active=True).first()
+            pending = RobloxLinkCode.objects.select_for_update().filter(player_id=player_id, digest=digest, expires_at__gt=timezone.now()).first() if player else None
+            if pending is None:
+                return Response({"ok": False, "detail": "That code is wrong or expired. Get a new one on your website profile."}, status=404)
+            if player.roblox_user_id or Player.objects.filter(roblox_user_id=data["roblox_user_id"]).exists():
+                return Response({"ok": False, "detail": "This player or Roblox account is already linked. Unlink it on the website first."}, status=409)
+            player.roblox_user_id = data["roblox_user_id"]
+            player.roblox_username = data["roblox_username"]
+            player.roblox_display_name = data["roblox_display_name"]
+            player.roblox_linked_at = timezone.now()
+            player.save(update_fields=["roblox_user_id", "roblox_username", "roblox_display_name", "roblox_linked_at"])
+            pending.delete()
+            AuditEntry.objects.create(actor_id=player.user_id, action="player.roblox_linked", target_type="player", target_id=str(player.pk),
+                                      details={"roblox_user_id": player.roblox_user_id, "roblox_username": player.roblox_username, "method": "game_code"})
     except IntegrityError:
-        return _back(player, "taken")
-    return _back(player, "linked")
+        # The unique Roblox user id also protects concurrent claims by different site players.
+        return Response({"ok": False, "detail": "That Roblox account is already linked to another DaWest player."}, status=409)
+    return Response({"ok": True, "username": player.username})
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def unlink(request):
-    player = _player(request.user)
+    player = _player(request.user, lock=True)
     if player is None:
-        return Response({"detail": "Only player accounts can link Roblox."}, status=400)
+        return Response({"detail": "Only active player accounts can link Roblox."}, status=400)
     old = player.roblox_user_id
     Player.objects.filter(pk=player.pk).update(roblox_user_id=None, roblox_username="", roblox_display_name="", roblox_linked_at=None)
+    RobloxLinkCode.objects.filter(player=player).delete()
     if old:
         AuditEntry.objects.create(actor=request.user, action="player.roblox_unlinked", target_type="player", target_id=str(player.pk), details={"roblox_user_id": old})
     return Response({"linked": False})

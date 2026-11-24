@@ -70,6 +70,51 @@ The local database is **backend-django/db.sqlite3**, preserved across restarts. 
 
 ## Authentication and permissions
 
+### Roblox account linking
+
+Roblox linking uses one-time in-game verification codes. It does not use an OAuth app,
+client ID, client secret, or callback URL. Existing verified links remain valid.
+
+On your own profile, press **Get link code**. Join DaWest using the Roblox account you
+want to link, open the gear menu, choose **Ranked**, enter the code, and press **Link account**.
+The website detects completion automatically. Codes expire after 10 minutes, work once,
+and are invalidated by generating a replacement, cancelling, or unlinking. Unlink an
+existing account before linking a different one. Treat codes as private.
+
+The website and game reuse the existing KOH/faction credential:
+
+- Set `DAWEST_GAME_API_KEY` on the backend (Render environment or local server environment).
+- Store that same value as the Roblox experience secret `DaWestGameKey`, restricted to
+  `dawest-rankings.onrender.com`. Keep it out of client scripts and `VITE_*` variables.
+- Enable **Allow HTTP Requests** in the experience. `DaWestAccountLink` and `DaWestSite`
+  run in `ServerScriptService`; the client submits only the code. The server takes
+  `UserId`, username, and display name directly from the connected `Player`.
+- Deploy the backend and frontend, then publish the matching Studio scripts. Startup
+  migrations add `accounts.RobloxLinkCode`; they preserve all existing player links.
+  The old `ROBLOX_OAUTH_*` environment variables can be removed.
+
+API routes under `/api/v1/`:
+
+| Method | Route | Access / purpose |
+| --- | --- | --- |
+| GET | `auth/roblox/link/` | Signed-in player; private status (never returns the usable code) |
+| POST | `auth/roblox/link/` | Signed-in player + CSRF; create/replace a code, 20 per hour |
+| DELETE | `auth/roblox/link/` | Signed-in player + CSRF; cancel a pending code |
+| POST | `auth/roblox/unlink/` | Signed-in player + CSRF; clear the link and pending code |
+| POST | `game/players/link/` | Trusted server, `Authorization: Bearer <DAWEST_GAME_API_KEY>` |
+
+The game POST body is `{code, roblox_user_id, roblox_username, roblox_display_name}`.
+The backend stores only the code's SHA-256 digest. It checks expiry, active account
+status, and unique Roblox identity, and consumes the code in the same transaction as
+the link and audit entry. Browser sessions cannot call the game route. OAuth start
+and callback routes have been removed. Public `roblox/<user_id>/` and `roblox/?ids=...`
+rating lookups are unchanged.
+
+The new game server script is mirrored in `roblox/DaWestAccountLink.server.luau`.
+In the Studio place, `SettingsController` supplies the code field and result feedback,
+`DaWestRankings` listens for `DaWestLinkConfirmedAt` to refresh the rating, and
+`DaWestSite` bounds authenticated requests with a 15-second timeout.
+
 Players can customize their own picture and banner through **Customize profile** on `/profile`. PNG, JPG, static WebP, and GIF uploads are supported, with a live preview and remove/restore-default controls. The server center-crops and resizes pictures to **256 × 256** and banners to **1280 × 240**. Animated GIF frames, frame durations, transparency, and loop settings are preserved; static images become optimized WebP files. Reduced-motion visitors receive a still first-frame image.
 
 Each image is limited to **8 MB**, **16 megapixels per source frame**, and **120 GIF frames**, with an additional total decoding budget. Images are validated by their contents and re-encoded without EXIF metadata. The authenticated session determines the owner; the upload endpoint cannot target another player. Both selected images are processed before the database transaction, so a failed upload does not partially replace the existing profile.

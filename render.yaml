@@ -29,14 +29,9 @@ services:
         value: "1"
       - key: TRUST_PROXY_HEADERS
         value: "1"
-      # Log in with Roblox: create an OAuth app in the Roblox Creator Dashboard (scopes: openid, profile)
-      # and paste its client id / secret here in the Render dashboard (not committed)
-      - key: ROBLOX_OAUTH_CLIENT_ID
+      # Match the Roblox experience's DaWestGameKey secret (account/faction links and KOH).
+      - key: DAWEST_GAME_API_KEY
         sync: false
-      - key: ROBLOX_OAUTH_CLIENT_SECRET
-        sync: false
-      - key: ROBLOX_OAUTH_REDIRECT_URI
-        value: https://dawest-rankings.onrender.com/api/v1/auth/roblox/callback/
       - key: USE_SQLITE
         value: "0"
       - key: USE_REDIS

@@ -1,118 +1,232 @@
-import io
-import urllib.error
+from datetime import timedelta
 from unittest.mock import patch
-from urllib.parse import parse_qs, urlparse
 
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import IntegrityError
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from rankings.models import Player
+from .models import AuditEntry, RobloxLinkCode
+from .roblox import code_digest
 from .services import create_player_account
 
 PASSWORD = "Frontier!River87956"
-OAUTH = dict(ROBLOX_OAUTH_CLIENT_ID="client-123", ROBLOX_OAUTH_CLIENT_SECRET="secret-xyz", ROBLOX_OAUTH_REDIRECT_URI="https://dawest.test/api/v1/auth/roblox/callback/", USE_REDIS=False)
+LINK = "/api/v1/auth/roblox/link/"
+REDEEM = "/api/v1/game/players/link/"
 
 
 def make_member(username):
     return create_player_account({"username": username, "display_name": username.title(), "region": "NA", "password": PASSWORD})
 
 
-@override_settings(**OAUTH)
+@override_settings(DAWEST_GAME_API_KEY="test-game-key", USE_REDIS=False)
 class RobloxLinkTests(TestCase):
     def setUp(self):
         cache.clear()
         self.user = make_member("gunslinger")
         self.client = APIClient()
         self.client.force_login(self.user)
+        self.game = APIClient()
+        self.game.credentials(HTTP_AUTHORIZATION="Bearer test-game-key")
 
-    def start(self):
-        res = self.client.get("/api/v1/auth/roblox/start/")
-        self.assertEqual(res.status_code, 302)
-        url = urlparse(res["Location"])
-        self.assertEqual(url.netloc, "apis.roblox.com")
-        q = parse_qs(url.query)
-        self.assertEqual(q["client_id"], ["client-123"])
-        self.assertEqual(q["redirect_uri"], [OAUTH["ROBLOX_OAUTH_REDIRECT_URI"]])
-        self.assertEqual(q["code_challenge_method"], ["S256"])
-        self.assertEqual(q["scope"], ["openid profile"])
-        return q["state"][0]
+    def code(self):
+        response = self.client.post(LINK)
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertIn("no-store", response["Cache-Control"])
+        return response.json()["code"]
 
-    @patch("accounts.roblox.roblox_identity", return_value=(123456, "RobloxGuy", "Roblox Guy"))
-    def test_link_flow_stores_roblox_account(self, identity):
-        state = self.start()
-        res = self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": state})
-        self.assertEqual(res.status_code, 302)
-        self.assertEqual(res["Location"], "/players/gunslinger?roblox=linked")
-        p = Player.objects.get(user=self.user)
-        self.assertEqual((p.roblox_user_id, p.roblox_username, p.roblox_display_name), (123456, "RobloxGuy", "Roblox Guy"))
-        self.assertIsNotNone(p.roblox_linked_at)
-        session = self.client.get("/api/v1/auth/session/").json()
-        self.assertEqual(session["user"]["player"]["roblox"]["user_id"], 123456)
-        self.assertTrue(session["user"]["roblox_login_available"])
+    def redeem(self, code, /, **extra):
+        return self.game.post(REDEEM, {"code": code, "roblox_user_id": 123456,
+                                      "roblox_username": "RobloxGuy", "roblox_display_name": "Roblox Guy", **extra}, format="json")
 
-    @patch("accounts.roblox.roblox_identity", return_value=(1, "x", "x"))
-    def test_wrong_state_is_rejected(self, identity):
-        self.start()
-        res = self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": "forged"})
-        self.assertEqual(res["Location"], "/players/gunslinger?roblox=expired")
-        identity.assert_not_called()
+    def test_link_flow_stores_identity_and_updates_existing_public_lookup(self):
+        code = self.code()
+        self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
+        response = self.redeem(code)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(response.json()["ok"])
+        player = Player.objects.get(user=self.user)
+        self.assertEqual((player.roblox_user_id, player.roblox_username, player.roblox_display_name),
+                         (123456, "RobloxGuy", "Roblox Guy"))
+        self.assertIsNotNone(player.roblox_linked_at)
+        self.assertFalse(RobloxLinkCode.objects.exists())
+        self.assertEqual(self.client.get(LINK).json()["roblox"]["user_id"], 123456)
+        session = self.client.get("/api/v1/auth/session/").json()["user"]
+        self.assertEqual(session["player"]["roblox"]["user_id"], 123456)
+        self.assertTrue(session["roblox_link_available"])
+        self.assertTrue(APIClient().get("/api/v1/roblox/123456/").json()["linked"])
+        self.assertTrue(APIClient().get("/api/v1/roblox/", {"ids": "123456"}).json()["players"]["123456"]["linked"])
+        audit = AuditEntry.objects.get(action="player.roblox_linked")
+        self.assertEqual(audit.actor_id, self.user.pk)
+        self.assertEqual(audit.details["method"], "game_code")
+        self.assertNotIn(code, str(audit.details))
+
+    def test_only_a_digest_is_persisted_and_status_never_discloses_the_code(self):
+        code = self.code()
+        pending = RobloxLinkCode.objects.get()
+        self.assertEqual(pending.digest, code_digest(code))
+        self.assertNotIn(code, pending.digest)
+        response = self.client.get(LINK)
+        self.assertIn("no-store", response["Cache-Control"])
+        self.assertNotIn(code, response.content.decode())
+        self.assertIsNotNone(response.json()["expires_at"])
+
+    def test_code_is_single_use(self):
+        code = self.code()
+        self.assertEqual(self.redeem(code).status_code, 200)
+        self.assertEqual(self.redeem(code, roblox_user_id=999).status_code, 404)
+        self.assertEqual(Player.objects.get(user=self.user).roblox_user_id, 123456)
+        self.assertEqual(AuditEntry.objects.filter(action="player.roblox_linked").count(), 1)
+
+    def test_new_code_invalidates_previous_code(self):
+        old = self.code()
+        new = self.code()
+        self.assertNotEqual(new, old)
+        self.assertEqual(self.redeem(old).status_code, 404)
+        self.assertEqual(self.redeem(new).status_code, 200)
+
+    def test_expired_code_is_rejected(self):
+        code = self.code()
+        RobloxLinkCode.objects.update(expires_at=timezone.now() - timedelta(seconds=1))
+        self.assertEqual(self.redeem(code).status_code, 404)
+        self.assertIsNone(self.client.get(LINK).json()["expires_at"])
         self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
 
-    @patch("accounts.roblox.roblox_identity", return_value=(1, "x", "x"))
-    def test_state_is_single_use(self, identity):
-        state = self.start()
-        self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": state})
-        res = self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": state})
-        self.assertEqual(res["Location"], "/players/gunslinger?roblox=expired")
+    def test_cancel_invalidates_pending_code(self):
+        code = self.code()
+        self.assertEqual(self.client.delete(LINK).status_code, 200)
+        self.assertEqual(self.redeem(code).status_code, 404)
 
-    @patch("accounts.roblox.roblox_identity", return_value=(777, "Shared", "Shared"))
-    def test_roblox_account_can_only_link_once(self, identity):
+    def test_wrong_code_is_rejected_without_consuming_valid_code(self):
+        code = self.code()
+        wrong = ("A" if code[0] != "A" else "B") + code[1:]
+        self.assertEqual(self.redeem(wrong).status_code, 404)
+        self.assertEqual(self.redeem(code).status_code, 200)
+
+    def test_lowercase_and_display_separators_are_accepted(self):
+        code = self.code().lower()
+        self.assertEqual(self.redeem(f" {code[:5]}-{code[5:]} ").status_code, 200)
+
+    def test_roblox_account_can_only_link_once(self):
         other = make_member("otherplayer")
-        Player.objects.filter(user=other).update(roblox_user_id=777)
-        state = self.start()
-        res = self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": state})
-        self.assertEqual(res["Location"], "/players/gunslinger?roblox=taken")
+        Player.objects.filter(user=other).update(roblox_user_id=123456)
+        self.assertEqual(self.redeem(self.code()).status_code, 409)
+        self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
+        self.assertTrue(RobloxLinkCode.objects.exists())
+
+    def test_existing_link_cannot_be_silently_replaced(self):
+        code = self.code()
+        Player.objects.filter(user=self.user).update(roblox_user_id=555)
+        self.assertEqual(self.client.post(LINK).status_code, 409)
+        self.assertEqual(self.redeem(code).status_code, 409)
+        self.assertEqual(Player.objects.get(user=self.user).roblox_user_id, 555)
+
+    def test_concurrent_uniqueness_error_rolls_back_and_keeps_code(self):
+        code = self.code()
+        with patch("accounts.roblox.Player.save", side_effect=IntegrityError("unique constraint")):
+            self.assertEqual(self.redeem(code).status_code, 409)
+        self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
+        self.assertTrue(RobloxLinkCode.objects.exists())
+        self.assertFalse(AuditEntry.objects.filter(action="player.roblox_linked").exists())
+
+    def test_browser_session_cannot_redeem_a_code(self):
+        code = self.code()
+        for client in (APIClient(), self.client):
+            response = client.post(REDEEM, {"code": code, "roblox_user_id": 999}, format="json")
+            self.assertEqual(response.status_code, 403)
         self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
 
-    def test_rejected_secret_reports_reason(self):
-        body = io.BytesIO(b'{"error":"invalid_client","error_description":"Client authentication failed"}')
-        err = urllib.error.HTTPError("https://apis.roblox.com/oauth/v1/token", 401, "Unauthorized", {}, body)
-        state = self.start()
-        with patch("accounts.roblox.urllib.request.urlopen", side_effect=err):
-            res = self.client.get("/api/v1/auth/roblox/callback/", {"code": "abc", "state": state})
-        self.assertEqual(res["Location"], "/players/gunslinger?roblox=failed&reason=token_invalid_client")
-        self.assertNotIn("secret-xyz", res["Location"])
+    def test_incorrect_game_key_is_rejected(self):
+        self.game.credentials(HTTP_AUTHORIZATION="Bearer wrong")
+        self.assertEqual(self.redeem(self.code()).status_code, 403)
 
-    @override_settings(ROBLOX_OAUTH_CLIENT_ID="  client-123 \n", ROBLOX_OAUTH_CLIENT_SECRET=" secret-xyz ")
-    def test_keys_are_trimmed(self):
-        res = self.client.get("/api/v1/auth/roblox/start/")
-        self.assertIn("client_id=client-123&", res["Location"])
+    @override_settings(DAWEST_GAME_API_KEY="")
+    def test_not_configured_fails_closed(self):
+        self.assertEqual(self.client.post(LINK).status_code, 503)
+        self.assertFalse(self.client.get(LINK).json()["available"])
+        self.assertFalse(self.client.get("/api/v1/auth/session/").json()["user"]["roblox_link_available"])
+        self.assertEqual(self.redeem("ABCDEFGHJK").status_code, 403)
 
-    def test_denied_on_roblox_page(self):
-        state = self.start()
-        res = self.client.get("/api/v1/auth/roblox/callback/", {"error": "access_denied", "state": state})
-        self.assertEqual(res["Location"], "/players/gunslinger?roblox=cancelled")
+    def test_signed_out_users_cannot_issue_read_or_cancel(self):
+        for method in ("get", "post", "delete"):
+            self.assertEqual(getattr(APIClient(), method)(LINK).status_code, 403)
 
-    def test_signed_out_start_goes_to_login(self):
-        res = APIClient().get("/api/v1/auth/roblox/start/")
-        self.assertEqual(res.status_code, 302)
-        self.assertTrue(res["Location"].startswith("/login"))
+    def test_developer_without_player_profile_cannot_issue(self):
+        dev = get_user_model().objects.create_user("developer", password=PASSWORD, is_staff=True)
+        self.client.force_login(dev)
+        self.assertEqual(self.client.post(LINK).status_code, 400)
 
-    @override_settings(ROBLOX_OAUTH_CLIENT_ID="", ROBLOX_OAUTH_CLIENT_SECRET="")
-    def test_not_configured(self):
-        res = self.client.get("/api/v1/auth/roblox/start/")
-        self.assertEqual(res["Location"], "/players/gunslinger?roblox=unavailable")
+    def test_inactive_profile_cannot_issue_or_redeem(self):
+        code = self.code()
+        Player.objects.filter(user=self.user).update(is_active=False)
+        self.assertEqual(self.client.post(LINK).status_code, 400)
+        self.assertEqual(self.redeem(code).status_code, 404)
 
-    def test_unlink_requires_csrf_and_clears(self):
-        Player.objects.filter(user=self.user).update(roblox_user_id=55, roblox_username="a")
+    def test_deactivated_user_cannot_redeem_an_old_code(self):
+        code = self.code()
+        get_user_model().objects.filter(pk=self.user.pk).update(is_active=False)
+        self.assertEqual(self.redeem(code).status_code, 404)
+
+    def test_request_body_cannot_choose_the_website_owner(self):
+        other = make_member("otherplayer")
+        response = self.client.post(LINK, {"player_id": other.player_profile.pk, "roblox_user_id": 999}, format="json")
+        self.assertEqual(self.redeem(response.json()["code"]).status_code, 200)
+        self.assertIsNone(Player.objects.get(user=other).roblox_user_id)
+        self.assertEqual(Player.objects.get(user=self.user).roblox_user_id, 123456)
+
+    def test_another_players_status_never_exposes_pending_code(self):
+        self.code()
+        other = make_member("otherplayer")
+        stranger = APIClient()
+        stranger.force_login(other)
+        self.assertIsNone(stranger.get(LINK).json()["expires_at"])
+        self.assertEqual(stranger.delete(LINK).status_code, 200)
+        self.assertTrue(RobloxLinkCode.objects.filter(player=self.user.player_profile).exists())
+
+    def test_game_identity_and_code_are_validated(self):
+        code = self.code()
+        invalid = [{"code": "短" * 10}, {"code": "A" * 33}, {"roblox_user_id": 0},
+                   {"roblox_user_id": -1}, {"roblox_user_id": 2**63},
+                   {"roblox_username": "not a username"}, {"roblox_display_name": ""}]
+        for fields in invalid:
+            with self.subTest(fields=fields):
+                self.assertEqual(self.redeem(code, **fields).status_code, 400)
+        self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
+
+    def test_issuance_is_rate_limited_but_status_can_still_be_polled(self):
+        for _ in range(20):
+            self.assertEqual(self.client.post(LINK).status_code, 201)
+        self.assertEqual(self.client.post(LINK).status_code, 429)
+        self.assertEqual(self.client.get(LINK).status_code, 200)
+        self.assertEqual(self.client.delete(LINK).status_code, 200)
+
+    def test_issue_cancel_and_unlink_require_csrf(self):
         strict = APIClient(enforce_csrf_checks=True)
         strict.force_login(self.user)
+        self.assertEqual(strict.post(LINK).status_code, 403)
+        self.assertEqual(strict.delete(LINK).status_code, 403)
         self.assertEqual(strict.post("/api/v1/auth/roblox/unlink/").status_code, 403)
         strict.get("/api/v1/auth/session/")
-        res = strict.post("/api/v1/auth/roblox/unlink/", HTTP_X_CSRFTOKEN=strict.cookies["csrftoken"].value)
-        self.assertEqual(res.status_code, 200)
-        self.assertIsNone(Player.objects.get(user=self.user).roblox_user_id)
+        token = strict.cookies["csrftoken"].value
+        self.assertEqual(strict.post(LINK, HTTP_X_CSRFTOKEN=token).status_code, 201)
+        self.assertEqual(strict.delete(LINK, HTTP_X_CSRFTOKEN=token).status_code, 200)
+        self.assertEqual(strict.post("/api/v1/auth/roblox/unlink/", HTTP_X_CSRFTOKEN=token).status_code, 200)
+
+    def test_unlink_clears_identity_and_invalidates_any_pending_code(self):
+        code = self.code()
+        Player.objects.filter(user=self.user).update(roblox_user_id=55, roblox_username="a", roblox_display_name="A", roblox_linked_at=timezone.now())
+        self.assertEqual(self.client.post("/api/v1/auth/roblox/unlink/").status_code, 200)
+        player = Player.objects.get(user=self.user)
+        self.assertEqual((player.roblox_user_id, player.roblox_username, player.roblox_display_name, player.roblox_linked_at), (None, "", "", None))
+        self.assertEqual(self.redeem(code).status_code, 404)
+        self.assertTrue(AuditEntry.objects.filter(action="player.roblox_unlinked").exists())
+
+    def test_legacy_oauth_routes_are_removed(self):
+        self.assertEqual(self.client.get("/api/v1/auth/roblox/start/").status_code, 404)
+        self.assertEqual(self.client.get("/api/v1/auth/roblox/callback/", {"code": "old", "state": "old"}).status_code, 404)
 
 
 @override_settings(USE_REDIS=False)

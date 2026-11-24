@@ -9,4 +9,4 @@ urlpatterns += [path("profile/appearance/", update_appearance)]
 urlpatterns += [path("username/", change_username)]
 from rankings.audio import upload_player_audio
 urlpatterns += [path("profile/audio/", upload_player_audio)]
-urlpatterns += [path("roblox/start/", roblox.start), path("roblox/callback/", roblox.callback), path("roblox/unlink/", roblox.unlink)]
+urlpatterns += [path("roblox/link/", roblox.link), path("roblox/unlink/", roblox.unlink)]

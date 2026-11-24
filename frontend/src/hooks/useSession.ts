@@ -21,7 +21,7 @@ export interface SessionUser {
       linked_at: string | null;
     } | null;
   } | null;
-  roblox_login_available?: boolean;
+  roblox_link_available?: boolean;
 }
 export interface Session {
   authenticated: boolean;
